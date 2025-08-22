@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Email Verification | Servana</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif; 
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to bottom right, #030a5e, #0c0479);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      height: 100vh;
+      text-align: center;
+    }
+
+     #message, #success-container {
+      text-align: center;
+      padding: 20px;
+      }
+
+    h2 {
+      color: #2c3e50;
+    }
+
+    #resend {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      }
+
+      #resend:hover {
+      background-color: #0056b3;
+    }
+    #success-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    lottie-player {
+      margin-bottom: 10px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    button {
+      background-color: #00c897;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <!-- ✅ Lottie Success Animation -->
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+  <lottie-player
+    src="https://assets10.lottiefiles.com/packages/lf20_jbrw3hcz.json"
+    background="transparent"
+    speed="1"
+    style="width: 200px; height: 200px;"
+    autoplay
+  ></lottie-player>
+
+  <h2>Verification Successful!</h2>
+
+  <!-- 🔊 Sound Effect -->
+  <audio id="success-audio">
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3" type="audio/mpeg" />
+  </audio>
+
+  <p>You're now verified. Redirecting shortly...</p>
+
+  <button id="resend-button" class="hidden">Resend Verification Email</button>
+  <div id="resend-status"></div>
+
+  <!-- 🔁 Firebase & Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBo0wT2U4eEbD8uciW9ZBhKN2gDH_846j8",
+      authDomain: "servana-59172.firebaseapp.com",
+      projectId: "servana-59172",
+      storageBucket: "servana-59172.appspot.com",
+      messagingSenderId: "371435102114",
+      appId: "1:371435102114:web:42d04c1584d55b29b09cfb"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const resendBtn = document.getElementById('resend-button');
+    const statusDiv = document.getElementById('resend-status');
+    const audio = document.getElementById('success-audio');
+
+    // Check verification every 2 seconds
+    const checkVerification = setInterval(() => {
+      const user = auth.currentUser;
+      if (user) {
+        user.reload().then(async () => {
+          if (user.emailVerified) {
+            clearInterval(checkVerification);
+            audio.play();
+
+            // Check user role
+            const userRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userRef);
+
+            if (userSnap.exists()) {
+              const role = userSnap.data().role;
+              if (role === "provider") {
+                window.location.href = "dashboard-provider.html";
+              } else {
+                window.location.href = "dashboard.html"; // default to user dashboard
+              }
+            } else {
+              window.location.href = "login.html"; // fallback
+            }
+
+            // Auto-close after 5s
+            setTimeout(() => {
+              window.close();
+            }, 5000);
+          }
+        });
+      }
+    }, 2000);
+
+    // Resend Button
+    resendBtn.addEventListener('click', () => {
+      const user = auth.currentUser;
+      if (user) {
+        sendEmailVerification(user)
+          .then(() => {
+            statusDiv.textContent = "Verification email resent. Check your inbox.";
+          })
+          .catch(err => {
+            statusDiv.textContent = "Failed to resend. Try again.";
+          });
+      }
+    });
+  </script>
+</body>
+</html>

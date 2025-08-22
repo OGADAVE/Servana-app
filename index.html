@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Servana - Your personal service genie</title>
+  <link rel="icon" type="image/png" href="images/logo.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Orbitron:wght@500&display=swap" rel="stylesheet">
+  <script type="module" src="index.js" defer></script>
+
+  <style>
+    body {
+      background: linear-gradient(to bottom right, #030a5e, #0c0479, #0A0A0A);
+      font-family: 'Poppins', sans-serif;
+      color: #F5F5F5;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      text-align: center;
+      padding: 2rem;
+      animation: fadeIn 1.2s ease-in-out;
+    }
+
+    header img {
+      border-radius: 1rem;
+      width: 120px;
+      animation: slideDown 1s ease-out;
+    }
+
+    h1 {
+      color: white;
+      font-family: 'Orbitron', sans-serif;
+      margin-top: 1rem;
+    }
+
+    p {
+      margin-top: 0.5rem;
+      font-size: 1rem;
+      animation: fadeIn 2s ease-in;
+    }
+
+    #loader {
+      font-size: 1.2rem;
+      color: #ffffff;
+      text-align: center;
+      padding-top: 100px;
+      margin-bottom: 80px;
+    }
+
+    .spinner {
+      border: 4px solid #ffffff33;
+      border-top: 4px solid #ffffff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: auto;
+    }
+
+    #main-content {
+      display: none;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+      margin-top: 2rem;
+      margin-bottom: 100px;
+      animation: fadeInUp 1.5s ease-out;
+    }
+
+    #get-started {
+      display: inline-block;
+      padding: 10px 20px;
+      margin-top: 1rem;
+      background-color: #4a00e0;
+      color: white;
+      border-radius: 8px;
+      text-decoration: none;
+      box-shadow: 0 0 10px #4a00e0;
+      transition: box-shadow 0.3s ease;
+    }
+
+    #get-started:hover {
+      box-shadow: 0 0 20px #4a00e0;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes fadeInUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @media (max-width: 600px) {
+      header img {
+        width: 80px;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      #main-content {
+        padding: 1rem;
+      }
+    }
+
+    footer {
+  background-color: #0b1c3d;
+  color: white;
+  padding: 20px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 14px;
+  gap: 1rem;
+}
+
+.footer-left,
+.footer-center,
+.footer-right {
+  flex: 1;
+  min-width: 200px;
+}
+
+.footer-center form {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.footer-center input {
+  padding: 6px;
+  border-radius: 4px;
+  border: none;
+  font-size: 14px;
+}
+
+.footer-center button {
+  background-color: #6c63ff;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.footer-right {
+  text-align: right;
+}
+
+.footer-right a {
+  margin: 0 6px;
+  color: white;
+  font-size: 1.2rem;
+  text-decoration: none;
+}
+
+.footer-right a:hover {
+  color: #6c63ff;
+}
+
+@media (max-width: 768px) {
+  footer {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .footer-left,
+  .footer-center,
+  .footer-right {
+    text-align: center;
+  }
+
+  .footer-center form {
+    justify-content: center;
+  }
+}
+  </style>
+</head>
+<body>
+  <header>
+    <img src="images/Servana logo.png" alt="Servana Logo">
+    <h1>Welcome to <strong>Servana</strong></h1>
+    <p><i class="fas fa-magic"></i> Your personal service genie. Fast help. No stress.</p>
+  </header>
+
+  <div id="loader">
+    <div class="spinner"></div>
+  </div>
+
+  <main id="main-content">
+    <p>Let's get started! Log in or create an account to continue.</p>
+    <a href="login.html" id="get-started">Get Started</a>
+  </main>
+  <footer>
+  <div class="footer-left">
+    © 2025 Servana. All rights reserved.
+  </div>
+
+  <div class="footer-center">
+    <form id="newsletter-form">
+      <span>Stay in the loop </span>
+      <input type="email" placeholder="Enter your email" required>
+      <button type="submit">Subscribe</button>
+    </form>
+  </div>
+
+  <div class="footer-right">
+    <a href="https://facebook.com/servanaHQ" target="_blank"><i class="fab fa-facebook-f"></i></a>
+    <a href="https://twitter.com/servanaHQ" target="_blank"><i class="fab fa-twitter"></i></a>
+    <a href="https://instagram.com/servanaHQ" target="_blank"><i class="fab fa-instagram"></i></a>
+    <a href="mailto:support@servana.com"><i class="fas fa-envelope"></i></a>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Servana Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(to bottom right, #030a5e, #0c0479, #0A0A0A);
+      font-family: 'Poppins', sans-serif;
+      color: #F5F5F5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .login-container {
+      background-color: #1C2A44;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 25px rgba(0,0,0,0.6);
+      width: 350px;
+      text-align: center;
+    }
+
+    .login-container img {
+      width: 80px;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .login-container h2 {
+      color: #2962FF;
+      margin-bottom: 1rem;
+    }
+
+    .login-container input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 6px;
+      background-color: #263238;
+      color: white;
+    }
+
+    .login-container button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 1rem;
+      background-color: #2962FF;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .login-container button:hover {
+      background-color: #0039CB;
+    }
+
+    .login-container a {
+      color: #B0BEC5;
+      display: block;
+      margin-top: 1rem;
+      text-decoration: underline;
+    }
+
+    #login-error, #login-success {
+      display: none;
+      margin-top: 1rem;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    #login-error {
+      background-color: #f8d7da;
+      color: #d32f2f;
+    }
+
+    #login-success {
+      background-color: #d4edda;
+      color: #388e3c;
+    }
+
+    #login-loader {
+      margin-top: 10px;
+      display: none;
+      color: #B0BEC5;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <img src="images/Servana logo.png" alt="Servana Logo" width="120" style="border-radius: 1rem;">
+    <h2>Welcome Back</h2>
+    <!-- Login Form -->
+<form id="login-form">
+  <input type="email" id="email" placeholder="Email" required />
+  <input type="password" id="password" placeholder="Password" required />
+  <button type="submit" id="login-btn">Login</button>
+  <div id="login-loader" style="display:none;">Logging you in...</div>
+  <div id="login-error"></div>
+  <div id="login-success"></div>
+</form>
+
+<!-- Resend Verification -->
+<div style="margin-top: 12px; display: none;">
+  <button id="resend-verification">Resend Verification Email</button>
+</div>
+    <a href="#">Forgot password?</a>
+    <p style="margin-top: 1rem; color: #B0BEC5;">
+      Don't have an account?
+      <a href="signup.html" style="color: #2962FF; text-decoration: underline;">Sign up</a>
+    </p>
+  </div>
+
+  <script type="module" src="login.js"></script>
+</body>
+</html>

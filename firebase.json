@@ -1,0 +1,11 @@
+{
+  "hosting": {
+    "site": "servana-59172",
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}

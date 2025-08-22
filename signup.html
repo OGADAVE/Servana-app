@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up - Servana</title>
+  <link rel="icon" type="image/png" href="images/logo.png">
+  
+  <style>
+    /* 🌊 Blue Gradient Background */
+    body {
+      margin: 0;
+      background: linear-gradient(to bottom right, #030a5e, #0c0479);
+      font-family: 'Poppins', sans-serif;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 10px;
+    }
+
+    /* 🔒 Card Container */
+    .signup-container {
+      background-color: rgba(255, 255, 255, 0.05);
+      color: #222;
+      padding: 1rem;
+      border: 1px solid #039BE5;
+      border-radius: 32px 32px 32px 32px;
+      width: 100%;
+      margin: 2rem auto;
+      max-width: 600px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      animation: fadeInUp 0.5s ease;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1.5em;
+      color: white;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    input,
+    select {
+      margin-bottom: 1em;
+      padding: 0.75em;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1em;
+      transition: border-color 0.3s ease;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #1e3c72;
+      outline: none;
+    }
+
+    label {
+      margin-bottom: 0.4em;
+      font-weight: bold;
+      color: white;
+    }
+
+    button {
+      background: #2a5298;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 0.85em;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #1e3c72;
+    }
+
+    p {
+      margin-top: 1em;
+      text-align: center;
+      font-size: 0.95em;
+      color: white;
+    }
+
+    a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* Toast message */
+    .toast {
+      display: none;
+      background-color: #4BB543;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      margin: 15px 0;
+      animation: fadeInOut 2s ease-in-out;
+      text-align: center;
+    }
+
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateY(-10px); }
+      20% { opacity: 1; transform: translateY(0); }
+      80% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(-10px); }
+    }
+
+    #signup-success-toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #4caf50;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  display: none;
+  transition: opacity 0.5s ease;
+  z-index: 9999;
+}
+
+    #signup-error {
+      color: red;
+      font-size: 14px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    #password-strength {
+      font-weight: bold;
+      font-size: 14px;
+      margin: -5px 0 10px 0;
+    }
+
+    #signup-loader {
+      display: none;
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    #toggle-password {
+      background: transparent;
+      border: none;
+      color: #9ba9c2;
+      font-size: 0.9em;
+      cursor: pointer;
+      align-self: flex-end;
+      margin: -10px 0 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="signup-container">
+    <h2>Create Your Account</h2>
+    <form id="signupForm">
+  <label for="fullName">Full Name</label>
+  <input type="text" id="fullName" required />
+
+  <label for="phone">Phone Number</label>
+  <input type="tel" id="phone" required />
+
+  <label for="email">Email Address</label>
+  <input type="email" id="email" required />
+
+  <label for="password">Password</label>
+  <input type="password" id="password" required />
+ <div id="password-strength"></div>
+      <input type="password" id="confirm-password" placeholder="Confirm Password" required />
+      <button type="button" id="toggle-password">Show Password</button>
+
+      <div id="signup-loader">🔄 Creating account...</div>
+      <div id="signup-error"></div>
+
+      <button type="submit" id="signupBtn">Sign Up</button>
+    </form>
+
+    <div class="toast" id="signup-success-toast">✅ Signup successful! Redirecting...</div>
+    <p>Already have an account? <a href="login.html">Log in here</a></p>
+  </div>
+
+  <script type="module" src="firebase.js"></script>
+<script type="module" src="signup.js"></script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Servana Inbox</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to bottom right, #030a5e, #0c0479);
+      color: #ffffff;
+      padding: 1rem;
+    }
+    h1 {
+      text-align: center;
+      color: yellow;
+    }
+    .inbox-item {
+      background: white;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .inbox-item:hover {
+      background: #e6f7ff;
+    }
+    .unread-count {
+      color: #d93025;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>📥 Servana Inbox</h1>
+  <div id="inbox"></div>
+
+  <script type="module" src="inbox.js"></script>
+</body>
+</html>

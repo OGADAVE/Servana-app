@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Servana Chat</title>
+  <link rel="icon" href="images/logo.png" type="image/png" />
+  <script type="module" src="chat.js" defer></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.css">
+  <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to bottom right, #030a5e, #0c0479);
+      color: #ffffff;
+      padding: 1rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    header img {
+      width: 60px;
+      border-radius: 12px;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .chat-container {
+      max-width: 600px;
+      margin: auto;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1.5rem;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .top-bar button {
+      background-color: transparent;
+      color: white;
+      border: 1px solid #fff;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .top-bar button:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+      transform: scale(1.05);
+    }
+
+    h2#chatHeader {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
+    #messages {
+      max-height: 400px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 1rem;
+    }
+
+    .message {
+      padding: 10px 14px;
+      border-radius: 10px;
+      max-width: 80%;
+      word-wrap: break-word;
+      position: relative;
+    }
+
+    .message.mine {
+      background-color: #6a00ff;
+      align-self: flex-end;
+    }
+
+    .message.other {
+      background-color: #24243e;
+      align-self: flex-start;
+    }
+
+    .message .timestamp {
+      font-size: 0.75rem;
+      color: #bbb;
+      position: absolute;
+      bottom: -16px;
+      right: 10px;
+    }
+
+    #typingStatus {
+      font-style: italic;
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+      color: #aaa;
+    }
+
+    .chat-input {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+    }
+
+    .chat-input input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #666;
+      border-radius: 8px;
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .chat-input input::placeholder {
+      color: #bbb;
+    }
+
+    .chat-input button {
+      background-color: #6a00ff;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .chat-input button:hover {
+      background-color: #5000c8;
+      transform: translateY(-2px);
+    }
+
+    .chat-input label {
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    #preview {
+      max-width: 80px;
+      max-height: 80px;
+      border-radius: 8px;
+      display: none;
+    }
+
+    emoji-picker {
+      position: absolute;
+      bottom: 60px;
+      right: 20px;
+      z-index: 1000;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      background: #1e1e2f;
+      padding: 0.5rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    emoji-picker.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    body.dark-mode {
+      background: #0c0c1e;
+      color: #f1f1f1;
+    }
+
+    body.dark-mode .chat-container {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    body.dark-mode .chat-input input {
+      background-color: rgba(255, 255, 255, 0.08);
+      color: #f1f1f1;
+    }
+
+    body.dark-mode .top-bar button {
+      border-color: #ccc;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="images/Servana logo.png" alt="Servana Logo">
+    <h1>Servana Chat</h1>
+  </header>
+
+  <div class="chat-container">
+    <div class="top-bar">
+      <button onclick="window.location.href='inbox.html'">⬅ Inbox</button>
+      <button onclick="toggleDarkMode()">🌓 Dark Mode</button>
+    </div>
+
+<h2 id="chatHeader">
+  <span id="receiverName">Chat</span><br>
+  <span id="receiverRole"></span>
+</h2>
+
+<img id="receiverAvatar" class="avatar" />
+<h2 id="receiverName"></h2>
+<p id="receiverRole"></p>
+<p id="receiverStatus"></p>
+
+<div style="margin-top: 1rem;">
+  <button id="scheduleBtn">📅 Schedule</button>
+  <input type="date" id="scheduleDate" style="display:none;">
+  <input type="time" id="scheduleTime" style="display:none;">
+</div>
+
+<h3>Upcoming Bookings</h3>
+<div id="bookings"></div>
+
+    <div id="messages"></div>
+    <div id="typingStatus"></div>
+
+    <div class="chat-input">
+      <button class="emoji-btn" onclick="toggleEmojiPicker()">😊</button>
+      <input type="text" id="messageInput" placeholder="Type your message..." />
+      <label for="fileInput">📄</label>
+      <input type="file" id="fileInput" accept="image/*" style="display: none;" />
+      <img id="preview" src="" />
+      <button id="sendBtn">Send</button>
+    </div>
+
+    <emoji-picker id="emojiPicker"></emoji-picker>
+  </div>
+</body>
+</html>
