@@ -2,6 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { getStorage } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
 
 // Firebase config
 const firebaseConfig = {
@@ -71,3 +72,4 @@ form.addEventListener("submit", async (e) => {
     messageDiv.innerHTML = `<p class="error">${error.message}</p>`;
   }
 });
+
