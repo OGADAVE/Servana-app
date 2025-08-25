@@ -1,107 +1,73 @@
-import { auth } from "./firebase.js";
-import {
-  createUserWithEmailAndPassword,
-  sendEmailVerification,
-  updateProfile
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import { db } from "./firebase.js";
-import {
-  doc,
-  setDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+// 🔹 Firebase SDK (v9+ modular)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-document.addEventListener("DOMContentLoaded", () => {
-  const signupForm = document.getElementById("signupForm");
-  const passwordInput = document.getElementById("password");
-  const confirmPasswordInput = document.getElementById("confirm-password");
-  const passwordStrengthDiv = document.getElementById("password-strength");
-  const signupBtn = document.getElementById("signupBtn");
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyBo0wT2U4eEbD8uciW9ZBhKN2gDH_846j8",
+  authDomain: "servana-59172.firebaseapp.com",
+  projectId: "servana-59172",
+  storageBucket: "servana-59172.appspot.com",
+  messagingSenderId: "371435102114",
+  appId: "1:371435102114:web:42d04c1584d55b29b09cfb"
+};
 
-  const fullNameInput = document.getElementById("fullName");
-  const phoneInput = document.getElementById("phone");
-  const emailInput = document.getElementById("email");
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+// 🔹 Toggle password visibility
+window.togglePassword = function(fieldId) {
+  const input = document.getElementById(fieldId);
+  input.type = input.type === "password" ? "text" : "password";
+};
 
-  // Password strength checker
-  passwordInput.addEventListener("input", () => {
-    const strength = checkPasswordStrength(passwordInput.value);
-    passwordStrengthDiv.textContent = `Strength: ${strength}`;
-  });
+// 🔹 Signup form logic
+const form = document.getElementById("signup-form");
+const messageDiv = document.getElementById("message");
 
-  // Form submit
-  signupForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    const fullName = fullNameInput.value.trim();
-    const phone = phoneInput.value.trim();
-    const email = emailInput.value.trim();
-    const password = passwordInput.value;
-    const confirmPassword = confirmPasswordInput.value;
+  const fullname = document.getElementById("fullname").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const confirmPassword = document.getElementById("confirm-password").value.trim();
 
-    if (password !== confirmPassword) {
-      showToast("❌ Passwords do not match.", "error");
-      return;
-    }
+  messageDiv.innerHTML = "";
 
-    signupBtn.disabled = true;
-    signupBtn.textContent = "Creating Account...";
-
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      await updateProfile(user, { displayName: fullName });
-
-      await setDoc(doc(db, "users", user.uid), {
-        name: fullName,
-        phone: phone,
-        email: email,
-        role: "seeker",
-        uid: user.uid,
-        createdAt: serverTimestamp()
-      });
-
-      await sendEmailVerification(user);
-
-      showToast("✅ Account created! Please verify your email.", "success");
-
-      setTimeout(() => {
-        window.location.href = "verify.html";
-      }, 2000);
-    } catch (error) {
-      console.error(error);
-      showToast(`❌ ${error.message}`, "error");
-    } finally {
-      signupBtn.disabled = false;
-      signupBtn.textContent = "Sign Up";
-    }
-  });
-});
-
-function checkPasswordStrength(password) {
-  let strength = "Weak";
-  if (
-    password.length >= 8 &&
-    /[A-Z]/.test(password) &&
-    /\d/.test(password) &&
-    /[!@#$%^&*]/.test(password)
-  ) {
-    strength = "Strong";
-  } else if (password.length >= 6) {
-    strength = "Medium";
+  if (password !== confirmPassword) {
+    messageDiv.innerHTML = `<p class="error">Passwords do not match</p>`;
+    return;
   }
-  return strength;
-}
 
-function showToast(message, type = "info") {
-  const toast = document.createElement("div");
-  toast.className = `toast ${type}`;
-  toast.textContent = message;
-  document.body.appendChild(toast);
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
-  setTimeout(() => toast.classList.add("show"), 100);
-  setTimeout(() => {
-    toast.classList.remove("show");
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
-}
+    // Save extra user info in Firestore
+    await setDoc(doc(db, "users", user.uid), {
+      fullname,
+      phone,
+      email,
+      createdAt: new Date()
+    });
+
+    // Send email verification
+    await sendEmailVerification(user);
+
+    messageDiv.innerHTML = `<p class="success">Signup successful! Please check your email for verification.</p>`;
+    form.reset();
+
+    // Redirect after signup
+    setTimeout(() => {
+      window.location.href = "verify.html";
+    }, 2000);
+
+  } catch (error) {
+    messageDiv.innerHTML = `<p class="error">${error.message}</p>`;
+  }
+});
