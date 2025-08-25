@@ -19,16 +19,11 @@
       text-align: center;
     }
 
-     #message, #success-container {
-      text-align: center;
-      padding: 20px;
-      }
-
     h2 {
-      color: #2c3e50;
+      color: #fff;
     }
 
-    #resend {
+    #resend-button {
       margin-top: 20px;
       padding: 10px 20px;
       background-color: #007bff;
@@ -36,39 +31,29 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      }
+    }
 
-      #resend:hover {
+    #resend-button:hover {
       background-color: #0056b3;
     }
-    #success-container {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-    }
 
-    lottie-player {
-      margin-bottom: 10px;
+    #resend-status {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: #ffcc00;
     }
 
     .hidden {
       display: none;
     }
 
-    button {
-      background-color: #00c897;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      font-size: 1rem;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-top: 20px;
+    lottie-player {
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
-  <!-- ✅ Lottie Success Animation -->
+  <!-- ✅ Lottie Animation -->
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
   <lottie-player
     src="https://assets10.lottiefiles.com/packages/lf20_jbrw3hcz.json"
@@ -78,14 +63,13 @@
     autoplay
   ></lottie-player>
 
-  <h2>Verification Successful!</h2>
+  <h2>Verify Your Email</h2>
+  <p>Please check your inbox. Redirecting after verification...</p>
 
   <!-- 🔊 Sound Effect -->
   <audio id="success-audio">
     <source src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3" type="audio/mpeg" />
   </audio>
-
-  <p>You're now verified. Redirecting shortly...</p>
 
   <button id="resend-button" class="hidden">Resend Verification Email</button>
   <div id="resend-status"></div>
@@ -110,54 +94,55 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    const resendBtn = document.getElementById('resend-button');
-    const statusDiv = document.getElementById('resend-status');
-    const audio = document.getElementById('success-audio');
+    const resendBtn = document.getElementById("resend-button");
+    const statusDiv = document.getElementById("resend-status");
+    const audio = document.getElementById("success-audio");
 
-    // Check verification every 2 seconds
-    const checkVerification = setInterval(() => {
-      const user = auth.currentUser;
+    // Auth state listener
+    onAuthStateChanged(auth, (user) => {
       if (user) {
-        user.reload().then(async () => {
-          if (user.emailVerified) {
-            clearInterval(checkVerification);
-            audio.play();
-
-            // Check user role
-            const userRef = doc(db, "users", user.uid);
-            const userSnap = await getDoc(userRef);
-
-            if (userSnap.exists()) {
-              const role = userSnap.data().role;
-              if (role === "provider") {
-                window.location.href = "dashboard-provider.html";
-              } else {
-                window.location.href = "dashboard.html"; // default to user dashboard
-              }
-            } else {
-              window.location.href = "login.html"; // fallback
-            }
-
-            // Auto-close after 5s
-            setTimeout(() => {
-              window.close();
-            }, 5000);
+        // Show resend button after 10s if still unverified
+        setTimeout(() => {
+          if (!user.emailVerified) {
+            resendBtn.classList.remove("hidden");
           }
-        });
-      }
-    }, 2000);
+        }, 10000);
 
-    // Resend Button
-    resendBtn.addEventListener('click', () => {
+        // Poll every 2 seconds
+        const interval = setInterval(async () => {
+          await user.reload();
+          if (user.emailVerified) {
+            clearInterval(interval);
+            audio.play();
+            statusDiv.textContent = "✅ Email verified! Redirecting...";
+
+            // Get role from Firestore
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            const role = userDoc.exists() ? userDoc.data().role : "seeker";
+
+            // Redirect based on role
+            if (role === "provider") {
+              window.location.href = "/provider-dashboard.html";
+            } else {
+              window.location.href = "dashboard/dashboard.html";
+            }
+          }
+        }, 2000);
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+
+    // Resend email
+    resendBtn.addEventListener("click", async () => {
       const user = auth.currentUser;
       if (user) {
-        sendEmailVerification(user)
-          .then(() => {
-            statusDiv.textContent = "Verification email resent. Check your inbox.";
-          })
-          .catch(err => {
-            statusDiv.textContent = "Failed to resend. Try again.";
-          });
+        try {
+          await sendEmailVerification(user);
+          statusDiv.textContent = "📩 Verification email resent. Check your inbox!";
+        } catch (err) {
+          statusDiv.textContent = "❌ Error: " + err.message;
+        }
       }
     });
   </script>
