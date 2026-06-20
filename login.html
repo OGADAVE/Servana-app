@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Servana — Welcome</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/styles.css">
+  <style>
+    body{display:flex;align-items:stretch;min-height:100vh}
+    .auth-layout{display:flex;width:100%;min-height:100vh}
+    /* Hero panel */
+    .hero-panel{display:none;flex:1;background:linear-gradient(145deg,var(--brand-deep) 0%,var(--brand) 50%,var(--accent) 100%);position:relative;overflow:hidden;padding:48px 44px;flex-direction:column;justify-content:space-between;color:#fff}
+    @media(min-width:900px){.hero-panel{display:flex}}
+    .hb{position:absolute;border-radius:50%;pointer-events:none}
+    .hb1{width:340px;height:340px;top:-80px;right:-80px;background:rgba(255,255,255,.04)}
+    .hb2{width:220px;height:220px;bottom:80px;left:-60px;background:rgba(255,214,10,.05)}
+    .hb3{width:160px;height:160px;bottom:-40px;right:120px;background:rgba(108,60,225,.12)}
+    .hp-logo{display:flex;align-items:center;gap:10px;position:relative;z-index:1}
+    .hp-logo-text{font-family:'Orbitron',sans-serif;font-size:17px;font-weight:700;letter-spacing:2px}
+    .hp-body{position:relative;z-index:1}
+    .hp-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--gold);background:rgba(255,214,10,.10);border:1px solid rgba(255,214,10,.22);padding:4px 12px;border-radius:20px;letter-spacing:.5px;margin-bottom:20px}
+    .hp-heading{font-family:'Orbitron',sans-serif;font-size:clamp(26px,3vw,36px);font-weight:700;line-height:1.2;margin-bottom:14px}
+    .hp-sub{font-size:15px;color:rgba(255,255,255,.65);line-height:1.65;max-width:360px}
+    .hp-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px;position:relative;z-index:1}
+    .hp-pill{font-size:12px;font-weight:500;color:rgba(255,255,255,.75);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);padding:5px 13px;border-radius:20px}
+    .hp-foot{font-size:12px;color:rgba(255,255,255,.38);position:relative;z-index:1}
+    /* Form panel */
+    .form-panel{flex:0 0 100%;display:flex;align-items:center;justify-content:center;padding:32px 20px;overflow-y:auto}
+    @media(min-width:900px){.form-panel{flex:0 0 440px;padding:48px 44px}}
+    .form-box{width:100%;max-width:400px}
+    .mobile-logo{display:flex;align-items:center;gap:9px;justify-content:center;margin-bottom:28px}
+    .mobile-logo-text{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700;color:var(--brand);letter-spacing:1.5px}
+    @media(min-width:900px){.mobile-logo{display:none}}
+    .form-heading{font-size:22px;font-weight:700;color:var(--text-1);margin-bottom:4px}
+    .form-subhead{font-size:13px;color:var(--text-2);margin-bottom:24px}
+    /* Role select */
+    .role-row{display:flex;gap:10px;margin-bottom:20px}
+    .role-opt{flex:1;border:1.5px solid var(--border);border-radius:var(--r-md);padding:12px 10px;cursor:pointer;text-align:center;transition:border-color .2s,background .2s;background:var(--bg-subtle);position:relative}
+    .role-opt input{position:absolute;opacity:0;width:0;height:0}
+    .role-opt.sel{border-color:var(--accent);background:rgba(108,60,225,.06)}
+    .role-opt-icon{font-size:22px;margin-bottom:5px}
+    .role-opt-label{font-size:12px;font-weight:600;color:var(--text-1);display:block}
+    .role-opt-sub{font-size:10px;color:var(--text-3)}
+    /* PW strength */
+    .pw-strength{margin-top:6px;display:none}
+    .pw-strength.show{display:block}
+    .pw-bar{height:3px;border-radius:4px;background:var(--border);overflow:hidden;margin-bottom:4px}
+    .pw-fill{height:100%;border-radius:4px;transition:width .3s var(--ease),background .3s;width:0%}
+    .pw-lbl{font-size:10px;color:var(--text-3)}
+    /* Extras */
+    .extras{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;font-size:13px}
+    .check-label{display:flex;align-items:center;gap:7px;cursor:pointer;color:var(--text-2);font-weight:500}
+    .check-label input{accent-color:var(--accent);width:15px;height:15px}
+    .forgot-btn{color:var(--accent);font-weight:600;font-size:13px;background:none;border:none;cursor:pointer;padding:0;font-family:'DM Sans',sans-serif;transition:color .15s}
+    .forgot-btn:hover{color:var(--brand)}
+    .terms-row{font-size:12px;color:var(--text-2);margin-bottom:20px;line-height:1.6}
+    .terms-row a{color:var(--accent);font-weight:600}
+    .switch-text{text-align:center;font-size:13px;color:var(--text-2);margin-top:22px}
+    .switch-link{color:var(--accent);font-weight:700;background:none;border:none;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:2px;padding:0}
+    .switch-link:hover{color:var(--brand)}
+    /* Forgot modal */
+    .modal-overlay{padding:20px}
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+<div id="spinner-overlay"><div class="spinner-ring"></div></div>
+
+<!-- Forgot password modal -->
+<div class="modal-overlay" id="forgotOverlay" role="dialog" aria-modal="true">
+  <div class="modal-box" style="max-width:380px">
+    <div class="modal-handle"></div>
+    <div class="modal-head">
+      <span class="modal-title">🔐 Reset Password</span>
+      <button class="modal-close" id="forgotClose"><svg viewBox="0 0 24 24" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:18px;line-height:1.6">Enter your email and we'll send a reset link.</p>
+    <div class="modal-form">
+      <div class="field">
+        <label for="forgotEmail">Email Address</label>
+        <div class="input-wrap">
+          <svg class="i-icon" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <input type="email" id="forgotEmail" placeholder="you@email.com">
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block" id="forgotSubmit">
+        <span class="btn-text">Send Reset Link</span>
+        <span class="btn-spin-wrap"><div class="btn-spin"></div></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="auth-layout">
+  <!-- Hero panel (desktop) -->
+  <aside class="hero-panel" aria-hidden="true">
+    <div class="hb hb1"></div><div class="hb hb2"></div><div class="hb hb3"></div>
+    <div class="hp-logo">
+      <img src="./assets/images/logo.png" alt="Servana" style="width:40px;height:40px;border-radius:10px;object-fit:cover;border:1.5px solid rgba(255,255,255,.25)" onerror="this.style.display='none'">
+      <span class="hp-logo-text">SERVANA</span>
+    </div>
+    <div class="hp-body">
+      <div class="hp-badge">⚡ Your Personal Service Genie</div>
+      <h2 class="hp-heading">Fast Help.<br>No Stress.</h2>
+      <p class="hp-sub">Connect with trusted local professionals — plumbers, electricians, barbers, tutors and more — all in one place.</p>
+      <div class="hp-pills">
+        <span class="hp-pill">🔧 Plumbers</span><span class="hp-pill">⚡ Electricians</span>
+        <span class="hp-pill">✂️ Barbers</span><span class="hp-pill">📚 Tutors</span>
+        <span class="hp-pill">🏠 Cleaners</span><span class="hp-pill">🚗 Mechanics</span>
+        <span class="hp-pill">💅 Makeup Artists</span><span class="hp-pill">+ 90 more</span>
+      </div>
+    </div>
+    <p class="hp-foot">© 2025 Servana. Built for Africa and beyond.</p>
+  </aside>
+
+  <!-- Form panel -->
+  <section class="form-panel">
+    <div class="form-box">
+      <div class="mobile-logo">
+        <img src="./assets/images/logo.png" alt="Servana" style="width:36px;height:36px;border-radius:9px;object-fit:cover;border:1.5px solid var(--border)" onerror="this.style.display='none'">
+        <span class="mobile-logo-text">SERVANA</span>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs mb-4" role="tablist">
+        <button class="tab-btn active" id="tabLogin"  role="tab" aria-selected="true">Log In</button>
+        <button class="tab-btn"        id="tabSignup" role="tab" aria-selected="false">Sign Up</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div id="formLogin">
+        <h1 class="form-heading">Welcome back 👋</h1>
+        <p class="form-subhead">Log in to your Servana account.</p>
+
+        <div class="field mb-3">
+          <label>Email Address</label>
+          <div class="input-wrap">
+            <svg class="i-icon" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <input type="email" id="loginEmail" placeholder="you@email.com" autocomplete="email">
+          </div>
+          <span class="field-err" id="loginEmailErr">Please enter a valid email.</span>
+        </div>
+
+        <div class="field mb-2">
+          <label>Password</label>
+          <div class="input-wrap">
+            <svg class="i-icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <input type="password" id="loginPassword" placeholder="Your password" autocomplete="current-password">
+            <button type="button" class="input-end" data-target="loginPassword" aria-label="Toggle password">
+              <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <span class="field-err" id="loginPasswordErr">Password is required.</span>
+        </div>
+
+        <div class="extras">
+          <label class="check-label"><input type="checkbox" id="rememberMe"> Remember me</label>
+          <button class="forgot-btn" id="openForgot">Forgot password?</button>
+        </div>
+
+        <button class="btn btn-primary btn-block btn-lg mb-3" id="loginBtn">
+          <span class="btn-text">Log In</span>
+          <span class="btn-spin-wrap"><div class="btn-spin"></div></span>
+        </button>
+
+        <div class="divider">or continue with</div>
+
+        <button class="btn-google mb-2" id="googleLoginBtn">
+          <svg class="g-icon" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.1 0 5.8 1.1 8 2.9l5.9-5.9C34.5 3.5 29.6 1.5 24 1.5 14.9 1.5 7.1 6.9 3.4 14.5l6.9 5.3C12 14 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.5 2.9-2.2 5.4-4.7 7l7.2 5.6c4.2-3.9 6.6-9.6 6.6-16.6z"/><path fill="#FBBC05" d="M10.3 28.2A14.6 14.6 0 019.5 24c0-1.5.3-2.9.8-4.2l-6.9-5.3A23 23 0 001.5 24c0 3.7.9 7.2 2.4 10.3l6.4-6.1z"/><path fill="#34A853" d="M24 46.5c5.6 0 10.3-1.9 13.7-5l-7.2-5.6c-1.8 1.2-4.1 1.9-6.5 1.9-6.4 0-11.9-4.4-13.7-10.5l-6.4 6.1C7.1 41.1 14.9 46.5 24 46.5z"/></svg>
+          Continue with Google
+        </button>
+
+        <p class="switch-text">Don't have an account? <button class="switch-link" id="toSignup">Create one</button></p>
+      </div>
+
+      <!-- SIGNUP FORM -->
+      <div id="formSignup" class="hidden">
+        <h1 class="form-heading">Create account ✨</h1>
+        <p class="form-subhead">Join Servana — it's free.</p>
+
+        <p style="font-size:13px;font-weight:600;color:var(--text-1);margin-bottom:8px">I want to…</p>
+        <div class="role-row">
+          <label class="role-opt sel" id="roSeeker">
+            <input type="radio" name="role" value="seeker" checked>
+            <div class="role-opt-icon">🔍</div>
+            <span class="role-opt-label">Find Services</span>
+            <span class="role-opt-sub">I'm a seeker</span>
+          </label>
+          <label class="role-opt" id="roProvider">
+            <input type="radio" name="role" value="provider">
+            <div class="role-opt-icon">🛠️</div>
+            <span class="role-opt-label">Offer Services</span>
+            <span class="role-opt-sub">I'm a provider</span>
+          </label>
+        </div>
+
+        <div class="form-row mb-3">
+          <div class="field">
+            <label>First Name</label>
+            <div class="input-wrap">
+              <svg class="i-icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+              <input type="text" id="firstName" placeholder="Ada" autocomplete="given-name">
+            </div>
+            <span class="field-err" id="firstNameErr">First name required.</span>
+          </div>
+          <div class="field">
+            <label>Last Name</label>
+            <div class="input-wrap">
+              <svg class="i-icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+              <input type="text" id="lastName" placeholder="Okafor" autocomplete="family-name">
+            </div>
+            <span class="field-err" id="lastNameErr">Last name required.</span>
+          </div>
+        </div>
+
+        <div class="field mb-3">
+          <label>Email Address</label>
+          <div class="input-wrap">
+            <svg class="i-icon" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <input type="email" id="signupEmail" placeholder="you@email.com" autocomplete="email">
+          </div>
+          <span class="field-err" id="signupEmailErr">Valid email required.</span>
+        </div>
+
+        <div class="field mb-3">
+          <label>Password</label>
+          <div class="input-wrap">
+            <svg class="i-icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <input type="password" id="signupPassword" placeholder="Create a strong password" autocomplete="new-password">
+            <button type="button" class="input-end" data-target="signupPassword" aria-label="Toggle password">
+              <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <span class="field-err" id="signupPasswordErr">Minimum 8 characters.</span>
+          <div class="pw-strength" id="pwStrength">
+            <div class="pw-bar"><div class="pw-fill" id="pwFill"></div></div>
+            <span class="pw-lbl" id="pwLbl">Enter a password</span>
+          </div>
+        </div>
+
+        <div class="field mb-3">
+          <label>Confirm Password</label>
+          <div class="input-wrap">
+            <svg class="i-icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <input type="password" id="confirmPassword" placeholder="Repeat password" autocomplete="new-password">
+            <button type="button" class="input-end" data-target="confirmPassword" aria-label="Toggle password">
+              <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <span class="field-err" id="confirmPasswordErr">Passwords do not match.</span>
+        </div>
+
+        <p class="terms-row">By creating an account you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</p>
+
+        <button class="btn btn-primary btn-block btn-lg mb-3" id="signupBtn">
+          <span class="btn-text">Create Account</span>
+          <span class="btn-spin-wrap"><div class="btn-spin"></div></span>
+        </button>
+
+        <div class="divider">or continue with</div>
+
+        <button class="btn-google mb-2" id="googleSignupBtn">
+          <svg class="g-icon" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.1 0 5.8 1.1 8 2.9l5.9-5.9C34.5 3.5 29.6 1.5 24 1.5 14.9 1.5 7.1 6.9 3.4 14.5l6.9 5.3C12 14 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.5 2.9-2.2 5.4-4.7 7l7.2 5.6c4.2-3.9 6.6-9.6 6.6-16.6z"/><path fill="#FBBC05" d="M10.3 28.2A14.6 14.6 0 019.5 24c0-1.5.3-2.9.8-4.2l-6.9-5.3A23 23 0 001.5 24c0 3.7.9 7.2 2.4 10.3l6.4-6.1z"/><path fill="#34A853" d="M24 46.5c5.6 0 10.3-1.9 13.7-5l-7.2-5.6c-1.8 1.2-4.1 1.9-6.5 1.9-6.4 0-11.9-4.4-13.7-10.5l-6.4 6.1C7.1 41.1 14.9 46.5 24 46.5z"/></svg>
+          Continue with Google
+        </button>
+
+        <p class="switch-text">Already have an account? <button class="switch-link" id="toLogin">Log in</button></p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script type="module">
+import { auth, db, toast, showSpinner, hideSpinner, friendlyError, validEmail, setLoading, esc, seedDefaultCategories, ensureCategoryExists } from "./assets/firebase.js";
+import {
+  onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+  signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, updateProfile,
+  setPersistence, browserLocalPersistence, browserSessionPersistence
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const provider = new GoogleAuthProvider();
+const $ = id => document.getElementById(id);
+
+// Redirect if already logged in
+onAuthStateChanged(auth, user => { if (user) redirect(user); });
+
+// Check URL params for pre-selected tab/role
+const params = new URLSearchParams(location.search);
+if (params.get("tab") === "signup") showSignup();
+if (params.get("role") === "provider") {
+  $("roProvider").classList.add("sel"); $("roSeeker").classList.remove("sel");
+  $("roProvider").querySelector("input").checked = true;
+}
+
+// ── Redirect based on role ───────────────────────────
+async function redirect(user) {
+  try {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    const role = snap.exists() ? snap.data().role : "seeker";
+    location.href = role === "provider" ? "./provider.html" : "./dashboard.html";
+  } catch { location.href = "./dashboard.html"; }
+}
+
+// ── Ensure user doc exists ───────────────────────────
+async function ensureUserDoc(user, extra = {}) {
+  const ref = doc(db, "users", user.uid);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) {
+    await setDoc(ref, { uid: user.uid, displayName: user.displayName || "", email: user.email || "", photoURL: user.photoURL || "", createdAt: serverTimestamp(), ...extra });
+  }
+}
+
+// ── Tabs ─────────────────────────────────────────────
+function showLogin()  { $("formLogin").classList.remove("hidden"); $("formSignup").classList.add("hidden"); $("tabLogin").classList.add("active"); $("tabSignup").classList.remove("active"); }
+function showSignup() { $("formSignup").classList.remove("hidden"); $("formLogin").classList.add("hidden"); $("tabSignup").classList.add("active"); $("tabLogin").classList.remove("active"); }
+
+$("tabLogin").addEventListener("click",  showLogin);
+$("tabSignup").addEventListener("click", showSignup);
+$("toSignup").addEventListener("click",  showSignup);
+$("toLogin").addEventListener("click",   showLogin);
+
+// ── Password toggles ──────────────────────────────────
+document.querySelectorAll(".input-end[data-target]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const input = $(btn.dataset.target);
+    input.type = input.type === "text" ? "password" : "text";
+  });
+});
+
+// ── Role selection ────────────────────────────────────
+document.querySelectorAll('input[name="role"]').forEach(r => {
+  r.addEventListener("change", () => {
+    $("roSeeker").classList.toggle("sel",   r.value === "seeker"   && r.checked);
+    $("roProvider").classList.toggle("sel", r.value === "provider" && r.checked);
+  });
+});
+
+// ── Password strength ─────────────────────────────────
+$("signupPassword").addEventListener("input", () => {
+  const pw = $("signupPassword").value;
+  const str = $("pwStrength"); const fill = $("pwFill"); const lbl = $("pwLbl");
+  if (!pw) { str.classList.remove("show"); return; }
+  str.classList.add("show");
+  let s = 0;
+  if (pw.length >= 8) s++;
+  if (/[A-Z]/.test(pw)) s++;
+  if (/[0-9]/.test(pw)) s++;
+  if (/[^A-Za-z0-9]/.test(pw)) s++;
+  const levels = [
+    { pct:"15%", c:"#DC2626", l:"Too weak" },
+    { pct:"35%", c:"#D97706", l:"Weak" },
+    { pct:"60%", c:"#CA8A04", l:"Fair" },
+    { pct:"80%", c:"#16A34A", l:"Strong" },
+    { pct:"100%",c:"#15803D", l:"Very strong 💪" }
+  ];
+  const lv = levels[Math.min(s, 4)];
+  fill.style.width = lv.pct; fill.style.background = lv.c;
+  lbl.textContent = lv.l; lbl.style.color = lv.c;
+});
+
+// ── Field validation helpers ──────────────────────────
+const showErr = (id, msg) => { const e = $(id); if(e){ if(msg) e.textContent = msg; e.classList.add("show"); } };
+const clearErrs = (...ids) => ids.forEach(id => { const e = $(id); if(e) e.classList.remove("show"); });
+
+// ── Login ─────────────────────────────────────────────
+$("loginBtn").addEventListener("click", async () => {
+  const email = $("loginEmail").value.trim();
+  const pw    = $("loginPassword").value;
+  clearErrs("loginEmailErr","loginPasswordErr");
+  let ok = true;
+  if (!validEmail(email)) { showErr("loginEmailErr"); ok = false; }
+  if (!pw)                 { showErr("loginPasswordErr"); ok = false; }
+  if (!ok) return;
+
+  setLoading($("loginBtn"), true);
+  try {
+    await setPersistence(auth, $("rememberMe").checked ? browserLocalPersistence : browserSessionPersistence);
+    const cred = await signInWithEmailAndPassword(auth, email, pw);
+    await ensureUserDoc(cred.user);
+    toast("Logged in! Redirecting…", "success", 2000);
+    setTimeout(() => redirect(cred.user), 1400);
+  } catch(err) {
+    const msg = friendlyError(err.code); if (msg) toast(msg, "error");
+  } finally { setLoading($("loginBtn"), false); }
+});
+
+// ── Sign up ───────────────────────────────────────────
+$("signupBtn").addEventListener("click", async () => {
+  const first = $("firstName").value.trim(), last = $("lastName").value.trim();
+  const email = $("signupEmail").value.trim();
+  const pw = $("signupPassword").value, pw2 = $("confirmPassword").value;
+  const role = document.querySelector('input[name="role"]:checked')?.value || "seeker";
+  clearErrs("firstNameErr","lastNameErr","signupEmailErr","signupPasswordErr","confirmPasswordErr");
+  let ok = true;
+  if (!first) { showErr("firstNameErr"); ok = false; }
+  if (!last)  { showErr("lastNameErr");  ok = false; }
+  if (!validEmail(email)) { showErr("signupEmailErr"); ok = false; }
+  if (pw.length < 8) { showErr("signupPasswordErr"); ok = false; }
+  if (pw !== pw2) { showErr("confirmPasswordErr"); ok = false; }
+  if (!ok) return;
+
+  setLoading($("signupBtn"), true);
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pw);
+    await updateProfile(cred.user, { displayName: `${first} ${last}` });
+    await ensureUserDoc(cred.user, { role });
+    // If provider, create provider doc + seed all categories
+    if (role === "provider") {
+      const { setDoc: sd, doc: dc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+      await sd(dc(db, "providers", cred.user.uid), {
+        uid: cred.user.uid, name: `${first} ${last}`,
+        email: cred.user.email, available: true, verified: false,
+        rating: 0, reviewCount: 0, completedJobs: 0,
+        createdAt: serverTimestamp()
+      }, { merge: true });
+
+      // Seed all 30 default categories — safe to run multiple times,
+      // skips any that already exist. Runs non-blocking in background.
+      seedDefaultCategories()
+        .then(({ added, skipped }) => {
+          if (added > 0) console.log(`[Servana] Auto-seeded ${added} categories.`);
+        })
+        .catch(err => console.warn("[Servana] Category seed (non-critical):", err));
+    }
+    toast("Account created! Welcome to Servana 🎉", "success", 2200);
+    setTimeout(() => redirect(cred.user), 1600);
+  } catch(err) {
+    const msg = friendlyError(err.code); if (msg) toast(msg, "error");
+  } finally { setLoading($("signupBtn"), false); }
+});
+
+// ── Google ────────────────────────────────────────────
+async function googleAuth() {
+  try {
+    const cred = await signInWithPopup(auth, provider);
+    await ensureUserDoc(cred.user);
+    toast("Signed in with Google! 🎉", "success", 2000);
+    setTimeout(() => redirect(cred.user), 1400);
+  } catch(err) {
+    const msg = friendlyError(err.code); if (msg) toast(msg, "error");
+  }
+}
+$("googleLoginBtn").addEventListener("click",  googleAuth);
+$("googleSignupBtn").addEventListener("click", googleAuth);
+
+// ── Forgot password ───────────────────────────────────
+$("openForgot").addEventListener("click", () => { $("forgotEmail").value = $("loginEmail").value; $("forgotOverlay").classList.add("active"); });
+const closeForgot = () => { $("forgotOverlay").classList.remove("active"); $("forgotEmail").value = ""; };
+$("forgotClose").addEventListener("click", closeForgot);
+$("forgotOverlay").addEventListener("click", e => { if (e.target === $("forgotOverlay")) closeForgot(); });
+
+$("forgotSubmit").addEventListener("click", async () => {
+  const email = $("forgotEmail").value.trim();
+  if (!validEmail(email)) { toast("Please enter a valid email.", "warning"); return; }
+  setLoading($("forgotSubmit"), true);
+  try {
+    await sendPasswordResetEmail(auth, email);
+    toast("Reset link sent! Check your inbox.", "success");
+    closeForgot();
+  } catch(err) { const msg = friendlyError(err.code); if (msg) toast(msg, "error"); }
+  finally { setLoading($("forgotSubmit"), false); }
+});
+
+// ── Enter key support ─────────────────────────────────
+[$("loginEmail"), $("loginPassword")].forEach(el => el?.addEventListener("keydown", e => { if (e.key==="Enter") $("loginBtn").click(); }));
+[$("signupEmail"), $("confirmPassword")].forEach(el => el?.addEventListener("keydown", e => { if (e.key==="Enter") $("signupBtn").click(); }));
+$("forgotEmail")?.addEventListener("keydown", e => { if (e.key==="Enter") $("forgotSubmit").click(); });
+document.addEventListener("keydown", e => { if (e.key==="Escape") closeForgot(); });
+</script>
+</body>
+</html>

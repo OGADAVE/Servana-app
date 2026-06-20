@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Servana — Chat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/styles.css">
+  <style>
+    body{overflow:hidden;height:100vh;display:flex;flex-direction:column}
+    .chat-layout{display:flex;flex:1;overflow:hidden;height:calc(100vh - var(--header-h))}
+    /* Sidebar */
+    .chat-sidebar{width:300px;flex-shrink:0;background:var(--bg-surface);border-right:.5px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+    @media(max-width:639px){.chat-sidebar{width:100%;position:absolute;top:var(--header-h);left:0;right:0;bottom:0;z-index:10;transition:transform .3s var(--ease)}.chat-sidebar.slide-out{transform:translateX(-100%)}}
+    .sidebar-head{padding:16px;border-bottom:.5px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .sidebar-title{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:500;letter-spacing:.5px;color:var(--text-1)}
+    .sidebar-search{padding:10px 16px;border-bottom:.5px solid var(--border)}
+    .sidebar-search input{width:100%;padding:8px 12px 8px 34px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:13px;outline:none}
+    .sidebar-search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,60,225,.10)}
+    .sidebar-search-wrap{position:relative}
+    .sidebar-search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;stroke:var(--text-3);fill:none;stroke-width:2;stroke-linecap:round}
+    .conv-list{flex:1;overflow-y:auto;padding:8px 0}
+    .conv-item{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;transition:background .15s;border-left:3px solid transparent}
+    .conv-item:hover{background:var(--bg-subtle)}
+    .conv-item.active{background:rgba(26,35,126,.06);border-left-color:var(--brand)}
+    .conv-av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--accent));display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0;position:relative}
+    .conv-online{position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;background:var(--success);border:1.5px solid var(--bg-surface)}
+    .conv-info{flex:1;min-width:0}
+    .conv-name{font-size:13px;font-weight:600;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .conv-preview{font-size:11px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+    .conv-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+    .conv-time{font-size:10px;color:var(--text-3)}
+    .conv-unread{width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+    /* Chat view */
+    .chat-view{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg-page)}
+    .chat-no-select{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--text-3)}
+    .chat-no-select svg{width:48px;height:48px;stroke:var(--text-3);fill:none;stroke-width:1.2;opacity:.4}
+    .chat-view-head{background:var(--bg-surface);border-bottom:.5px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:12px}
+    .chat-view-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--accent));display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0}
+    .chat-view-name{font-size:14px;font-weight:700;color:var(--text-1)}
+    .chat-view-status{font-size:11px;color:var(--success);margin-top:1px}
+    .back-btn-mobile{display:none;width:32px;height:32px;border-radius:50%;background:none;border:1px solid var(--border);cursor:pointer;color:var(--text-2);display:flex;align-items:center;justify-content:center;margin-right:4px;transition:background .15s;flex-shrink:0}
+    .back-btn-mobile:hover{background:var(--bg-subtle)}
+    .back-btn-mobile svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round}
+    @media(min-width:640px){.back-btn-mobile{display:none!important}}
+    .messages-area{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+    .msg-row{display:flex;align-items:flex-end;gap:8px}
+    .msg-row.mine{flex-direction:row-reverse}
+    .msg-av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--accent));display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0}
+    .msg-bubble{max-width:72%;padding:10px 14px;border-radius:16px;font-size:13px;line-height:1.5;word-break:break-word;position:relative}
+    .msg-bubble.them{background:var(--bg-surface);border:.5px solid var(--border);color:var(--text-1);border-bottom-left-radius:4px}
+    .msg-bubble.mine{background:linear-gradient(135deg,var(--brand),var(--accent));color:#fff;border-bottom-right-radius:4px}
+    .msg-time{font-size:10px;color:rgba(255,255,255,.6);margin-top:4px;text-align:right}
+    .msg-bubble.them .msg-time{color:var(--text-3)}
+    .msg-date-sep{text-align:center;font-size:11px;color:var(--text-3);font-weight:500;padding:8px 0}
+    .chat-input-area{background:var(--bg-surface);border-top:.5px solid var(--border);padding:12px 16px;display:flex;align-items:flex-end;gap:10px}
+    .chat-input{flex:1;border:1px solid var(--border);border-radius:20px;background:var(--bg-subtle);padding:10px 16px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text-1);outline:none;resize:none;max-height:100px;overflow-y:auto;line-height:1.5;transition:border-color .2s}
+    .chat-input:focus{border-color:var(--accent)}
+    .chat-input::placeholder{color:var(--text-3)}
+    .send-btn{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--accent));border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:opacity .2s,transform .15s;box-shadow:0 3px 10px rgba(108,60,225,.3)}
+    .send-btn:hover{opacity:.88} .send-btn:active{transform:scale(.94)}
+    .send-btn svg{width:17px;height:17px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .send-btn:disabled{opacity:.4;cursor:not-allowed}
+    .typing-indicator{display:flex;align-items:center;gap:4px;padding:4px 0}
+    .typing-dot{width:6px;height:6px;border-radius:50%;background:var(--text-3);animation:typingBounce .9s infinite}
+    .typing-dot:nth-child(2){animation-delay:.15s}
+    .typing-dot:nth-child(3){animation-delay:.30s}
+    @keyframes typingBounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+    .conv-empty{text-align:center;padding:40px 20px;color:var(--text-3)}
+    .conv-empty svg{width:36px;height:36px;stroke:currentColor;fill:none;stroke-width:1.5;opacity:.4;margin:0 auto 10px}
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+<div id="spinner-overlay"><div class="spinner-ring"></div></div>
+
+<!-- Header -->
+<header class="header">
+  <a href="./dashboard.html" class="header-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></a>
+  <div class="header-title">MESSAGES<span>Chat with providers</span></div>
+  <button class="hdr-btn" aria-label="New chat" title="New chat">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+</header>
+
+<div class="chat-layout">
+
+  <!-- Sidebar: conversation list -->
+  <div class="chat-sidebar" id="chatSidebar">
+    <div class="sidebar-head">
+      <span class="sidebar-title">Conversations</span>
+      <span class="sec-pill" id="convCount">0</span>
+    </div>
+    <div class="sidebar-search">
+      <div class="sidebar-search-wrap">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="search" id="convSearch" placeholder="Search conversations…">
+      </div>
+    </div>
+    <div class="conv-list" id="convList">
+      <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+        <div class="skel" style="height:52px;border-radius:8px"></div>
+        <div class="skel" style="height:52px;border-radius:8px"></div>
+        <div class="skel" style="height:52px;border-radius:8px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat view -->
+  <div class="chat-view" id="chatView">
+    <div class="chat-no-select" id="chatNoSelect">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      <p style="font-size:14px;font-weight:600;color:var(--text-2)">Select a conversation</p>
+      <p style="font-size:12px">Choose from your chats to start messaging</p>
+    </div>
+
+    <!-- Active chat (hidden until selected) -->
+    <div id="activeChatWrap" class="hidden" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+      <div class="chat-view-head">
+        <button class="back-btn-mobile" id="backToList">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="chat-view-av" id="chatAvatar"></div>
+        <div>
+          <div class="chat-view-name" id="chatPartnerName">—</div>
+          <div class="chat-view-status" id="chatStatus">● Online</div>
+        </div>
+      </div>
+      <div class="messages-area" id="messagesArea"></div>
+      <div class="chat-input-area">
+        <textarea class="chat-input" id="chatInput" placeholder="Type a message…" rows="1"></textarea>
+        <button class="send-btn" id="sendBtn" aria-label="Send message">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+import { auth, db, toast, esc, initials } from "./assets/firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  collection, doc, query, where, orderBy, limit,
+  onSnapshot, addDoc, updateDoc, serverTimestamp, getDocs, getDoc, setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const $ = id => document.getElementById(id);
+let currentUser = null, activeChatId = null, unsubMessages = null;
+let allConvs = [], convSearch = "";
+
+onAuthStateChanged(auth, user => {
+  if (!user) { location.href = "./login.html"; return; }
+  currentUser = user;
+  loadConversations();
+  // Check for deep link: ?uid=xxx starts chat with that user
+  const uid = new URLSearchParams(location.search).get("uid");
+  if (uid) startChatWith(uid);
+});
+
+// ── Load conversations ────────────────────────────────────
+function loadConversations() {
+  const q = query(
+    collection(db, "chats"),
+    where("participants", "array-contains", currentUser.uid),
+    orderBy("lastMessageAt", "desc")
+  );
+  onSnapshot(q, snap => {
+    allConvs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    $("convCount").textContent = allConvs.length;
+    renderConvList();
+  }, err => {
+    $("convList").innerHTML = `<div style="padding:20px;text-align:center;color:var(--danger);font-size:13px">Failed to load conversations.</div>`;
+  });
+}
+
+function renderConvList(filter = "") {
+  const list = filter
+    ? allConvs.filter(c => {
+        const other = getOtherName(c);
+        return other.toLowerCase().includes(filter.toLowerCase());
+      })
+    : allConvs;
+
+  const el = $("convList");
+  if (!list.length) {
+    el.innerHTML = `<div class="conv-empty"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><p style="font-size:13px;font-weight:600;color:var(--text-2)">No conversations yet</p><p style="font-size:12px;margin-top:4px">Book a service to start chatting</p></div>`;
+    return;
+  }
+  el.innerHTML = list.map(c => {
+    const otherName = getOtherName(c);
+    const ini       = initials(otherName);
+    const preview   = c.lastMessage || "Start a conversation";
+    const time      = c.lastMessageAt?.toDate?.()?.toLocaleTimeString("en-NG",{hour:"2-digit",minute:"2-digit"}) || "";
+    const unread    = (c.unread?.[currentUser.uid] || 0);
+    return `<div class="conv-item${c.id===activeChatId?" active":""}" data-id="${c.id}" data-name="${esc(otherName)}">
+      <div class="conv-av">${ini}<div class="conv-online"></div></div>
+      <div class="conv-info">
+        <div class="conv-name">${esc(otherName)}</div>
+        <div class="conv-preview">${esc(preview)}</div>
+      </div>
+      <div class="conv-meta">
+        <span class="conv-time">${time}</span>
+        ${unread>0?`<span class="conv-unread">${unread}</span>`:""}
+      </div>
+    </div>`;
+  }).join("");
+
+  el.querySelectorAll(".conv-item").forEach(item => {
+    item.addEventListener("click", () => openChat(item.dataset.id, item.dataset.name));
+  });
+}
+
+function getOtherName(conv) {
+  if (!conv.participantNames) return "User";
+  const otherUid = (conv.participants||[]).find(uid => uid !== currentUser.uid);
+  return conv.participantNames[otherUid] || "User";
+}
+
+// ── Search conversations ──────────────────────────────────
+$("convSearch").addEventListener("input", e => renderConvList(e.target.value));
+
+// ── Open chat ─────────────────────────────────────────────
+async function openChat(chatId, partnerName) {
+  if (activeChatId === chatId) return;
+  activeChatId = chatId;
+
+  // Update UI
+  document.querySelectorAll(".conv-item").forEach(i => i.classList.toggle("active", i.dataset.id===chatId));
+  $("chatNoSelect").classList.add("hidden");
+  $("activeChatWrap").classList.remove("hidden");
+  $("chatPartnerName").textContent = partnerName;
+  $("chatAvatar").textContent      = initials(partnerName);
+  $("messagesArea").innerHTML      = `<div style="text-align:center;padding:20px"><div class="skel" style="height:40px;border-radius:12px;margin-bottom:8px;width:60%;margin-left:20%"></div><div class="skel" style="height:40px;border-radius:12px;width:50%;margin-left:auto"></div></div>`;
+
+  // Reset unread
+  try { await updateDoc(doc(db,"chats",chatId), { [`unread.${currentUser.uid}`]: 0 }); } catch(e) {}
+
+  // Mobile: slide sidebar out
+  if (window.innerWidth < 640) $("chatSidebar").classList.add("slide-out");
+
+  // Unsubscribe previous listener
+  if (unsubMessages) { unsubMessages(); unsubMessages = null; }
+
+  // Subscribe to messages
+  const q = query(collection(db,"chats",chatId,"messages"), orderBy("createdAt","asc"), limit(100));
+  unsubMessages = onSnapshot(q, snap => {
+    renderMessages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  });
+}
+
+function renderMessages(messages) {
+  const area = $("messagesArea");
+  if (!messages.length) {
+    area.innerHTML = `<div class="msg-date-sep">Start the conversation 👋</div>`;
+    return;
+  }
+  let lastDate = "";
+  area.innerHTML = messages.map(m => {
+    const mine = m.senderId === currentUser.uid;
+    const time = m.createdAt?.toDate?.()?.toLocaleTimeString("en-NG",{hour:"2-digit",minute:"2-digit"}) || "";
+    const dateStr = m.createdAt?.toDate?.()?.toLocaleDateString("en-NG",{month:"short",day:"numeric"}) || "";
+    let dateSep = "";
+    if (dateStr && dateStr !== lastDate) { lastDate = dateStr; dateSep = `<div class="msg-date-sep">${dateStr}</div>`; }
+    return `${dateSep}
+    <div class="msg-row ${mine?"mine":""}">
+      ${!mine?`<div class="msg-av">${initials(m.senderName||"U")}</div>`:""}
+      <div class="msg-bubble ${mine?"mine":"them"}">
+        ${esc(m.text)}
+        <div class="msg-time">${time}</div>
+      </div>
+    </div>`;
+  }).join("");
+  area.scrollTop = area.scrollHeight;
+}
+
+// ── Send message ──────────────────────────────────────────
+async function sendMessage() {
+  const text = $("chatInput").value.trim();
+  if (!text || !activeChatId) return;
+  $("chatInput").value = "";
+  try {
+    const msg = { senderId: currentUser.uid, senderName: currentUser.displayName||"User", text, createdAt: serverTimestamp(), read: false };
+    await addDoc(collection(db,"chats",activeChatId,"messages"), msg);
+    await updateDoc(doc(db,"chats",activeChatId), {
+      lastMessage: text, lastMessageAt: serverTimestamp()
+    });
+  } catch(e) { toast("Failed to send message.", "error"); $("chatInput").value = text; }
+}
+
+$("sendBtn").addEventListener("click", sendMessage);
+$("chatInput").addEventListener("keydown", e => {
+  if (e.key==="Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+// Auto-resize textarea
+$("chatInput").addEventListener("input", () => {
+  const el = $("chatInput"); el.style.height = "auto"; el.style.height = Math.min(el.scrollHeight,100)+"px";
+});
+
+// Mobile back button
+$("backToList").addEventListener("click", () => {
+  $("chatSidebar").classList.remove("slide-out");
+  $("activeChatWrap").classList.add("hidden");
+  $("chatNoSelect").classList.remove("hidden");
+  activeChatId = null;
+  if (unsubMessages) { unsubMessages(); unsubMessages = null; }
+});
+
+// ── Start chat with a user (from bookings deep link) ──────
+async function startChatWith(otherUid) {
+  if (!currentUser) return;
+  try {
+    // Find existing chat
+    const q    = query(collection(db,"chats"), where("participants","array-contains",currentUser.uid));
+    const snap = await getDocs(q);
+    let chatId = null;
+    snap.docs.forEach(d => {
+      const data = d.data();
+      if ((data.participants||[]).includes(otherUid)) chatId = d.id;
+    });
+    if (!chatId) {
+      // Fetch other user info
+      const otherSnap = await getDoc(doc(db,"users",otherUid));
+      const otherName = otherSnap.exists() ? (otherSnap.data().displayName||"User") : "User";
+      const myName    = currentUser.displayName||"User";
+      const chatRef   = await addDoc(collection(db,"chats"), {
+        participants: [currentUser.uid, otherUid],
+        participantNames: { [currentUser.uid]: myName, [otherUid]: otherName },
+        lastMessage: "", lastMessageAt: serverTimestamp(),
+        unread: { [currentUser.uid]: 0, [otherUid]: 0 }
+      });
+      chatId = chatRef.id;
+    }
+    // Slight delay to let conversations load
+    setTimeout(() => openChat(chatId, allConvs.find(c=>c.id===chatId) ? getOtherName(allConvs.find(c=>c.id===chatId)) : "User"), 1200);
+  } catch(e) { console.error(e); }
+}
+</script>
+</body>
+</html>

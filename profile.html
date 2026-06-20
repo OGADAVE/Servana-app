@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Servana — My Profile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/styles.css">
+  <style>
+    .profile-hero{background:linear-gradient(130deg,var(--brand-deep),var(--brand) 60%,var(--accent));padding:32px 20px 80px;position:relative;overflow:hidden;text-align:center}
+    .profile-hero::before{content:'';position:absolute;width:250px;height:250px;border-radius:50%;top:-60px;right:-40px;background:rgba(255,255,255,.04)}
+    .profile-hero::after{content:'';position:absolute;width:160px;height:160px;border-radius:50%;bottom:-40px;left:20px;background:rgba(255,214,10,.05)}
+    .avatar-wrap{position:relative;display:inline-block;margin-bottom:14px;z-index:1}
+    .avatar-img{width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.4);display:block}
+    .avatar-fallback{width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.18);border:3px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#fff}
+    .avatar-edit-btn{position:absolute;bottom:2px;right:2px;width:28px;height:28px;border-radius:50%;background:var(--gold);border:2.5px solid var(--brand-deep);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s}
+    .avatar-edit-btn:hover{transform:scale(1.1)}
+    .avatar-edit-btn svg{width:13px;height:13px;stroke:var(--brand-deep);fill:none;stroke-width:2.2;stroke-linecap:round}
+    .hero-name{font-size:22px;font-weight:700;color:#fff;position:relative;z-index:1}
+    .hero-role{font-size:13px;color:rgba(255,255,255,.65);margin-top:3px;position:relative;z-index:1}
+    .hero-badges{display:flex;justify-content:center;gap:8px;margin-top:10px;position:relative;z-index:1;flex-wrap:wrap}
+    .hero-badge-pill{font-size:11px;font-weight:600;padding:3px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.8);background:rgba(255,255,255,.1)}
+    .hero-badge-pill.gold{color:var(--gold);border-color:rgba(255,214,10,.3);background:rgba(255,214,10,.1)}
+    /* Stats row floats up from hero */
+    .profile-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;background:var(--bg-surface);border:.5px solid var(--border);border-radius:var(--r-lg);margin-top:-40px;position:relative;z-index:2;box-shadow:var(--shadow-md);overflow:hidden;margin-left:16px;margin-right:16px}
+    .ps-item{padding:16px 10px;text-align:center;border-right:.5px solid var(--border)}
+    .ps-item:last-child{border-right:none}
+    .ps-num{font-size:20px;font-weight:700;color:var(--brand)}
+    .ps-lbl{font-size:10px;color:var(--text-3);font-weight:500;margin-top:3px}
+    /* Tab strip */
+    .profile-tabs{display:flex;border-bottom:.5px solid var(--border);background:var(--bg-surface);margin-top:20px;overflow-x:auto;scrollbar-width:none}
+    .profile-tabs::-webkit-scrollbar{display:none}
+    .ptab{flex:0 0 auto;padding:13px 20px;font-size:13px;font-weight:600;color:var(--text-3);background:none;border:none;cursor:pointer;border-bottom:2.5px solid transparent;transition:color .2s,border-color .2s;white-space:nowrap}
+    .ptab.active{color:var(--brand);border-bottom-color:var(--brand)}
+    /* Form sections */
+    .form-section{background:var(--bg-card);border:.5px solid var(--border);border-radius:var(--r-lg);padding:20px;margin-bottom:18px;box-shadow:var(--shadow-xs)}
+    .fs-title{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:500;color:var(--text-1);letter-spacing:.5px;margin-bottom:16px}
+    .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:480px){.field-grid{grid-template-columns:1fr}}
+    /* Activity list */
+    .activity-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:.5px solid var(--border)}
+    .activity-item:last-child{border-bottom:none}
+    .act-icon{width:36px;height:36px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+    .act-body{flex:1;min-width:0}
+    .act-title{font-size:13px;font-weight:600;color:var(--text-1)}
+    .act-sub{font-size:11px;color:var(--text-3);margin-top:2px}
+    .act-val{font-size:13px;font-weight:700;color:var(--brand);flex-shrink:0}
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+<div id="spinner-overlay"><div class="spinner-ring"></div></div>
+<input type="file" id="photoInput" class="file-hidden" accept="image/*">
+
+<!-- Header -->
+<header class="header">
+  <a href="./dashboard.html" class="header-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></a>
+  <div class="header-title">MY PROFILE<span>Manage your account</span></div>
+  <a href="./settings.html" class="hdr-btn" aria-label="Settings" title="Settings">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+  </a>
+</header>
+
+<!-- Profile hero -->
+<div class="profile-hero">
+  <div class="avatar-wrap">
+    <img id="avatarImg" class="avatar-img" src="" alt="Avatar" onerror="this.style.display='none';document.getElementById('avatarFallback').style.display='flex'">
+    <div id="avatarFallback" class="avatar-fallback" style="display:none">?</div>
+    <label class="avatar-edit-btn" for="photoInput" title="Change photo">
+      <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    </label>
+  </div>
+  <div class="hero-name" id="heroName">Loading…</div>
+  <div class="hero-role" id="heroRole">Servana Member</div>
+  <div class="hero-badges">
+    <span class="hero-badge-pill gold" id="roleLabel">Seeker</span>
+    <span class="hero-badge-pill" id="memberSince">Member</span>
+    <span class="hero-badge-pill" id="verifiedBadge" style="display:none">✓ Verified</span>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="profile-stats" id="profileStats">
+  <div class="ps-item"><div class="ps-num" id="statBookings">—</div><div class="ps-lbl">Bookings</div></div>
+  <div class="ps-item"><div class="ps-num" id="statCompleted">—</div><div class="ps-lbl">Completed</div></div>
+  <div class="ps-item"><div class="ps-num" id="statRating">—</div><div class="ps-lbl">Avg Rating</div></div>
+</div>
+
+<!-- Tabs -->
+<div class="profile-tabs" role="tablist">
+  <button class="ptab active" data-tab="info">Personal Info</button>
+  <button class="ptab" data-tab="activity">Recent Activity</button>
+  <button class="ptab" data-tab="security">Security</button>
+</div>
+
+<div class="page-sm" style="padding-top:20px">
+
+  <!-- INFO TAB -->
+  <div class="tab-panel active" id="tab-info">
+    <div class="form-section">
+      <div class="fs-title">Personal Information</div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="field-grid">
+          <div class="field"><label>First Name</label><input type="text" id="firstName" placeholder="Ada"></div>
+          <div class="field"><label>Last Name</label><input type="text" id="lastName" placeholder="Okafor"></div>
+        </div>
+        <div class="field"><label>Email Address</label><input type="email" id="email" placeholder="you@email.com" readonly style="opacity:.6;cursor:not-allowed"></div>
+        <div class="field"><label>Phone Number</label><input type="tel" id="phone" placeholder="+234 801 234 5678"></div>
+        <div class="field">
+          <label>City</label>
+          <select id="city">
+            <option value="">Select city</option>
+            <option>Abuja</option><option>Lagos</option><option>Port Harcourt</option>
+            <option>Ibadan</option><option>Kano</option><option>Enugu</option><option>Benin City</option>
+          </select>
+        </div>
+        <div class="field"><label>Bio (optional)</label><textarea id="bio" placeholder="Tell us a little about yourself…"></textarea></div>
+        <button class="btn btn-primary" id="saveInfoBtn" style="align-self:flex-start">
+          <span class="btn-text">Save Changes</span>
+          <span class="btn-spin-wrap"><div class="btn-spin"></div></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="fs-title">Profile Photo</div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <img id="photoPreview" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--border)" src="" alt="Preview" onerror="this.style.display='none'">
+        <div>
+          <label for="photoInput" class="btn btn-secondary btn-sm" style="display:inline-flex;align-items:center;gap:7px;cursor:pointer">
+            <svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Change Photo
+          </label>
+          <p style="font-size:11px;color:var(--text-3);margin-top:6px">JPG or PNG · Max 5MB</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIVITY TAB -->
+  <div class="tab-panel hidden" id="tab-activity">
+    <div class="form-section">
+      <div class="fs-title">Recent Bookings</div>
+      <div id="recentActivity">
+        <div class="skel" style="height:48px;margin-bottom:8px;border-radius:8px"></div>
+        <div class="skel" style="height:48px;margin-bottom:8px;border-radius:8px"></div>
+        <div class="skel" style="height:48px;border-radius:8px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECURITY TAB -->
+  <div class="tab-panel hidden" id="tab-security">
+    <div class="form-section">
+      <div class="fs-title">Change Password</div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="field">
+          <label>New Password</label>
+          <div class="input-wrap">
+            <svg class="i-icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <input type="password" id="newPassword" placeholder="At least 8 characters">
+          </div>
+        </div>
+        <div class="field">
+          <label>Confirm New Password</label>
+          <div class="input-wrap">
+            <svg class="i-icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <input type="password" id="confirmNewPw" placeholder="Repeat password">
+          </div>
+        </div>
+        <button class="btn btn-primary" id="changePwBtn" style="align-self:flex-start">
+          <span class="btn-text">Update Password</span>
+          <span class="btn-spin-wrap"><div class="btn-spin"></div></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="form-section" style="border-color:rgba(220,38,38,.2)">
+      <div class="fs-title" style="color:var(--danger)">Danger Zone</div>
+      <p style="font-size:13px;color:var(--text-2);margin-bottom:14px;line-height:1.6">Permanently delete your account and all associated data. This action cannot be undone.</p>
+      <button class="btn btn-danger" id="deleteAccBtn">Delete My Account</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Bottom nav -->
+<nav class="bottom-nav">
+  <button class="nav-btn" onclick="location.href='./dashboard.html'"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></button>
+  <button class="nav-btn" onclick="location.href='./seeker.html'"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Find</span></button>
+  <button class="nav-btn" onclick="location.href='./bookings.html'"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Bookings</span></button>
+  <button class="nav-btn" onclick="location.href='./chat.html'"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span>Chat</span></button>
+  <button class="nav-btn active"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg><span>Profile</span></button>
+</nav>
+
+<script type="module">
+import { auth, db, storage, toast, showSpinner, hideSpinner, esc, formatNGN, initials, setLoading } from "./assets/firebase.js";
+import { onAuthStateChanged, updateProfile, updatePassword, deleteUser, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { doc, getDoc, setDoc, getDocs, collection, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+const $ = id => document.getElementById(id);
+let currentUser = null, userData = {};
+
+onAuthStateChanged(auth, async user => {
+  if (!user) { location.href = "./login.html"; return; }
+  currentUser = user;
+  await loadProfile();
+  await loadActivity();
+});
+
+async function loadProfile() {
+  try {
+    const snap = await getDoc(doc(db, "users", currentUser.uid));
+    userData   = snap.exists() ? snap.data() : {};
+
+    const name   = currentUser.displayName || userData.displayName || "Friend";
+    const parts  = name.split(" ");
+    const avatar = currentUser.photoURL || userData.photoURL || "";
+
+    // Hero
+    $("heroName").textContent  = name;
+    $("heroRole").textContent  = userData.role || "Servana Member";
+    $("roleLabel").textContent = userData.role === "provider" ? "Provider" : "Seeker";
+    const created = userData.createdAt?.toDate?.();
+    if (created) $("memberSince").textContent = `Member since ${created.toLocaleString("default",{month:"short",year:"numeric"})}`;
+    if (userData.verified) $("verifiedBadge").style.display = "inline";
+
+    // Avatar
+    if (avatar) { $("avatarImg").src = avatar; $("avatarImg").style.display = "block"; $("avatarFallback").style.display = "none"; $("photoPreview").src = avatar; }
+    else { $("avatarFallback").textContent = initials(name); $("avatarFallback").style.display = "flex"; }
+
+    // Form fields
+    $("firstName").value = parts[0] || "";
+    $("lastName").value  = parts.slice(1).join(" ") || "";
+    $("email").value     = currentUser.email || "";
+    $("phone").value     = userData.phone || "";
+    $("city").value      = userData.city || "";
+    $("bio").value       = userData.bio || "";
+
+  } catch(e) { toast("Failed to load profile.", "error"); }
+}
+
+async function loadActivity() {
+  try {
+    const q    = query(collection(db,"bookings"), where("seekerId","==",currentUser.uid));
+    const snap = await getDocs(q);
+    const bookings  = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const completed = bookings.filter(b => b.status==="completed");
+    const ratings   = completed.filter(b => b.reviewed);
+
+    $("statBookings").textContent  = bookings.length;
+    $("statCompleted").textContent = completed.length;
+    $("statRating").textContent    = ratings.length ? "4.8★" : "—";
+
+    // Recent activity
+    const recent = [...bookings].sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).slice(0,5);
+    const actEl  = $("recentActivity");
+    if (!recent.length) {
+      actEl.innerHTML = `<div class="empty-state" style="padding:32px 0"><div class="empty-icon">📋</div><p class="empty-title">No activity yet</p><p class="empty-sub"><a href="./seeker.html" style="color:var(--accent);font-weight:600">Find a service →</a></p></div>`;
+      return;
+    }
+    const STATUS_ICON = { pending:"⏳", accepted:"✅", completed:"🏆", cancelled:"🚫" };
+    const STATUS_BG   = { pending:"rgba(217,119,6,.08)", accepted:"rgba(41,98,255,.08)", completed:"rgba(22,163,74,.08)", cancelled:"rgba(220,38,38,.06)" };
+    actEl.innerHTML = recent.map(b => `
+      <div class="activity-item">
+        <div class="act-icon" style="background:${STATUS_BG[b.status]||"var(--bg-subtle)"}">${STATUS_ICON[b.status]||"📋"}</div>
+        <div class="act-body">
+          <div class="act-title">${esc(b.service||"Service")} · ${esc(b.providerName||"Provider")}</div>
+          <div class="act-sub">${esc(b.date||"")} ${b.status.charAt(0).toUpperCase()+b.status.slice(1)}</div>
+        </div>
+        <div class="act-val">${formatNGN(b.total||b.serviceFee||0)}</div>
+      </div>`).join("");
+  } catch(e) {}
+}
+
+// ── Tabs ─────────────────────────────────────────────────
+document.querySelectorAll(".ptab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".ptab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach(p => { p.classList.add("hidden"); p.classList.remove("active"); });
+    tab.classList.add("active");
+    const panel = $(`tab-${tab.dataset.tab}`);
+    if (panel) { panel.classList.remove("hidden"); panel.classList.add("active"); }
+  });
+});
+
+// ── Save personal info ────────────────────────────────────
+$("saveInfoBtn").addEventListener("click", async () => {
+  const first = $("firstName").value.trim();
+  const last  = $("lastName").value.trim();
+  if (!first) { toast("First name is required.", "warning"); return; }
+  setLoading($("saveInfoBtn"), true);
+  try {
+    const fullName = `${first} ${last}`.trim();
+    await updateProfile(currentUser, { displayName: fullName });
+    await setDoc(doc(db,"users",currentUser.uid), {
+      displayName: fullName, phone: $("phone").value.trim(),
+      city: $("city").value, bio: $("bio").value.trim(), updatedAt: serverTimestamp()
+    }, { merge: true });
+    $("heroName").textContent = fullName;
+    toast("Profile saved!", "success");
+  } catch(e) { toast("Failed to save. Try again.", "error"); }
+  finally { setLoading($("saveInfoBtn"), false); }
+});
+
+// ── Photo upload ──────────────────────────────────────────
+$("photoInput").addEventListener("change", async () => {
+  const file = $("photoInput").files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) { toast("Select an image file.", "warning"); return; }
+  if (file.size > 5*1024*1024) { toast("Image must be under 5MB.", "warning"); return; }
+  try {
+    showSpinner();
+    const r   = ref(storage, `users/${currentUser.uid}/profile-photo`);
+    await uploadBytes(r, file);
+    const url = await getDownloadURL(r);
+    await updateProfile(currentUser, { photoURL: url });
+    await setDoc(doc(db,"users",currentUser.uid), { photoURL: url }, { merge: true });
+    $("avatarImg").src = url; $("avatarImg").style.display = "block";
+    $("avatarFallback").style.display = "none";
+    $("photoPreview").src = url;
+    toast("Photo updated!", "success");
+  } catch(e) { toast("Upload failed.", "error"); }
+  finally { hideSpinner(); $("photoInput").value = ""; }
+});
+
+// ── Change password ───────────────────────────────────────
+$("changePwBtn").addEventListener("click", async () => {
+  const pw1 = $("newPassword").value;
+  const pw2 = $("confirmNewPw").value;
+  if (pw1.length < 8) { toast("Password must be at least 8 characters.", "warning"); return; }
+  if (pw1 !== pw2)    { toast("Passwords do not match.", "warning"); return; }
+  setLoading($("changePwBtn"), true);
+  try {
+    await updatePassword(currentUser, pw1);
+    $("newPassword").value = ""; $("confirmNewPw").value = "";
+    toast("Password updated successfully!", "success");
+  } catch(e) {
+    if (e.code === "auth/requires-recent-login") toast("Please log out and log back in before changing your password.", "warning");
+    else toast("Failed to update password.", "error");
+  } finally { setLoading($("changePwBtn"), false); }
+});
+
+// ── Delete account ────────────────────────────────────────
+$("deleteAccBtn").addEventListener("click", async () => {
+  const confirmed = confirm("Are you absolutely sure? This will permanently delete your account and all data. This cannot be undone.");
+  if (!confirmed) return;
+  try {
+    showSpinner();
+    await deleteUser(currentUser);
+    location.href = "./index.html";
+  } catch(e) {
+    hideSpinner();
+    if (e.code === "auth/requires-recent-login") toast("Please log out and log back in before deleting your account.", "warning");
+    else toast("Failed to delete account.", "error");
+  }
+});
+</script>
+</body>
+</html>

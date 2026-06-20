@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Servana — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/styles.css">
+  <style>
+    .role-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+    @media(max-width:480px){.role-cards{grid-template-columns:1fr}}
+    .role-card{border-radius:var(--r-xl);border:1px solid var(--border);padding:24px;cursor:pointer;overflow:hidden;position:relative;transition:transform .22s var(--ease),box-shadow .22s,border-color .22s}
+    .role-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+    .role-card:active{transform:translateY(0)}
+    .role-card.seeker{background:linear-gradient(135deg,#0F1C3F,#0A2463)}
+    .role-card.seeker:hover{border-color:rgba(41,98,255,.5)}
+    .role-card.provider{background:linear-gradient(135deg,#1A0F2E,#2D1B69)}
+    .role-card.provider:hover{border-color:rgba(139,92,246,.5)}
+    .rc-icon{font-size:30px;margin-bottom:12px}
+    .rc-badge{position:absolute;top:16px;right:16px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:12px}
+    .seeker .rc-badge{background:rgba(41,98,255,.2);color:#60A5FA;border:1px solid rgba(41,98,255,.3)}
+    .provider .rc-badge{background:rgba(139,92,246,.2);color:#A78BFA;border:1px solid rgba(139,92,246,.3)}
+    .rc-title{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700;color:#fff;margin-bottom:6px}
+    .rc-desc{font-size:12px;color:rgba(255,255,255,.6);line-height:1.5}
+    .rc-cta{font-size:12px;font-weight:600;color:rgba(255,255,255,.5);margin-top:14px;transition:color .2s,gap .2s;display:flex;align-items:center;gap:4px}
+    .role-card:hover .rc-cta{color:rgba(255,255,255,.9);gap:8px}
+    .cats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+    .cat-card{background:var(--bg-card);border:.5px solid var(--border);border-radius:var(--r-md);padding:16px 10px 14px;text-align:center;cursor:pointer;transition:transform .22s var(--ease),box-shadow .22s,border-color .22s;display:flex;flex-direction:column;align-items:center;gap:8px;box-shadow:var(--shadow-xs)}
+    .cat-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color:var(--border-hover)}
+    .cat-card .ci{width:46px;height:46px;border-radius:var(--r-sm);background:linear-gradient(135deg,rgba(26,35,126,.06),rgba(108,60,225,.08));display:flex;align-items:center;justify-content:center;font-size:22px;transition:transform .22s var(--ease)}
+    .cat-card:hover .ci{transform:scale(1.12)}
+    .cat-name{font-size:12px;font-weight:600;color:var(--text-1);line-height:1.3}
+    .cat-skel{background:var(--bg-card);border:.5px solid var(--border);border-radius:var(--r-md);padding:16px 10px 14px;display:flex;flex-direction:column;align-items:center;gap:10px}
+    .results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+    .res-card{background:var(--bg-card);border:.5px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;transition:transform .2s,box-shadow .2s;box-shadow:var(--shadow-xs)}
+    .res-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+<div id="spinner-overlay"><div class="spinner-ring"></div></div>
+
+<!-- Header -->
+<header class="header" role="banner">
+  <div class="header-logo" onclick="location.href='./index.html'" style="cursor:pointer">
+    <img src="./assets/images/logo.png" alt="Servana" onerror="this.style.display='none'">
+    <span class="header-logo-text">SERVANA</span>
+  </div>
+  <div class="header-spacer"></div>
+  <button class="hdr-btn" aria-label="Notifications" onclick="location.href='./bookings.html'">
+    <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+    <span class="notif-dot" id="notifDot" style="display:none"></span>
+  </button>
+  <div class="profile-wrap" id="profileWrap">
+    <div class="profile-trigger" id="profileTrigger" tabindex="0" aria-haspopup="true" aria-expanded="false">
+      <img id="profilePic" src="./assets/images/avatar.png" alt="Avatar" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Ccircle cx=%2212%22 cy=%228%22 r=%224%22 fill=%22%23fff%22/%3E%3Cpath d=%22M4 20c0-4 3.6-7 8-7s8 3 8 7%22 fill=%22%23fff%22/%3E%3C/svg%3E'">
+      <span class="p-name" id="userName">…</span>
+      <svg class="p-caret" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="dropdown" id="dropdown">
+      <div class="dd-head"><div class="dd-name" id="ddName">—</div><div class="dd-email" id="ddEmail">—</div></div>
+      <a href="./profile.html" class="dd-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>My Profile</a>
+      <a href="./bookings.html" class="dd-item"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>My Bookings</a>
+      <a href="./settings.html" class="dd-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Settings</a>
+      <div class="dd-divider"></div>
+      <label class="dd-item" for="photoInput" style="cursor:pointer"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Update Photo</label>
+      <input type="file" id="photoInput" class="file-hidden" accept="image/*">
+      <div class="dd-divider"></div>
+      <button class="dd-item danger" id="logoutBtn"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Log Out</button>
+    </div>
+  </div>
+</header>
+
+<main class="page" role="main">
+
+  <!-- Welcome banner -->
+  <div class="welcome-banner" style="position:relative;z-index:1">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;position:relative;z-index:1;margin-bottom:18px">
+      <div>
+        <p style="font-size:12px;font-weight:500;color:rgba(255,255,255,.65);margin-bottom:3px" id="greetingText">Welcome back</p>
+        <h1 style="font-size:clamp(18px,4vw,24px);font-weight:700;color:#fff" id="welcomeName">Loading…</h1>
+        <p style="font-size:12px;color:rgba(255,255,255,.55);font-style:italic;margin-top:3px">Your personal service genie. Fast help. No stress.</p>
+      </div>
+      <img id="welcomeAvatar" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2.5px solid rgba(255,255,255,.35);flex-shrink:0" src="./assets/images/avatar.png" alt="Avatar" onerror="this.style.display='none'">
+    </div>
+    <div class="role-cards" style="margin-bottom:0">
+      <div class="role-card seeker" onclick="location.href='./seeker.html'">
+        <span class="rc-badge">For Clients</span>
+        <div class="rc-icon">🔍</div>
+        <div class="rc-title">Seeker Mode</div>
+        <div class="rc-desc">Find trusted local professionals for any job, instantly.</div>
+        <div class="rc-cta">Browse services →</div>
+      </div>
+      <div class="role-card provider" onclick="location.href='./provider.html'">
+        <span class="rc-badge">For Pros</span>
+        <div class="rc-icon">💼</div>
+        <div class="rc-title">Provider Mode</div>
+        <div class="rc-desc">Offer your skills, get booked, and grow your income.</div>
+        <div class="rc-cta">Start offering →</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-bar">
+    <div class="search-field">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-input" type="search" id="searchInput" placeholder="Search services (e.g. Plumber, Barber…)" autocomplete="off">
+    </div>
+    <select class="loc-select" id="locationSelect">
+      <option value="">All Cities</option>
+      <option>Abuja</option><option>Lagos</option><option>Port Harcourt</option>
+      <option>Ibadan</option><option>Kano</option><option>Enugu</option><option>Benin City</option>
+    </select>
+    <button class="btn btn-primary" id="searchBtn">Search</button>
+    <button class="btn btn-secondary" id="clearBtn">Clear</button>
+  </div>
+
+  <!-- Search results (hidden by default) -->
+  <section id="resultsSection" class="hidden" style="margin-bottom:22px">
+    <div class="sec-head">
+      <div><h2 class="sec-title">Search Results</h2><p class="sec-sub" id="resultsSub"></p></div>
+      <span class="sec-pill" id="resultsCount"></span>
+    </div>
+    <div class="results-grid" id="resultsGrid"></div>
+  </section>
+
+  <!-- Categories -->
+  <section id="categoriesSection">
+    <div class="sec-head">
+      <div><h2 class="sec-title">Service Categories</h2><p class="sec-sub">Browse all available services</p></div>
+      <span class="sec-pill" id="catCount"></span>
+    </div>
+    <div class="cats-grid" id="catsGrid">
+      <div class="cat-skel"><div class="skel" style="width:46px;height:46px;border-radius:8px"></div><div class="skel" style="width:75%;height:11px"></div></div>
+      <div class="cat-skel"><div class="skel" style="width:46px;height:46px;border-radius:8px"></div><div class="skel" style="width:65%;height:11px"></div></div>
+      <div class="cat-skel"><div class="skel" style="width:46px;height:46px;border-radius:8px"></div><div class="skel" style="width:80%;height:11px"></div></div>
+      <div class="cat-skel"><div class="skel" style="width:46px;height:46px;border-radius:8px"></div><div class="skel" style="width:70%;height:11px"></div></div>
+      <div class="cat-skel"><div class="skel" style="width:46px;height:46px;border-radius:8px"></div><div class="skel" style="width:78%;height:11px"></div></div>
+      <div class="cat-skel"><div class="skel" style="width:46px;height:46px;border-radius:8px"></div><div class="skel" style="width:60%;height:11px"></div></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Bottom nav -->
+<nav class="bottom-nav">
+  <button class="nav-btn active"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></button>
+  <button class="nav-btn" onclick="location.href='./seeker.html'"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Find</span></button>
+  <button class="nav-btn" onclick="location.href='./bookings.html'"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Bookings</span></button>
+  <button class="nav-btn" onclick="location.href='./chat.html'"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span>Chat</span></button>
+  <button class="nav-btn" onclick="location.href='./profile.html'"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg><span>Profile</span></button>
+</nav>
+
+<script type="module">
+import { auth, db, toast, showSpinner, hideSpinner, greeting, esc, initProfileDropdown, debounce } from "./assets/firebase.js";
+import { onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { doc, getDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+import { storage } from "./assets/firebase.js";
+
+const $ = id => document.getElementById(id);
+let services = [], catsReady = false;
+
+initProfileDropdown();
+
+onAuthStateChanged(auth, async user => {
+  if (!user) { location.href = "./login.html"; return; }
+  const name = user.displayName || "Friend";
+  $("greetingText").textContent  = greeting();
+  $("welcomeName").textContent   = name;
+  $("userName").textContent      = name.split(" ")[0];
+  $("ddName").textContent        = name;
+  $("ddEmail").textContent       = user.email || "";
+  if (user.photoURL) { $("profilePic").src = user.photoURL; $("welcomeAvatar").src = user.photoURL; }
+
+  // Check for pending bookings
+  try {
+    const snap = await getDocs(collection(db, "bookings"));
+    const pending = snap.docs.filter(d => d.data().seekerId === user.uid && d.data().status === "pending");
+    if (pending.length > 0) $("notifDot").style.display = "block";
+  } catch(e) {}
+
+  await Promise.all([loadCategories(), loadServices()]);
+});
+
+$("logoutBtn").addEventListener("click", async () => {
+  try { showSpinner(); await signOut(auth); location.href = "./login.html"; }
+  catch(e) { hideSpinner(); toast("Logout failed.", "error"); }
+});
+
+$("photoInput").addEventListener("change", async () => {
+  const file = $("photoInput").files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) { toast("Please select an image.", "warning"); return; }
+  if (file.size > 5*1024*1024) { toast("Image must be under 5MB.", "warning"); return; }
+  const user = auth.currentUser; if (!user) return;
+  try {
+    showSpinner();
+    const r = ref(storage, `users/${user.uid}/profile-photo`);
+    await uploadBytes(r, file);
+    const url = await getDownloadURL(r);
+    await updateProfile(user, { photoURL: url });
+    await updateDoc(doc(db, "users", user.uid), { photoURL: url });
+    $("profilePic").src = url; $("welcomeAvatar").src = url;
+    document.getElementById("profileWrap").classList.remove("open");
+    toast("Photo updated!", "success");
+  } catch(e) { toast("Upload failed.", "error"); }
+  finally { hideSpinner(); $("photoInput").value = ""; }
+});
+
+async function loadCategories() {
+  if (catsReady) return;
+  try {
+    const snap = await getDocs(collection(db, "category"));
+    if (snap.empty) { $("catsGrid").innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📂</div><p class="empty-title">No categories yet</p></div>`; return; }
+    $("catCount").textContent = `${snap.size} categories`;
+    $("catsGrid").innerHTML = snap.docs.map(d => {
+      const c = d.data();
+      return `<div class="cat-card" tabindex="0" data-cat="${encodeURIComponent(c.name||'')}"><div class="ci">${c.icon||"📂"}</div><span class="cat-name">${esc(c.name||"")}</span></div>`;
+    }).join("");
+    $("catsGrid").addEventListener("click", e => {
+      const card = e.target.closest(".cat-card");
+      if (card) location.href = `./category.html?cat=${card.dataset.cat}`;
+    });
+    catsReady = true;
+  } catch(e) {
+    $("catsGrid").innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--danger)">Failed to load categories. <button onclick="loadCategories()" style="color:var(--accent);background:none;border:none;cursor:pointer;font-weight:600">Retry</button></div>`;
+  }
+}
+
+async function loadServices() {
+  try {
+    const snap = await getDocs(collection(db, "services"));
+    services = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch(e) {}
+}
+
+function runSearch() {
+  const kw  = $("searchInput").value.trim().toLowerCase();
+  const loc = $("locationSelect").value.toLowerCase();
+  if (!kw && !loc) { showCats(); return; }
+  const filtered = services.filter(s => {
+    const matchLoc = !loc || (s.location||"").toLowerCase().includes(loc);
+    const matchKw  = !kw || [s.name,s.description,s.location].some(f => f?.toLowerCase().includes(kw));
+    return matchLoc && matchKw;
+  });
+  showResults(filtered, kw, loc);
+}
+
+function showResults(list, kw, loc) {
+  $("resultsSection").classList.remove("hidden");
+  $("categoriesSection").classList.add("hidden");
+  const parts = []; if (kw) parts.push(`"${kw}"`); if (loc) parts.push(`in ${loc}`);
+  $("resultsSub").textContent  = parts.length ? `Results for ${parts.join(" ")}` : "";
+  $("resultsCount").textContent = `${list.length} result${list.length!==1?"s":""}`;
+  if (!list.length) {
+    $("resultsGrid").innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🔍</div><p class="empty-title">No services found</p><p class="empty-sub">Try a different keyword or location.</p></div>`;
+    return;
+  }
+  $("resultsGrid").innerHTML = list.map(s => `
+    <div class="res-card" onclick="location.href='./seeker.html'">
+      <div style="font-size:24px;margin-bottom:8px">🛠️</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px">${esc(s.name||"Service")}</div>
+      ${s.description?`<div style="font-size:12px;color:var(--text-2);margin-bottom:6px">${esc(s.description)}</div>`:""}
+      ${s.location?`<div style="font-size:11px;color:var(--text-3)">📍 ${esc(s.location)}</div>`:""}
+    </div>`).join("");
+}
+
+function showCats() {
+  $("resultsSection").classList.add("hidden");
+  $("categoriesSection").classList.remove("hidden");
+  $("searchInput").value = ""; $("locationSelect").value = "";
+}
+
+$("searchBtn").addEventListener("click", runSearch);
+$("clearBtn").addEventListener("click", showCats);
+$("searchInput").addEventListener("keydown", e => { if (e.key==="Enter") runSearch(); });
+$("searchInput").addEventListener("input", debounce(() => { if (!$("searchInput").value.trim() && !$("locationSelect").value) showCats(); else runSearch(); }));
+$("locationSelect").addEventListener("change", runSearch);
+</script>
+</body>
+</html>

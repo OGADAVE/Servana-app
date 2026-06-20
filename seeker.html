@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Servana — Find a Service</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/styles.css">
+  <style>
+    .hero-search{background:linear-gradient(130deg,var(--brand-deep) 0%,var(--brand) 55%,var(--accent) 100%);padding:28px 20px 32px;position:relative;overflow:hidden}
+    .hero-search::before{content:'';position:absolute;width:300px;height:300px;border-radius:50%;top:-80px;right:-60px;background:rgba(255,255,255,.04);pointer-events:none}
+    .hs-text{text-align:center;color:#fff;margin-bottom:20px;position:relative;z-index:1}
+    .hs-badge{display:inline-block;font-size:11px;font-weight:600;color:var(--gold);background:rgba(255,214,10,.12);border:1px solid rgba(255,214,10,.22);padding:3px 12px;border-radius:20px;margin-bottom:10px}
+    .hs-heading{font-size:clamp(20px,4vw,28px);font-weight:700;line-height:1.25}
+    .hs-sub{font-size:13px;color:rgba(255,255,255,.60);margin-top:5px}
+    .hs-bar{background:var(--bg-surface);border-radius:var(--r-lg);padding:6px;display:flex;gap:6px;align-items:center;box-shadow:var(--shadow-lg);position:relative;z-index:1;max-width:680px;margin:0 auto;flex-wrap:wrap}
+    .hsb-field{flex:1;min-width:160px;display:flex;align-items:center;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);overflow:hidden}
+    .hsb-icon{padding:0 10px;display:flex;align-items:center;flex-shrink:0}
+    .hsb-icon svg{width:16px;height:16px;stroke:var(--text-3);fill:none;stroke-width:2;stroke-linecap:round}
+    .hsb-input{flex:1;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text-1);outline:none;padding:10px 8px 10px 0}
+    .hsb-input::placeholder{color:var(--text-3)}
+    .hsb-div{width:1px;height:28px;background:var(--border);flex-shrink:0}
+    .hsb-loc{display:flex;align-items:center;gap:6px;padding:0 10px;flex-shrink:0}
+    .hsb-loc svg{width:14px;height:14px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round}
+    .hsb-loc select{border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--text-2);cursor:pointer;outline:none;max-width:110px}
+    .stats-strip{display:flex;background:var(--bg-surface);border-bottom:.5px solid var(--border);overflow-x:auto;scrollbar-width:none}
+    .stats-strip::-webkit-scrollbar{display:none}
+    .ss-item{flex:1;min-width:90px;padding:12px 16px;text-align:center;border-right:.5px solid var(--border)}
+    .ss-item:last-child{border-right:none}
+    .ss-num{font-size:17px;font-weight:700;color:var(--brand)}
+    .ss-lbl{font-size:10px;color:var(--text-3);margin-top:2px;font-weight:500}
+    .filter-row{display:flex;gap:8px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+    .filter-lbl{font-size:12px;font-weight:600;color:var(--text-3)}
+    .fchip{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg-card);font-size:12px;font-weight:500;color:var(--text-2);cursor:pointer;transition:all .18s}
+    .fchip:hover{border-color:var(--border-hover);color:var(--text-1)}
+    .fchip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .sort-sel{margin-left:auto;padding:6px 12px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-card);color:var(--text-2);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;outline:none}
+    .providers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px}
+    @media(max-width:480px){.providers-grid{grid-template-columns:1fr}}
+    @media(min-width:481px)and(max-width:767px){.providers-grid{grid-template-columns:1fr 1fr}}
+    .pc-top{padding:16px 16px 0;display:flex;align-items:flex-start;gap:12px}
+    .pc-av-wrap{position:relative;flex-shrink:0}
+    .pc-av{width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--border);background:linear-gradient(135deg,var(--brand),var(--accent));display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700}
+    .pc-online{position:absolute;bottom:2px;right:2px;width:12px;height:12px;border-radius:50%;background:var(--success);border:2px solid var(--bg-card)}
+    .pc-verified{position:absolute;top:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:var(--info);border:2px solid var(--bg-card);display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff}
+    .pc-info{flex:1;min-width:0}
+    .pc-name{font-size:15px;font-weight:700;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .pc-role{font-size:12px;color:var(--text-2);margin-top:1px}
+    .pc-stars{display:flex;align-items:center;gap:4px;margin-top:5px}
+    .pc-rnum{font-size:12px;font-weight:600;color:var(--text-1)}
+    .pc-rv{font-size:11px;color:var(--text-3)}
+    .pc-body{padding:12px 16px;flex:1}
+    .pc-desc{font-size:12.5px;color:var(--text-2);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:10px}
+    .pc-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+    .pc-tag{font-size:10px;font-weight:500;color:var(--accent);background:rgba(108,60,225,.07);border:1px solid rgba(108,60,225,.14);padding:2px 8px;border-radius:10px}
+    .pc-meta{display:flex;gap:12px;align-items:center;font-size:11px;color:var(--text-3)}
+    .pc-meta-item{display:flex;align-items:center;gap:4px}
+    .pc-meta-item svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2}
+    .pc-foot{padding:12px 16px;border-top:.5px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .pc-price{font-size:16px;font-weight:700;color:var(--brand);line-height:1}
+    .pc-price span{font-size:10px;font-weight:400;color:var(--text-3);display:block;margin-top:1px}
+    .skel-card{background:var(--bg-card);border:.5px solid var(--border);border-radius:var(--r-lg);padding:16px;display:flex;flex-direction:column;gap:10px}
+    /* Booking modal styles */
+    .svc-opt{padding:8px 14px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:var(--bg-subtle);font-size:13px;font-weight:500;color:var(--text-2);cursor:pointer;transition:all .18s}
+    .svc-opt:hover{border-color:var(--border-hover);color:var(--text-1)}
+    .svc-opt.sel{border-color:var(--accent);background:rgba(108,60,225,.06);color:var(--accent)}
+    .dt-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .price-sum{background:var(--bg-subtle);border:.5px solid var(--border);border-radius:var(--r-md);padding:14px 16px}
+    .ps-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px}
+    .ps-row:last-child{margin-bottom:0}
+    .ps-lbl{color:var(--text-2)} .ps-val{font-weight:600;color:var(--text-1)}
+    .ps-divider{height:.5px;background:var(--border);margin:8px 0}
+    .ps-total .ps-lbl{font-weight:700;color:var(--text-1);font-size:14px}
+    .ps-total .ps-val{font-size:16px;color:var(--brand)}
+    .booking-success{text-align:center;padding:20px 10px}
+    .success-anim{font-size:64px;animation:popIn .5s var(--ease) both;margin-bottom:16px}
+    @keyframes popIn{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+    .booking-ref{background:var(--bg-subtle);border:.5px solid var(--border);border-radius:var(--r-md);padding:14px 16px;font-size:13px;color:var(--text-2);margin-bottom:24px;line-height:1.7}
+    .booking-ref strong{color:var(--text-1);font-weight:700}
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+<div id="spinner-overlay"><div class="spinner-ring"></div></div>
+
+<!-- Header -->
+<header class="header">
+  <a href="./dashboard.html" class="header-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></a>
+  <div class="header-title">SEEKER MODE<span>Find trusted service providers</span></div>
+  <button class="hdr-btn" id="filterBtn" aria-label="Filters"><svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg></button>
+</header>
+
+<!-- Hero search -->
+<div class="hero-search">
+  <div class="hs-text">
+    <span class="hs-badge">⚡ Fast Help. No Stress.</span>
+    <h1 class="hs-heading">Find Your Service Provider</h1>
+    <p class="hs-sub">Trusted professionals, ready when you are.</p>
+  </div>
+  <div class="hs-bar" role="search">
+    <div class="hsb-field">
+      <div class="hsb-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+      <input class="hsb-input" type="search" id="searchInput" placeholder="e.g. Plumber, Barber, Electrician…" autocomplete="off">
+    </div>
+    <div class="hsb-div"></div>
+    <div class="hsb-loc">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      <select id="locationSelect">
+        <option value="">All Cities</option>
+        <option>Abuja</option><option>Lagos</option><option>Port Harcourt</option>
+        <option>Ibadan</option><option>Kano</option><option>Enugu</option><option>Benin City</option>
+      </select>
+    </div>
+    <button class="btn btn-accent btn-sm" id="searchBtn" style="border-radius:var(--r-sm)">Search</button>
+  </div>
+</div>
+
+<!-- Stats strip -->
+<div class="stats-strip">
+  <div class="ss-item"><div class="ss-num" id="statProv">—</div><div class="ss-lbl">Providers</div></div>
+  <div class="ss-item"><div class="ss-num" id="statCats">—</div><div class="ss-lbl">Categories</div></div>
+  <div class="ss-item"><div class="ss-num">7+</div><div class="ss-lbl">Cities</div></div>
+  <div class="ss-item"><div class="ss-num">4.8★</div><div class="ss-lbl">Avg Rating</div></div>
+</div>
+
+<main class="page-lg" role="main">
+
+  <!-- Category strip -->
+  <div class="cat-strip mb-3" id="catStrip" role="tablist">
+    <div class="cat-pill active" data-cat="" role="tab" tabindex="0">🌐 All Services</div>
+  </div>
+
+  <!-- Filter row -->
+  <div class="filter-row">
+    <span class="filter-lbl">Filter:</span>
+    <button class="fchip active" data-f="all">All</button>
+    <button class="fchip" data-f="available">Available Now</button>
+    <button class="fchip" data-f="verified">Verified Only</button>
+    <button class="fchip" data-f="top">Top Rated</button>
+    <select class="sort-sel" id="sortSel">
+      <option value="rating">Sort: Top Rated</option>
+      <option value="price_asc">Price: Low → High</option>
+      <option value="price_desc">Price: High → Low</option>
+      <option value="newest">Newest</option>
+    </select>
+  </div>
+
+  <!-- Results header -->
+  <div class="sec-head">
+    <div><h2 class="sec-title" id="resTitle">All Providers</h2><p class="sec-sub" id="resSub">Loading…</p></div>
+  </div>
+
+  <!-- Providers grid -->
+  <div class="providers-grid" id="providersGrid" aria-live="polite">
+    <div class="skel-card"><div style="display:flex;gap:10px"><div class="skel" style="width:52px;height:52px;border-radius:50%;flex-shrink:0"></div><div style="flex:1;display:flex;flex-direction:column;gap:7px"><div class="skel" style="height:13px;width:70%"></div><div class="skel" style="height:11px;width:50%"></div></div></div><div class="skel" style="height:11px;width:90%"></div><div class="skel" style="height:11px;width:70%"></div></div>
+    <div class="skel-card"><div style="display:flex;gap:10px"><div class="skel" style="width:52px;height:52px;border-radius:50%;flex-shrink:0"></div><div style="flex:1;display:flex;flex-direction:column;gap:7px"><div class="skel" style="height:13px;width:60%"></div><div class="skel" style="height:11px;width:45%"></div></div></div><div class="skel" style="height:11px;width:80%"></div><div class="skel" style="height:11px;width:65%"></div></div>
+    <div class="skel-card"><div style="display:flex;gap:10px"><div class="skel" style="width:52px;height:52px;border-radius:50%;flex-shrink:0"></div><div style="flex:1;display:flex;flex-direction:column;gap:7px"><div class="skel" style="height:13px;width:75%"></div><div class="skel" style="height:11px;width:55%"></div></div></div><div class="skel" style="height:11px;width:85%"></div><div class="skel" style="height:11px;width:75%"></div></div>
+  </div>
+</main>
+
+<!-- Booking modal -->
+<div class="modal-overlay" id="bookingOverlay" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <div id="bookForm">
+      <div class="modal-handle"></div>
+      <div class="modal-head">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div id="mAvatar" style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--accent));display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;flex-shrink:0"></div>
+          <div><div style="font-size:16px;font-weight:700;color:var(--text-1)" id="mName">—</div><div style="font-size:12px;color:var(--text-2)" id="mRole">—</div><div style="margin-top:4px;font-size:12px;display:flex;align-items:center;gap:5px" id="mStars"></div></div>
+        </div>
+        <button class="modal-close" id="closeBooking"><svg viewBox="0 0 24 24" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+
+      <p style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px">Select Service</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px" id="svcOptions"></div>
+
+      <p style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px">Schedule</p>
+      <div class="dt-row mb-3">
+        <div class="field"><label for="bookDate">Date</label><input type="date" id="bookDate"></div>
+        <div class="field"><label for="bookTime">Time</label><input type="time" id="bookTime"></div>
+      </div>
+
+      <div class="field mb-3">
+        <label for="bookAddr">Your Address</label>
+        <input type="text" id="bookAddr" placeholder="e.g. 15 Wuse Zone 4, Abuja">
+      </div>
+
+      <div class="field mb-3">
+        <label for="bookNotes">Additional Notes (optional)</label>
+        <textarea id="bookNotes" style="min-height:72px" placeholder="Tell the provider more about the job…"></textarea>
+      </div>
+
+      <p style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px">Price Summary</p>
+      <div class="price-sum mb-3">
+        <div class="ps-row"><span class="ps-lbl">Service fee</span><span class="ps-val" id="psService">—</span></div>
+        <div class="ps-row"><span class="ps-lbl">Platform fee (5%)</span><span class="ps-val" id="psPlatform">—</span></div>
+        <div class="ps-divider"></div>
+        <div class="ps-row ps-total"><span class="ps-lbl">Total</span><span class="ps-val" id="psTotal">—</span></div>
+      </div>
+
+      <button class="btn btn-primary btn-block btn-lg" id="confirmBtn">
+        <span class="btn-text">Confirm Booking</span>
+        <span class="btn-spin-wrap"><div class="btn-spin"></div></span>
+      </button>
+    </div>
+
+    <!-- Success screen -->
+    <div id="bookSuccess" class="booking-success hidden">
+      <div class="success-anim">🎉</div>
+      <div style="font-size:22px;font-weight:700;color:var(--text-1);margin-bottom:8px">Booking Confirmed!</div>
+      <div style="font-size:13px;color:var(--text-2);line-height:1.6;max-width:300px;margin:0 auto 20px">Your request has been sent. The provider will confirm shortly.</div>
+      <div class="booking-ref" id="bookingRef"></div>
+      <button class="btn btn-primary btn-block" id="doneBtn">View My Bookings</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom nav -->
+<nav class="bottom-nav">
+  <button class="nav-btn" onclick="location.href='./dashboard.html'"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></button>
+  <button class="nav-btn active"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Find</span></button>
+  <button class="nav-btn" onclick="location.href='./bookings.html'"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Bookings</span></button>
+  <button class="nav-btn" onclick="location.href='./chat.html'"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span>Chat</span></button>
+  <button class="nav-btn" onclick="location.href='./profile.html'"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg><span>Profile</span></button>
+</nav>
+
+<script type="module">
+import { auth, db, toast, showSpinner, hideSpinner, esc, starsHtml, initials, formatNGN, genRef, debounce } from "./assets/firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { collection, getDocs, addDoc, serverTimestamp, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const $ = id => document.getElementById(id);
+let currentUser = null, allProviders = [], filteredProviders = [];
+let activeCat = "", activeFilter = "all", activeSort = "rating";
+let selectedProvider = null, selectedService = null;
+let debTimer;
+
+onAuthStateChanged(auth, async user => {
+  if (!user) { location.href = "./login.html"; return; }
+  currentUser = user;
+  await Promise.all([loadCategories(), loadProviders()]);
+});
+
+async function loadCategories() {
+  try {
+    const snap = await getDocs(collection(db, "category"));
+    $("statCats").textContent = snap.size;
+    const strip = $("catStrip");
+    snap.docs.forEach(d => {
+      const c = d.data();
+      const pill = document.createElement("div");
+      pill.className = "cat-pill"; pill.dataset.cat = c.name||""; pill.setAttribute("role","tab"); pill.tabIndex = 0;
+      pill.innerHTML = `${c.icon||"📂"} ${esc(c.name||"")}`;
+      strip.appendChild(pill);
+    });
+    strip.addEventListener("click", e => {
+      const p = e.target.closest(".cat-pill"); if (!p) return;
+      strip.querySelectorAll(".cat-pill").forEach(x => x.classList.remove("active"));
+      p.classList.add("active"); activeCat = p.dataset.cat; applyFilters();
+    });
+  } catch(e) {}
+}
+
+async function loadProviders() {
+  try {
+    const snap = await getDocs(collection(db, "providers"));
+    allProviders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    $("statProv").textContent = allProviders.length + "+";
+    applyFilters();
+  } catch(e) { renderError(); }
+}
+
+function applyFilters() {
+  const kw  = $("searchInput").value.trim().toLowerCase();
+  const loc = $("locationSelect").value.toLowerCase();
+  let list  = [...allProviders];
+
+  if (activeCat) list = list.filter(p => (p.category||"").toLowerCase() === activeCat.toLowerCase());
+  if (loc) list = list.filter(p => (p.location||"").toLowerCase().includes(loc));
+  if (kw)  list = list.filter(p => [p.name,p.role,p.description,p.category,p.location].some(f => f?.toLowerCase().includes(kw)));
+
+  if (activeFilter === "available") list = list.filter(p => p.available !== false);
+  if (activeFilter === "verified")  list = list.filter(p => p.verified);
+  if (activeFilter === "top")       list = list.filter(p => parseFloat(p.rating||0) >= 4);
+
+  list.sort((a,b) => {
+    if (activeSort === "rating")     return (parseFloat(b.rating)||0) - (parseFloat(a.rating)||0);
+    if (activeSort === "price_asc")  return (parseFloat(a.startingPrice)||0) - (parseFloat(b.startingPrice)||0);
+    if (activeSort === "price_desc") return (parseFloat(b.startingPrice)||0) - (parseFloat(a.startingPrice)||0);
+    if (activeSort === "newest")     return (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0);
+    return 0;
+  });
+
+  filteredProviders = list;
+  $("resTitle").textContent = activeCat ? `${activeCat} Providers` : "All Providers";
+  $("resSub").textContent   = `${list.length} provider${list.length!==1?"s":""} found`;
+  renderProviders(list);
+}
+
+function renderProviders(list) {
+  const grid = $("providersGrid");
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🔍</div><p class="empty-title">No providers found</p><p class="empty-sub">Try adjusting your filters or search terms.</p><button class="btn btn-secondary mt-2" onclick="clearFilters()">Clear filters</button></div>`;
+    return;
+  }
+  grid.innerHTML = list.map(p => {
+    const rating = parseFloat(p.rating||0).toFixed(1);
+    const avail  = p.available !== false;
+    const tags   = (Array.isArray(p.tags) ? p.tags : []).slice(0,3);
+    const price  = p.startingPrice ? formatNGN(p.startingPrice) : "Varies";
+    const ini    = initials(p.name);
+    return `
+    <article class="provider-card" tabindex="0" role="button" data-id="${esc(p.id)}" aria-label="Book ${esc(p.name||"")}">
+      <div class="pc-top">
+        <div class="pc-av-wrap">
+          ${p.photoURL
+            ? `<img class="pc-av" src="${esc(p.photoURL)}" alt="${esc(p.name)}" onerror="this.outerHTML='<div class=\\'pc-av\\'>${ini}</div>'">`
+            : `<div class="pc-av">${ini}</div>`}
+          ${avail  ? `<div class="pc-online" title="Available now"></div>` : ""}
+          ${p.verified ? `<div class="pc-verified">✓</div>` : ""}
+        </div>
+        <div class="pc-info">
+          <div class="pc-name">${esc(p.name||"Provider")}</div>
+          <div class="pc-role">${esc(p.role||p.category||"Service Provider")}</div>
+          <div class="pc-stars">${starsHtml(rating)}<span class="pc-rnum">${rating}</span><span class="pc-rv">(${p.reviewCount||0})</span></div>
+        </div>
+        <span class="badge ${avail?"badge-success":"badge-danger"}">${avail?"Available":"Busy"}</span>
+      </div>
+      <div class="pc-body">
+        ${p.description?`<p class="pc-desc">${esc(p.description)}</p>`:""}
+        ${tags.length?`<div class="pc-tags">${tags.map(t=>`<span class="pc-tag">${esc(t)}</span>`).join("")}</div>`:""}
+        <div class="pc-meta">
+          ${p.location?`<span class="pc-meta-item"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(p.location)}</span>`:""}
+          ${p.completedJobs?`<span class="pc-meta-item"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>${p.completedJobs} jobs</span>`:""}
+        </div>
+      </div>
+      <div class="pc-foot">
+        <div class="pc-price">${price}<span>starting price</span></div>
+        <button class="btn btn-primary btn-sm book-btn" data-id="${esc(p.id)}">Book Now</button>
+      </div>
+    </article>`;
+  }).join("");
+
+  grid.querySelectorAll(".book-btn").forEach(btn => btn.addEventListener("click", e => {
+    e.stopPropagation();
+    const p = allProviders.find(x => x.id === btn.dataset.id);
+    if (p) openBookingModal(p);
+  }));
+  grid.querySelectorAll(".provider-card").forEach(card => {
+    card.addEventListener("click", () => { const p = allProviders.find(x => x.id === card.dataset.id); if (p) openBookingModal(p); });
+    card.addEventListener("keydown", e => { if (e.key==="Enter") card.click(); });
+  });
+}
+
+function renderError() {
+  $("providersGrid").innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">⚠️</div><p class="empty-title">Couldn't load providers</p><p class="empty-sub">Check your connection and try again.</p><button class="btn btn-secondary mt-2" onclick="loadProviders()">Retry</button></div>`;
+}
+
+window.clearFilters = () => {
+  $("searchInput").value = ""; $("locationSelect").value = "";
+  activeCat = ""; activeFilter = "all";
+  document.querySelectorAll(".cat-pill").forEach((p,i) => p.classList.toggle("active",i===0));
+  document.querySelectorAll(".fchip").forEach((c,i) => c.classList.toggle("active",i===0));
+  applyFilters();
+};
+
+// Filter chips
+document.querySelectorAll(".fchip").forEach(c => c.addEventListener("click", () => {
+  document.querySelectorAll(".fchip").forEach(x => x.classList.remove("active"));
+  c.classList.add("active"); activeFilter = c.dataset.f; applyFilters();
+}));
+
+$("sortSel").addEventListener("change", () => { activeSort = $("sortSel").value; applyFilters(); });
+$("searchBtn").addEventListener("click", applyFilters);
+$("searchInput").addEventListener("keydown", e => { if (e.key==="Enter") applyFilters(); });
+$("searchInput").addEventListener("input", debounce(applyFilters));
+$("locationSelect").addEventListener("change", applyFilters);
+
+// ── Booking modal ─────────────────────────────────────────────────────
+function openBookingModal(p) {
+  selectedProvider = p; selectedService = null;
+  $("bookForm").classList.remove("hidden"); $("bookSuccess").classList.add("hidden");
+
+  const ini = initials(p.name);
+  $("mAvatar").textContent = ini;
+  if (p.photoURL) { $("mAvatar").innerHTML = `<img src="${esc(p.photoURL)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover" onerror="this.parentElement.textContent='${ini}'">`; }
+  $("mName").textContent = p.name||"Provider";
+  $("mRole").textContent = p.role||p.category||"Service Provider";
+  $("mStars").innerHTML  = `${starsHtml(p.rating||0)} <span style="font-size:12px;color:var(--text-2)">${parseFloat(p.rating||0).toFixed(1)} (${p.reviewCount||0} reviews)</span>`;
+
+  // Default date/time
+  const now = new Date();
+  $("bookDate").min = $("bookDate").value = now.toISOString().split("T")[0];
+  $("bookTime").value = `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
+  $("bookAddr").value = ""; $("bookNotes").value = "";
+
+  // Services
+  const svcs = Array.isArray(p.services) && p.services.length ? p.services : [{ name: p.role||"Standard Service", price: p.startingPrice||0 }];
+  $("svcOptions").innerHTML = svcs.map((s,i) => `<div class="svc-opt${i===0?" sel":""}" data-name="${esc(s.name)}" data-price="${s.price||0}">${esc(s.name)} — ${formatNGN(s.price)}</div>`).join("");
+  selectedService = { name: svcs[0].name, price: parseFloat(svcs[0].price||0) };
+  updatePricing(selectedService.price);
+
+  $("svcOptions").querySelectorAll(".svc-opt").forEach(opt => opt.addEventListener("click", () => {
+    $("svcOptions").querySelectorAll(".svc-opt").forEach(x => x.classList.remove("sel"));
+    opt.classList.add("sel");
+    selectedService = { name: opt.dataset.name, price: parseFloat(opt.dataset.price||0) };
+    updatePricing(selectedService.price);
+  }));
+
+  $("bookingOverlay").classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function updatePricing(price) {
+  const plat = price * 0.05;
+  $("psService").textContent  = formatNGN(price);
+  $("psPlatform").textContent = formatNGN(plat);
+  $("psTotal").textContent    = formatNGN(price + plat);
+}
+
+function closeModal() {
+  $("bookingOverlay").classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+$("closeBooking").addEventListener("click", closeModal);
+$("bookingOverlay").addEventListener("click", e => { if (e.target === $("bookingOverlay")) closeModal(); });
+document.addEventListener("keydown", e => { if (e.key==="Escape") closeModal(); });
+$("doneBtn").addEventListener("click", () => { closeModal(); location.href = "./bookings.html"; });
+
+$("confirmBtn").addEventListener("click", async () => {
+  if (!selectedProvider || !currentUser) return;
+  const date  = $("bookDate").value;
+  const time  = $("bookTime").value;
+  const addr  = $("bookAddr").value.trim();
+  const notes = $("bookNotes").value.trim();
+  if (!date) { toast("Please select a date.", "warning"); return; }
+  if (!time) { toast("Please select a time.", "warning"); return; }
+  if (!addr) { toast("Please enter your address.", "warning"); return; }
+
+  const btn = $("confirmBtn");
+  btn.disabled = true; btn.classList.add("loading");
+  const ref = genRef();
+  try {
+    await addDoc(collection(db, "bookings"), {
+      bookingRef: ref, seekerId: currentUser.uid, seekerName: currentUser.displayName||"",
+      seekerEmail: currentUser.email||"", providerId: selectedProvider.id,
+      providerName: selectedProvider.name||"", service: selectedService?.name||"",
+      serviceFee: selectedService?.price||0, platformFee: (selectedService?.price||0)*0.05,
+      total: (selectedService?.price||0)*1.05, date, time, address: addr, notes,
+      status: "pending", createdAt: serverTimestamp()
+    });
+    $("bookForm").classList.add("hidden");
+    $("bookingRef").innerHTML = `<strong>Ref:</strong> ${ref}<br><strong>Provider:</strong> ${esc(selectedProvider.name)}<br><strong>Service:</strong> ${esc(selectedService?.name||"")}<br><strong>Date & Time:</strong> ${date} at ${time}<br><strong>Address:</strong> ${esc(addr)}`;
+    $("bookSuccess").classList.remove("hidden");
+    toast("Booking submitted! 🎉", "success");
+  } catch(err) {
+    console.error(err); toast("Failed to submit booking. Try again.", "error");
+    btn.disabled = false; btn.classList.remove("loading");
+  }
+});
+</script>
+</body>
+</html>
