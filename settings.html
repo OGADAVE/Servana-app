@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Servana — Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/styles.css">
+  <style>
+    .settings-section{background:var(--bg-card);border:.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:18px;box-shadow:var(--shadow-xs)}
+    .ss-head{padding:14px 18px;border-bottom:.5px solid var(--border);display:flex;align-items:center;gap:10px}
+    .ss-head-icon{width:32px;height:32px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+    .ss-head-icon.blue{background:rgba(41,98,255,.1)} .ss-head-icon.purple{background:rgba(108,60,225,.1)}
+    .ss-head-icon.green{background:rgba(22,163,74,.1)} .ss-head-icon.gold{background:rgba(255,214,10,.1)}
+    .ss-head-icon.red{background:rgba(220,38,38,.08)}
+    .ss-head-title{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:500;color:var(--text-1);letter-spacing:.5px}
+    .setting-row{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:.5px solid var(--border);gap:12px}
+    .setting-row:last-child{border-bottom:none}
+    .setting-label{font-size:14px;font-weight:500;color:var(--text-1)}
+    .setting-sub{font-size:12px;color:var(--text-3);margin-top:2px}
+    .setting-val{font-size:13px;color:var(--text-3)}
+    .setting-link{font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;transition:color .15s}
+    .setting-link:hover{color:var(--brand)}
+    .setting-row-danger .setting-label{color:var(--danger)}
+    .setting-row.nav-row{cursor:pointer;transition:background .15s}
+    .setting-row.nav-row:hover{background:var(--bg-subtle)}
+    .setting-row.nav-row svg{width:15px;height:15px;stroke:var(--text-3);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0}
+    .app-version{text-align:center;padding:20px;font-size:12px;color:var(--text-3)}
+    .app-version strong{color:var(--brand)}
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+<div id="spinner-overlay"><div class="spinner-ring"></div></div>
+
+<!-- Header -->
+<header class="header">
+  <a href="./profile.html" class="header-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></a>
+  <div class="header-title">SETTINGS<span>Preferences & account</span></div>
+  <div style="width:36px"></div>
+</header>
+
+<main class="page-sm" role="main">
+
+  <!-- Account -->
+  <div class="settings-section">
+    <div class="ss-head">
+      <div class="ss-head-icon blue">👤</div>
+      <span class="ss-head-title">Account</span>
+    </div>
+    <div class="setting-row nav-row" onclick="location.href='./profile.html'">
+      <div><div class="setting-label">Edit Profile</div><div class="setting-sub">Name, photo, phone, bio</div></div>
+      <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Email Address</div><div class="setting-sub" id="settingEmail">—</div></div>
+      <span class="setting-val">Verified ✓</span>
+    </div>
+    <div class="setting-row nav-row" onclick="location.href='./profile.html#security'">
+      <div><div class="setting-label">Change Password</div><div class="setting-sub">Update your login password</div></div>
+      <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="setting-row nav-row" onclick="location.href='./provider.html'">
+      <div><div class="setting-label">Switch to Provider Mode</div><div class="setting-sub">Offer services and earn</div></div>
+      <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+  </div>
+
+  <!-- Notifications -->
+  <div class="settings-section">
+    <div class="ss-head">
+      <div class="ss-head-icon purple">🔔</div>
+      <span class="ss-head-title">Notifications</span>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Booking Updates</div><div class="setting-sub">When providers accept, decline or complete</div></div>
+      <label class="toggle-wrap">
+        <input type="checkbox" class="toggle-input" id="notifBookings" checked>
+        <div class="toggle-track"></div><div class="toggle-thumb"></div>
+      </label>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">New Messages</div><div class="setting-sub">In-app chat notifications</div></div>
+      <label class="toggle-wrap">
+        <input type="checkbox" class="toggle-input" id="notifMessages" checked>
+        <div class="toggle-track"></div><div class="toggle-thumb"></div>
+      </label>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Promotions & Tips</div><div class="setting-sub">Deals, service tips, and updates</div></div>
+      <label class="toggle-wrap">
+        <input type="checkbox" class="toggle-input" id="notifPromos">
+        <div class="toggle-track"></div><div class="toggle-thumb"></div>
+      </label>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Email Notifications</div><div class="setting-sub">Receive updates via email</div></div>
+      <label class="toggle-wrap">
+        <input type="checkbox" class="toggle-input" id="notifEmail" checked>
+        <div class="toggle-track"></div><div class="toggle-thumb"></div>
+      </label>
+    </div>
+  </div>
+
+  <!-- Appearance -->
+  <div class="settings-section">
+    <div class="ss-head">
+      <div class="ss-head-icon gold">🎨</div>
+      <span class="ss-head-title">Appearance</span>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Dark Mode</div><div class="setting-sub">Follow system or override</div></div>
+      <label class="toggle-wrap">
+        <input type="checkbox" class="toggle-input" id="darkModeToggle">
+        <div class="toggle-track"></div><div class="toggle-thumb"></div>
+      </label>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Language</div></div>
+      <select id="langSelect" style="border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:13px;padding:6px 10px;outline:none">
+        <option value="en">English</option>
+        <option value="ha">Hausa</option>
+        <option value="yo">Yoruba</option>
+        <option value="ig">Igbo</option>
+        <option value="pcm">Pidgin</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Privacy -->
+  <div class="settings-section">
+    <div class="ss-head">
+      <div class="ss-head-icon green">🔒</div>
+      <span class="ss-head-title">Privacy & Security</span>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Profile Visibility</div><div class="setting-sub">Who can see your profile</div></div>
+      <select id="visibilitySelect" style="border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:13px;padding:6px 10px;outline:none">
+        <option value="public">Public</option>
+        <option value="seekers">Seekers only</option>
+        <option value="private">Private</option>
+      </select>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Show Online Status</div><div class="setting-sub">Let others see when you're active</div></div>
+      <label class="toggle-wrap">
+        <input type="checkbox" class="toggle-input" id="onlineStatus" checked>
+        <div class="toggle-track"></div><div class="toggle-thumb"></div>
+      </label>
+    </div>
+    <div class="setting-row nav-row" onclick="window.open('./privacy.html')">
+      <div><div class="setting-label">Privacy Policy</div></div>
+      <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="setting-row nav-row" onclick="window.open('./terms.html')">
+      <div><div class="setting-label">Terms of Service</div></div>
+      <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+  </div>
+
+  <!-- Support -->
+  <div class="settings-section">
+    <div class="ss-head">
+      <div class="ss-head-icon blue">💬</div>
+      <span class="ss-head-title">Support</span>
+    </div>
+    <div class="setting-row nav-row" onclick="toast('Opening help centre…','info')">
+      <div><div class="setting-label">Help Centre</div><div class="setting-sub">FAQs and how-to guides</div></div>
+      <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="setting-row nav-row" onclick="location.href='./chat.html'">
+      <div><div class="setting-label">Contact Support</div><div class="setting-sub">Chat with the Servana team</div></div>
+      <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="setting-row nav-row" onclick="toast('Thank you for the feedback! 🙏','success')">
+      <div><div class="setting-label">Rate the App</div><div class="setting-sub">Tell us how we're doing</div></div>
+      <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+  </div>
+
+  <!-- Sign out & danger -->
+  <div class="settings-section">
+    <div class="ss-head">
+      <div class="ss-head-icon red">⚠️</div>
+      <span class="ss-head-title">Account Actions</span>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label">Sign Out</div>
+      <button class="setting-link" id="signOutBtn">Sign Out</button>
+    </div>
+    <div class="setting-row setting-row-danger">
+      <div><div class="setting-label">Delete Account</div><div class="setting-sub">Permanently remove all your data</div></div>
+      <button class="setting-link" style="color:var(--danger)" id="deleteBtn">Delete</button>
+    </div>
+  </div>
+
+  <div class="app-version">
+    <strong>SERVANA</strong> · Version 1.0.0<br>
+    <span>© 2025 Servana. Built for Africa and beyond.</span>
+  </div>
+
+</main>
+
+<!-- Bottom nav -->
+<nav class="bottom-nav">
+  <button class="nav-btn" onclick="location.href='./dashboard.html'"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></button>
+  <button class="nav-btn" onclick="location.href='./seeker.html'"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Find</span></button>
+  <button class="nav-btn" onclick="location.href='./bookings.html'"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Bookings</span></button>
+  <button class="nav-btn" onclick="location.href='./chat.html'"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span>Chat</span></button>
+  <button class="nav-btn" onclick="location.href='./profile.html'"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg><span>Profile</span></button>
+</nav>
+
+<script type="module">
+import { auth, db, toast, showSpinner, hideSpinner, setLoading } from "./assets/firebase.js";
+import { onAuthStateChanged, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const $ = id => document.getElementById(id);
+let currentUser = null;
+
+// Expose toast for inline onclick handlers
+window.toast = toast;
+
+onAuthStateChanged(auth, async user => {
+  if (!user) { location.href = "./login.html"; return; }
+  currentUser = user;
+  $("settingEmail").textContent = user.email || "—";
+  await loadSettings();
+});
+
+async function loadSettings() {
+  try {
+    const snap = await getDoc(doc(db, "users", currentUser.uid));
+    const prefs = snap.exists() ? (snap.data().preferences || {}) : {};
+
+    $("notifBookings").checked  = prefs.notifBookings  !== false;
+    $("notifMessages").checked  = prefs.notifMessages  !== false;
+    $("notifPromos").checked    = prefs.notifPromos    || false;
+    $("notifEmail").checked     = prefs.notifEmail     !== false;
+    $("onlineStatus").checked   = prefs.onlineStatus   !== false;
+    $("visibilitySelect").value = prefs.visibility     || "public";
+    $("langSelect").value       = prefs.language       || "en";
+
+    // Dark mode from localStorage
+    const dark = localStorage.getItem("servana-dark");
+    if (dark === "true") { document.documentElement.style.colorScheme = "dark"; $("darkModeToggle").checked = true; }
+    else if (dark === "false") { document.documentElement.style.colorScheme = "light"; $("darkModeToggle").checked = false; }
+  } catch(e) {}
+}
+
+async function saveSettings() {
+  if (!currentUser) return;
+  const prefs = {
+    notifBookings: $("notifBookings").checked,
+    notifMessages: $("notifMessages").checked,
+    notifPromos:   $("notifPromos").checked,
+    notifEmail:    $("notifEmail").checked,
+    onlineStatus:  $("onlineStatus").checked,
+    visibility:    $("visibilitySelect").value,
+    language:      $("langSelect").value,
+    updatedAt:     serverTimestamp()
+  };
+  try {
+    await setDoc(doc(db,"users",currentUser.uid), { preferences: prefs }, { merge: true });
+    toast("Settings saved.", "success");
+  } catch(e) { toast("Failed to save settings.", "error"); }
+}
+
+// Auto-save on toggle change
+["notifBookings","notifMessages","notifPromos","notifEmail","onlineStatus"].forEach(id => {
+  $(id).addEventListener("change", saveSettings);
+});
+$("visibilitySelect").addEventListener("change", saveSettings);
+$("langSelect").addEventListener("change", saveSettings);
+
+// Dark mode toggle
+$("darkModeToggle").addEventListener("change", () => {
+  const on = $("darkModeToggle").checked;
+  localStorage.setItem("servana-dark", on);
+  document.documentElement.style.colorScheme = on ? "dark" : "light";
+  toast(`Dark mode ${on?"enabled":"disabled"}.`, "info");
+});
+
+// Sign out
+$("signOutBtn").addEventListener("click", async () => {
+  try { showSpinner(); await signOut(auth); location.href = "./login.html"; }
+  catch(e) { hideSpinner(); toast("Sign out failed.", "error"); }
+});
+
+// Delete account
+$("deleteBtn").addEventListener("click", async () => {
+  const confirmed = confirm("This will permanently delete your Servana account and all data. This cannot be undone. Are you sure?");
+  if (!confirmed) return;
+  try {
+    showSpinner();
+    await deleteUser(currentUser);
+    location.href = "./index.html";
+  } catch(e) {
+    hideSpinner();
+    if (e.code === "auth/requires-recent-login") toast("Please log out and log back in before deleting your account.", "warning");
+    else toast("Failed to delete account.", "error");
+  }
+});
+</script>
+</body>
+</html>

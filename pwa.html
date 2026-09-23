@@ -1,0 +1,316 @@
+<!--
+═══════════════════════════════════════════════════════════
+SERVANA — PWA Integration Guide
+Add this to EVERY HTML page in the <head> section
+═══════════════════════════════════════════════════════════
+-->
+
+<!--
+  ┌─────────────────────────────────────────────────────┐
+  │  STEP 1: ADD THESE META TAGS TO EVERY PAGE'S <head> │
+  └─────────────────────────────────────────────────────┘
+
+  Paste everything between the <head-additions> tags
+  into the <head> of each HTML file, right after
+  your existing <meta> tags.
+-->
+
+<head-additions>
+
+  <!-- PWA: Web App Manifest -->
+  <link rel="manifest" href="./manifest.json">
+
+  <!-- iOS Safari PWA support (Apple doesn't use manifest for these) -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Servana">
+  <link rel="apple-touch-icon" href="./assets/images/icon-192.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="./assets/images/icon-152.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="./assets/images/icon-144.png">
+  <link rel="apple-touch-icon" sizes="128x128" href="./assets/images/icon-128.png">
+
+  <!-- iOS Splash Screens (portrait, standard sizes) -->
+  <link rel="apple-touch-startup-image"
+        media="(device-width: 390px) and (device-height: 844px)"
+        href="./assets/images/splash-390x844.png">
+  <link rel="apple-touch-startup-image"
+        media="(device-width: 428px) and (device-height: 926px)"
+        href="./assets/images/splash-428x926.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/images/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="./assets/images/favicon-16.png">
+  <link rel="shortcut icon" href="./assets/images/favicon.ico">
+
+  <!-- Theme colour (browser chrome, Android status bar) -->
+  <meta name="theme-color" content="#1A237E"
+        media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#080E30"
+        media="(prefers-color-scheme: dark)">
+
+  <!-- Microsoft Tiles (Windows / Edge) -->
+  <meta name="msapplication-TileColor"   content="#1A237E">
+  <meta name="msapplication-TileImage"   content="./assets/images/icon-144.png">
+  <meta name="msapplication-config"      content="./browserconfig.xml">
+
+  <!-- Open Graph (sharing on WhatsApp, Facebook, Twitter) -->
+  <meta property="og:type"        content="website">
+  <meta property="og:site_name"   content="Servana">
+  <meta property="og:title"       content="Servana — Your Personal Service Genie">
+  <meta property="og:description" content="Find trusted local service providers fast. No stress.">
+  <meta property="og:image"       content="https://servana.app/assets/images/og-image.png">
+  <meta property="og:url"         content="https://servana.app">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       content="Servana — Your Personal Service Genie">
+  <meta name="twitter:description" content="Find trusted local service providers fast. No stress.">
+  <meta name="twitter:image"       content="https://servana.app/assets/images/og-image.png">
+
+  <!-- Prevent phone number detection on iOS -->
+  <meta name="format-detection" content="telephone=no">
+
+  <!-- OneSignal (push notifications) — place BEFORE service worker registration -->
+  <!--
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  -->
+
+</head-additions>
+
+
+<!--
+  ┌─────────────────────────────────────────────────────┐
+  │  STEP 2: ADD THIS SCRIPT AT END OF EVERY <body>     │
+  └─────────────────────────────────────────────────────┘
+
+  Paste just before the closing </body> tag.
+  This registers the service worker for PWA & offline support.
+-->
+
+<body-additions>
+
+<script>
+// ── Register Service Worker ──────────────────────────────
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("./sw.js", { scope: "./" })
+      .then(registration => {
+        console.log("[SW] Registered. Scope:", registration.scope);
+
+        // Check for updates every time the page loads
+        registration.addEventListener("updatefound", () => {
+          const newWorker = registration.installing;
+          newWorker.addEventListener("statechange", () => {
+            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+              // New version available — show update prompt
+              showUpdateBanner();
+            }
+          });
+        });
+      })
+      .catch(err => console.warn("[SW] Registration failed:", err));
+
+    // When SW is updated and takes control, reload
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      window.location.reload();
+    });
+  });
+}
+
+// ── Update available banner ──────────────────────────────
+function showUpdateBanner() {
+  // Check if banner already shown
+  if (document.getElementById("sw-update-banner")) return;
+
+  const banner = document.createElement("div");
+  banner.id = "sw-update-banner";
+  banner.style.cssText = `
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+    background: #1A237E; color: #fff; padding: 12px 20px;
+    border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,.3);
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    display: flex; align-items: center; gap: 12px; z-index: 9998;
+    white-space: nowrap; animation: slideUp .3s ease both;
+    max-width: calc(100vw - 32px);
+  `;
+  banner.innerHTML = `
+    <span>🆕 New version available!</span>
+    <button onclick="window.location.reload()" style="
+      padding: 6px 14px; background: #FFD60A; color: #1A237E;
+      border: none; border-radius: 8px; font-weight: 700; font-size: 12px;
+      cursor: pointer; font-family: inherit;
+    ">Update</button>
+    <button onclick="this.parentElement.remove()" style="
+      background: none; border: none; color: rgba(255,255,255,.6);
+      cursor: pointer; font-size: 18px; padding: 0; line-height: 1;
+    ">×</button>
+  `;
+  document.body.appendChild(banner);
+}
+
+// ── Install prompt (Add to Home Screen) ──────────────────
+let deferredPrompt = null;
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show install button if it exists on the page
+  const installBtn = document.getElementById("pwa-install-btn");
+  if (installBtn) installBtn.style.display = "flex";
+});
+
+// Call this function from an "Install App" button's onclick
+window.promptInstall = async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  console.log("[PWA] Install outcome:", outcome);
+  deferredPrompt = null;
+  const installBtn = document.getElementById("pwa-install-btn");
+  if (installBtn) installBtn.style.display = "none";
+};
+
+window.addEventListener("appinstalled", () => {
+  console.log("[PWA] App installed successfully!");
+  deferredPrompt = null;
+});
+
+// ── Dark mode persistence ─────────────────────────────────
+const savedDark = localStorage.getItem("servana-dark");
+if (savedDark === "true")  document.documentElement.style.colorScheme = "dark";
+if (savedDark === "false") document.documentElement.style.colorScheme = "light";
+</script>
+
+</body-additions>
+
+
+<!--
+  ┌─────────────────────────────────────────────────────┐
+  │  STEP 3: OPTIONAL INSTALL BUTTON                    │
+  └─────────────────────────────────────────────────────┘
+
+  Add anywhere in your page (e.g. settings.html or dashboard.html).
+  It auto-hides if the app is already installed.
+-->
+
+<install-button-example>
+<button
+  id="pwa-install-btn"
+  onclick="promptInstall()"
+  style="
+    display: none;
+    align-items: center; gap: 8px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #1A237E, #6C3CE1);
+    color: #fff; border: none; border-radius: 10px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700;
+    cursor: pointer; box-shadow: 0 4px 14px rgba(108,60,225,.28);
+  ">
+  📲 Install Servana App
+</button>
+</install-button-example>
+
+
+<!--
+  ┌─────────────────────────────────────────────────────┐
+  │  STEP 4: browserconfig.xml (for Windows/Edge tiles) │
+  │  Create this file at root level                     │
+  └─────────────────────────────────────────────────────┘
+-->
+<!-- browserconfig.xml content:
+<?xml version="1.0" encoding="utf-8"?>
+<browserconfig>
+  <msapplication>
+    <tile>
+      <square150x150logo src="./assets/images/icon-144.png"/>
+      <TileColor>#1A237E</TileColor>
+    </tile>
+  </msapplication>
+</browserconfig>
+-->
+
+
+<!--
+  ┌─────────────────────────────────────────────────────┐
+  │  REQUIRED IMAGE ASSETS (create these)               │
+  └─────────────────────────────────────────────────────┘
+
+  Place all images in: ./assets/images/
+
+  ICONS (generate from your logo at pwabuilder.com):
+  ✅ icon-72.png   — 72×72
+  ✅ icon-96.png   — 96×96
+  ✅ icon-128.png  — 128×128
+  ✅ icon-144.png  — 144×144
+  ✅ icon-152.png  — 152×152
+  ✅ icon-192.png  — 192×192  ← most important
+  ✅ icon-384.png  — 384×384
+  ✅ icon-512.png  — 512×512  ← most important
+  ✅ favicon-16.png— 16×16
+  ✅ favicon-32.png— 32×32
+  ✅ favicon.ico   — multi-size ICO
+
+  SPLASH SCREENS (iOS):
+  ✅ splash-390x844.png  — iPhone 12/13/14
+  ✅ splash-428x926.png  — iPhone 12/13/14 Plus
+
+  SOCIAL:
+  ✅ og-image.png        — 1200×630 Open Graph image
+
+  QUICK GENERATION:
+  → https://realfavicongenerator.net  (paste your logo)
+  → https://pwabuilder.com            (generates all icon sizes)
+  → https://www.favicon.io            (simple favicon tool)
+-->
+
+
+<!--
+  ┌─────────────────────────────────────────────────────┐
+  │  COMPLETE CHECKLIST FOR GOING LIVE                  │
+  └─────────────────────────────────────────────────────┘
+
+  PWA
+  □ manifest.json at root — done ✅
+  □ sw.js at root — done ✅
+  □ offline.html at root — done ✅
+  □ All icons in assets/images/
+  □ Head meta tags added to all 10 HTML pages
+  □ Service worker registration added to all 10 HTML pages
+  □ Site running on HTTPS (required for PWA + push)
+
+  FIREBASE
+  □ Deploy Firestore rules:  firebase deploy --only firestore:rules
+  □ Deploy indexes:          firebase deploy --only firestore:indexes
+  □ Enable Google auth in Firebase console
+
+  CLOUDINARY
+  □ Create account at cloudinary.com
+  □ Create unsigned upload preset
+  □ Update CLOUD_NAME + UPLOAD_PRESET in assets/cloudinary.js
+  □ Replace Firebase Storage calls in profile.html, provider.html, dashboard.html
+
+  PAYSTACK
+  □ Activate account at paystack.com
+  □ Add public key to assets/paystack.js
+  □ Add <script src="https://js.paystack.co/v1/inline.js"> to seeker.html
+  □ Wire payForBooking() into seeker.html booking confirm flow
+
+  EMAILJS
+  □ Create templates in EmailJS dashboard (3 templates — see email.js)
+  □ Keys already configured (using your existing service ID + public key)
+
+  ONESIGNAL
+  □ Create app at onesignal.com
+  □ Update ONESIGNAL_APP_ID + REST_API_KEY in assets/notifications.js
+  □ Download + place OneSignalSDKWorker.js at site root
+  □ Add OneSignal script tag to all pages (see pwa.html)
+
+  ADMIN
+  □ Set role: "admin" on your user doc in Firestore:
+    → Firebase console → Firestore → users/{your-uid} → role: "admin"
+
+  DOMAIN
+  □ Point servana.app to your hosting
+  □ Enable HTTPS (Cloudflare free, Firebase Hosting, Netlify, Vercel)
+-->

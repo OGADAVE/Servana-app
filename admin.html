@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Servana — Admin Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/styles.css">
+  <style>
+    body{display:flex;flex-direction:column;background:var(--bg-page)}
+    .admin-wrap{display:flex;flex:1;min-height:calc(100vh - var(--header-h))}
+    /* ── Sidebar ── */
+    .sidebar{width:240px;flex-shrink:0;background:var(--bg-surface);border-right:.5px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;position:sticky;top:var(--header-h);height:calc(100vh - var(--header-h))}
+    @media(max-width:767px){.sidebar{display:none}}
+    .sb-section{padding:12px 10px 4px;font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:1.5px;text-transform:uppercase}
+    .sb-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--r-sm);margin:2px 8px;cursor:pointer;color:var(--text-2);font-size:13px;font-weight:500;transition:background .15s,color .15s;border:none;background:none;font-family:'DM Sans',sans-serif;width:calc(100% - 16px);text-align:left}
+    .sb-item:hover{background:var(--bg-subtle);color:var(--text-1)}
+    .sb-item.active{background:rgba(26,35,126,.08);color:var(--brand);font-weight:600}
+    .sb-item svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+    .sb-badge{margin-left:auto;min-width:18px;height:18px;border-radius:9px;background:var(--danger);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px}
+    .sb-foot{margin-top:auto;padding:16px;border-top:.5px solid var(--border)}
+    /* ── Main content ── */
+    .admin-main{flex:1;overflow-y:auto;min-width:0}
+    .admin-page{max-width:1100px;margin:0 auto;padding:24px 20px 60px}
+    /* ── Mobile nav tabs ── */
+    .mob-tabs{display:none;overflow-x:auto;scrollbar-width:none;padding:10px 16px;background:var(--bg-surface);border-bottom:.5px solid var(--border);gap:6px}
+    .mob-tabs::-webkit-scrollbar{display:none}
+    @media(max-width:767px){.mob-tabs{display:flex}}
+    .mob-tab{padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg-subtle);font-size:12px;font-weight:600;color:var(--text-2);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .18s;font-family:'DM Sans',sans-serif}
+    .mob-tab.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+    /* ── Panels ── */
+    .panel{display:none} .panel.active{display:block}
+    /* ── Admin header ── */
+    .admin-header-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap}
+    .admin-title{font-family:'Orbitron',sans-serif;font-size:16px;font-weight:700;color:var(--text-1)}
+    .admin-sub{font-size:12px;color:var(--text-3);margin-top:3px}
+    /* ── Data table ── */
+    .data-table{width:100%;border-collapse:collapse;font-size:13px}
+    .data-table th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.5px;text-transform:uppercase;border-bottom:.5px solid var(--border);background:var(--bg-subtle);white-space:nowrap}
+    .data-table td{padding:12px 14px;border-bottom:.5px solid var(--border);color:var(--text-1);vertical-align:middle}
+    .data-table tr:last-child td{border-bottom:none}
+    .data-table tr:hover td{background:var(--bg-subtle)}
+    .table-wrap{background:var(--bg-card);border:.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-xs);overflow-x:auto}
+    /* ── User row ── */
+    .user-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--accent));display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;flex-shrink:0;object-fit:cover}
+    .user-cell{display:flex;align-items:center;gap:10px}
+    /* ── Action buttons in table ── */
+    .tbl-btn{padding:5px 12px;border-radius:var(--r-sm);font-size:11px;font-weight:700;border:none;cursor:pointer;transition:opacity .2s;font-family:'DM Sans',sans-serif;white-space:nowrap}
+    .tbl-btn.verify{background:rgba(22,163,74,.1);color:var(--success);border:1px solid rgba(22,163,74,.2)}
+    .tbl-btn.verify:hover{background:rgba(22,163,74,.18)}
+    .tbl-btn.suspend{background:rgba(220,38,38,.08);color:var(--danger);border:1px solid rgba(220,38,38,.18)}
+    .tbl-btn.suspend:hover{background:rgba(220,38,38,.15)}
+    .tbl-btn.resolve{background:rgba(41,98,255,.08);color:var(--info);border:1px solid rgba(41,98,255,.18)}
+    .tbl-btn.delete{background:rgba(220,38,38,.08);color:var(--danger);border:1px solid rgba(220,38,38,.18)}
+    .actions-cell{display:flex;gap:6px;flex-wrap:wrap}
+    /* ── Category management ── */
+    .cat-admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+    .cat-admin-card{background:var(--bg-card);border:.5px solid var(--border);border-radius:var(--r-md);padding:16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-xs)}
+    .cat-admin-icon{font-size:24px;flex-shrink:0}
+    .cat-admin-name{font-size:13px;font-weight:600;color:var(--text-1);flex:1}
+    .cat-admin-actions{display:flex;gap:4px}
+    /* ── Analytics ── */
+    .analytics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:24px}
+    .analytics-card{background:var(--bg-card);border:.5px solid var(--border);border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow-xs)}
+    .analytics-card-title{font-size:12px;font-weight:700;color:var(--text-3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:16px}
+    /* Simple bar chart */
+    .mini-bars{display:flex;align-items:flex-end;gap:4px;height:80px}
+    .mini-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+    .mini-bar-bg{width:100%;background:var(--border);border-radius:3px;flex:1;display:flex;align-items:flex-end}
+    .mini-bar-fill{width:100%;border-radius:3px;background:linear-gradient(to top,var(--brand),var(--accent));transition:height .6s var(--ease);min-height:3px}
+    .mini-bar-lbl{font-size:9px;color:var(--text-3)}
+    /* Commission settings */
+    .commission-row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:.5px solid var(--border)}
+    .commission-row:last-child{border-bottom:none}
+    .comm-lbl{flex:1;font-size:14px;font-weight:500;color:var(--text-1)}
+    .comm-sub{font-size:12px;color:var(--text-3);margin-top:2px}
+    .comm-input{width:80px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;outline:none;text-align:right}
+    .comm-input:focus{border-color:var(--accent)}
+    /* Search in tables */
+    .table-toolbar{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:.5px solid var(--border);flex-wrap:wrap}
+    .tbl-search{flex:1;min-width:160px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:13px;outline:none}
+    .tbl-search:focus{border-color:var(--accent)}
+    .tbl-count{font-size:12px;color:var(--text-3);white-space:nowrap}
+    /* Dispute badge */
+    .dispute-flag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:var(--danger);background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.18);padding:2px 8px;border-radius:10px}
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+<div id="spinner-overlay"><div class="spinner-ring"></div></div>
+
+<!-- Category modal -->
+<div class="modal-overlay" id="catModal" role="dialog" aria-modal="true">
+  <div class="modal-box" style="max-width:400px">
+    <div class="modal-handle"></div>
+    <div class="modal-head">
+      <span class="modal-title" id="catModalTitle">Add Category</span>
+      <button class="modal-close" id="closeCatModal"><svg viewBox="0 0 24 24" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-form">
+      <div class="field"><label>Category Name</label><input type="text" id="catName" placeholder="e.g. Plumbers"></div>
+      <div class="field"><label>Icon (emoji)</label><input type="text" id="catIcon" placeholder="🔧" maxlength="4"></div>
+      <div class="field"><label>Description (optional)</label><input type="text" id="catDesc" placeholder="Brief description"></div>
+      <button class="btn btn-primary btn-block" id="saveCatBtn">
+        <span class="btn-text">Save Category</span>
+        <span class="btn-spin-wrap"><div class="btn-spin"></div></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Header -->
+<header class="header" role="banner">
+  <div class="header-logo" style="cursor:pointer" onclick="location.href='./dashboard.html'">
+    <img src="./assets/images/logo.png" alt="Servana" onerror="this.style.display='none'">
+    <span class="header-logo-text">SERVANA</span>
+  </div>
+  <div style="flex:1;text-align:center">
+    <span style="font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:2px">ADMIN PANEL</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span id="adminName" style="font-size:13px;font-weight:600;color:rgba(255,255,255,.8)">Admin</span>
+    <button class="hdr-btn" id="signOutBtn" aria-label="Sign out" title="Sign out">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- Mobile tabs -->
+<div class="mob-tabs" id="mobTabs">
+  <button class="mob-tab active" data-panel="overview">📊 Overview</button>
+  <button class="mob-tab" data-panel="users">👥 Users</button>
+  <button class="mob-tab" data-panel="providers">🛠️ Providers</button>
+  <button class="mob-tab" data-panel="bookings">📅 Bookings</button>
+  <button class="mob-tab" data-panel="categories">📂 Categories</button>
+  <button class="mob-tab" data-panel="analytics">📈 Analytics</button>
+  <button class="mob-tab" data-panel="settings">⚙️ Settings</button>
+</div>
+
+<div class="admin-wrap">
+  <!-- Sidebar -->
+  <aside class="sidebar" role="navigation" aria-label="Admin navigation">
+    <div style="padding:16px;border-bottom:.5px solid var(--border)">
+      <div style="font-size:12px;font-weight:600;color:var(--text-3)">Logged in as</div>
+      <div style="font-size:14px;font-weight:700;color:var(--text-1);margin-top:2px" id="sidebarAdminName">Admin</div>
+    </div>
+    <div class="sb-section">Dashboard</div>
+    <button class="sb-item active" data-panel="overview"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Overview</button>
+    <button class="sb-item" data-panel="analytics"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics</button>
+
+    <div class="sb-section">Management</div>
+    <button class="sb-item" data-panel="users"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Users <span class="sb-badge" id="sb-users-count" style="display:none"></span></button>
+    <button class="sb-item" data-panel="providers"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>Providers <span class="sb-badge" id="sb-pending-verif" style="display:none"></span></button>
+    <button class="sb-item" data-panel="bookings"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Bookings <span class="sb-badge" id="sb-disputes" style="display:none"></span></button>
+    <button class="sb-item" data-panel="categories"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>Categories</button>
+
+    <div class="sb-section">Config</div>
+    <button class="sb-item" data-panel="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Platform Settings</button>
+
+    <div class="sb-foot">
+      <button class="sb-item" style="width:100%;color:var(--danger)" id="sidebarSignOut"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <div class="admin-main">
+    <div class="admin-page">
+
+      <!-- ═══════════ OVERVIEW ═══════════ -->
+      <div class="panel active" id="panel-overview">
+        <div class="admin-header-bar">
+          <div><div class="admin-title">Overview</div><div class="admin-sub">Platform health at a glance</div></div>
+          <button class="btn btn-secondary btn-sm" onclick="loadAllData()">🔄 Refresh</button>
+        </div>
+        <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
+          <div class="stat-card"><div class="sc-icon blue">👥</div><div class="sc-val" id="ovTotalUsers">—</div><div class="sc-label">Total Users</div></div>
+          <div class="stat-card"><div class="sc-icon purple">🛠️</div><div class="sc-val" id="ovProviders">—</div><div class="sc-label">Providers</div></div>
+          <div class="stat-card"><div class="sc-icon green">💰</div><div class="sc-val" id="ovRevenue">—</div><div class="sc-label">Platform Revenue</div></div>
+          <div class="stat-card"><div class="sc-icon gold">📅</div><div class="sc-val" id="ovBookings">—</div><div class="sc-label">Total Bookings</div></div>
+          <div class="stat-card"><div class="sc-icon gold">⏳</div><div class="sc-val" id="ovPending">—</div><div class="sc-label">Pending Verif.</div><div class="sc-delta down">Need review</div></div>
+          <div class="stat-card"><div class="sc-icon red">⚠️</div><div class="sc-val" id="ovDisputes">—</div><div class="sc-label">Active Disputes</div></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" class="mt-3">
+          <div class="card" style="grid-column:1/-1">
+            <div class="card-head"><span class="card-head-title">Recent Bookings</span><button class="btn btn-ghost btn-sm" onclick="switchPanel('bookings')">View All</button></div>
+            <div class="card-body" style="padding:0">
+              <div id="ovRecentBookings" style="padding:16px"><div class="skel" style="height:48px;border-radius:8px;margin-bottom:8px"></div><div class="skel" style="height:48px;border-radius:8px"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ USERS ═══════════ -->
+      <div class="panel" id="panel-users">
+        <div class="admin-header-bar">
+          <div><div class="admin-title">User Management</div><div class="admin-sub">All registered seekers and users</div></div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <input class="tbl-search" type="search" id="userSearch" placeholder="Search users…">
+            <span class="tbl-count" id="userCount"></span>
+          </div>
+          <div style="overflow-x:auto"><table class="data-table" id="usersTable">
+            <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="usersBody"><tr><td colspan="6" style="text-align:center;padding:32px"><div class="skel" style="height:40px;border-radius:8px"></div></td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ═══════════ PROVIDERS ═══════════ -->
+      <div class="panel" id="panel-providers">
+        <div class="admin-header-bar">
+          <div><div class="admin-title">Provider Management</div><div class="admin-sub">Verify, suspend, and manage service providers</div></div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <input class="tbl-search" type="search" id="provSearch" placeholder="Search providers…">
+            <select id="provFilter" style="padding:7px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:13px;outline:none">
+              <option value="all">All Providers</option>
+              <option value="pending">Pending Verification</option>
+              <option value="verified">Verified</option>
+              <option value="suspended">Suspended</option>
+            </select>
+            <span class="tbl-count" id="provCount"></span>
+          </div>
+          <div style="overflow-x:auto"><table class="data-table">
+            <thead><tr><th>Provider</th><th>Role/Category</th><th>Location</th><th>Rating</th><th>Jobs</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="providersBody"><tr><td colspan="7" style="text-align:center;padding:32px"><div class="skel" style="height:40px;border-radius:8px"></div></td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ═══════════ BOOKINGS ═══════════ -->
+      <div class="panel" id="panel-bookings">
+        <div class="admin-header-bar">
+          <div><div class="admin-title">Booking Management</div><div class="admin-sub">All platform bookings — handle disputes here</div></div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <input class="tbl-search" type="search" id="bookSearch" placeholder="Search bookings…">
+            <select id="bookFilter" style="padding:7px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:13px;outline:none">
+              <option value="all">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="accepted">Accepted</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="disputed">Disputed</option>
+            </select>
+            <span class="tbl-count" id="bookCount"></span>
+          </div>
+          <div style="overflow-x:auto"><table class="data-table">
+            <thead><tr><th>Ref</th><th>Seeker</th><th>Provider</th><th>Service</th><th>Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="bookingsBody"><tr><td colspan="8" style="text-align:center;padding:32px"><div class="skel" style="height:40px;border-radius:8px"></div></td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ═══════════ CATEGORIES ═══════════ -->
+      <div class="panel" id="panel-categories">
+        <div class="admin-header-bar">
+          <div><div class="admin-title">Service Categories</div><div class="admin-sub" id="catAdminSub">Manage all service categories on Servana</div></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-secondary btn-sm" id="seedCatsBtn">
+              <span class="btn-text">🌱 Seed All 30 Categories</span>
+              <span class="btn-spin-wrap"><div class="btn-spin" style="border-top-color:var(--brand)"></div></span>
+            </button>
+            <button class="btn btn-primary" id="addCatBtn">+ Add Category</button>
+          </div>
+        </div>
+        <div class="cat-admin-grid" id="catAdminGrid">
+          <div class="skel" style="height:64px;border-radius:12px"></div>
+          <div class="skel" style="height:64px;border-radius:12px"></div>
+          <div class="skel" style="height:64px;border-radius:12px"></div>
+        </div>
+      </div>
+
+      <!-- ═══════════ ANALYTICS ═══════════ -->
+      <div class="panel" id="panel-analytics">
+        <div class="admin-header-bar">
+          <div><div class="admin-title">Analytics</div><div class="admin-sub">Platform performance insights</div></div>
+        </div>
+        <div class="analytics-grid">
+          <div class="analytics-card">
+            <div class="analytics-card-title">Monthly Bookings</div>
+            <div class="mini-bars" id="chartBookings"></div>
+          </div>
+          <div class="analytics-card">
+            <div class="analytics-card-title">Revenue (Platform Fee ₦)</div>
+            <div class="mini-bars" id="chartRevenue"></div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="card">
+            <div class="card-head"><span class="card-head-title">Top Providers</span></div>
+            <div class="card-body" style="padding:0"><div id="topProviders" style="padding:12px"></div></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-head-title">Booking Status Split</span></div>
+            <div class="card-body"><div id="statusSplit" style="display:flex;flex-direction:column;gap:8px"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ SETTINGS ═══════════ -->
+      <div class="panel" id="panel-settings">
+        <div class="admin-header-bar">
+          <div><div class="admin-title">Platform Settings</div><div class="admin-sub">Commission rates and configuration</div></div>
+        </div>
+        <div class="card mb-3">
+          <div class="card-head"><span class="card-head-title">Commission & Fees</span></div>
+          <div class="card-body">
+            <div class="commission-row">
+              <div><div class="comm-lbl">Platform Commission Rate</div><div class="comm-sub">Deducted from each completed booking</div></div>
+              <div style="display:flex;align-items:center;gap:6px"><input class="comm-input" type="number" id="commRate" value="5" min="0" max="30"><span style="font-size:13px;color:var(--text-2)">%</span></div>
+            </div>
+            <div class="commission-row">
+              <div><div class="comm-lbl">Minimum Booking Amount</div><div class="comm-sub">Lowest service price accepted on platform</div></div>
+              <div style="display:flex;align-items:center;gap:6px"><span style="font-size:13px;color:var(--text-2)">₦</span><input class="comm-input" type="number" id="minBooking" value="500" min="0"></div>
+            </div>
+            <div class="commission-row">
+              <div><div class="comm-lbl">Provider Payout Window</div><div class="comm-sub">Days after job completion before payout</div></div>
+              <div style="display:flex;align-items:center;gap:6px"><input class="comm-input" type="number" id="payoutDays" value="3" min="1" max="30"><span style="font-size:13px;color:var(--text-2)">days</span></div>
+            </div>
+            <button class="btn btn-primary mt-3" id="saveSettingsBtn">
+              <span class="btn-text">Save Settings</span>
+              <span class="btn-spin-wrap"><div class="btn-spin"></div></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><span class="card-head-title">Platform Status</span></div>
+          <div class="card-body">
+            <div class="commission-row">
+              <div><div class="comm-lbl">Maintenance Mode</div><div class="comm-sub">Disable bookings for all users</div></div>
+              <label class="toggle-wrap"><input type="checkbox" class="toggle-input" id="maintenanceMode"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+            </div>
+            <div class="commission-row">
+              <div><div class="comm-lbl">New Registrations</div><div class="comm-sub">Allow new users to sign up</div></div>
+              <label class="toggle-wrap"><input type="checkbox" class="toggle-input" id="allowRegistrations" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+            </div>
+            <div class="commission-row">
+              <div><div class="comm-lbl">Provider Applications</div><div class="comm-sub">Allow new provider signups</div></div>
+              <label class="toggle-wrap"><input type="checkbox" class="toggle-input" id="allowProviders" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { auth, db, toast, showSpinner, hideSpinner, esc, formatNGN, starsHtml, initials, setLoading, seedDefaultCategories, DEFAULT_CATEGORIES } from "./assets/firebase.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { collection, doc, getDoc, getDocs, updateDoc, deleteDoc, addDoc, setDoc, serverTimestamp, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const $ = id => document.getElementById(id);
+let allUsers=[], allProviders=[], allBookings=[], allCats=[], platformConfig={};
+let editingCatId = null;
+
+// ── Auth guard — admin only ──────────────────────────────
+onAuthStateChanged(auth, async user => {
+  if (!user) { location.href = "./login.html"; return; }
+  const snap = await getDoc(doc(db,"users",user.uid));
+  if (!snap.exists() || snap.data().role !== "admin") {
+    toast("Access denied. Admin only.", "error", 5000);
+    setTimeout(() => location.href = "./dashboard.html", 2000);
+    return;
+  }
+  const name = user.displayName || "Admin";
+  $("adminName").textContent = name; $("sidebarAdminName").textContent = name;
+  await loadAllData();
+  loadPlatformConfig();
+});
+
+// ── Navigation ───────────────────────────────────────────
+window.switchPanel = function(panelId) {
+  document.querySelectorAll(".panel").forEach(p => p.classList.toggle("active", p.id===`panel-${panelId}`));
+  document.querySelectorAll(".sb-item[data-panel]").forEach(i => i.classList.toggle("active", i.dataset.panel===panelId));
+  document.querySelectorAll(".mob-tab[data-panel]").forEach(t => t.classList.toggle("active", t.dataset.panel===panelId));
+};
+document.querySelectorAll(".sb-item[data-panel], .mob-tab[data-panel]").forEach(el => el.addEventListener("click", () => switchPanel(el.dataset.panel)));
+
+// ── Sign out ─────────────────────────────────────────────
+const doSignOut = async () => { try { await signOut(auth); location.href="./login.html"; } catch(e) { toast("Sign out failed.","error"); } };
+$("signOutBtn").addEventListener("click", doSignOut);
+$("sidebarSignOut").addEventListener("click", doSignOut);
+
+// ── Load all data ────────────────────────────────────────
+async function loadAllData() {
+  try {
+    showSpinner();
+    const [usersSnap, provsSnap, booksSnap, catsSnap] = await Promise.all([
+      getDocs(collection(db,"users")),
+      getDocs(collection(db,"providers")),
+      getDocs(collection(db,"bookings")),
+      getDocs(collection(db,"category")),
+    ]);
+    allUsers    = usersSnap.docs.map(d=>({id:d.id,...d.data()}));
+    allProviders= provsSnap.docs.map(d=>({id:d.id,...d.data()}));
+    allBookings = booksSnap.docs.map(d=>({id:d.id,...d.data()}));
+    allCats     = catsSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+    updateOverview(); renderUsers(); renderProviders(); renderBookings(); renderCategories(); renderAnalytics();
+  } catch(e) { toast("Failed to load platform data.","error"); console.error(e); }
+  finally { hideSpinner(); }
+}
+
+// ── Overview ─────────────────────────────────────────────
+function updateOverview() {
+  const completed  = allBookings.filter(b=>b.status==="completed");
+  const revenue    = completed.reduce((s,b)=>s+(b.total||0)*0.05, 0);
+  const pending    = allProviders.filter(p=>!p.verified).length;
+  const disputes   = allBookings.filter(b=>b.status==="disputed").length;
+
+  $("ovTotalUsers").textContent = allUsers.length;
+  $("ovProviders").textContent  = allProviders.length;
+  $("ovRevenue").textContent    = formatNGN(revenue);
+  $("ovBookings").textContent   = allBookings.length;
+  $("ovPending").textContent    = pending;
+  $("ovDisputes").textContent   = disputes;
+
+  if (pending > 0) { $("sb-pending-verif").textContent=pending; $("sb-pending-verif").style.display="flex"; }
+  if (disputes > 0){ $("sb-disputes").textContent=disputes; $("sb-disputes").style.display="flex"; }
+  $("sb-users-count").textContent=allUsers.length; $("sb-users-count").style.display="flex";
+
+  // Recent bookings
+  const recent = [...allBookings].sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).slice(0,5);
+  $("ovRecentBookings").innerHTML = recent.length ? recent.map(b=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:.5px solid var(--border)">
+      <div style="font-size:20px">${{pending:"⏳",accepted:"🔵",completed:"✅",cancelled:"🚫",disputed:"⚠️"}[b.status]||"📋"}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--text-1)">${esc(b.seekerName||"Seeker")} → ${esc(b.providerName||"Provider")}</div>
+        <div style="font-size:11px;color:var(--text-3)">${esc(b.service||"Service")} · ${esc(b.date||"")}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:13px;font-weight:700;color:var(--brand)">${formatNGN(b.total||0)}</div>
+        <span class="badge badge-${esc(b.status)}">${esc(b.status)}</span>
+      </div>
+    </div>`).join("") : `<div class="empty-state" style="padding:24px"><div class="empty-icon">📋</div><p class="empty-title">No bookings yet</p></div>`;
+}
+
+// ── Users ────────────────────────────────────────────────
+function renderUsers(filter="") {
+  const list = filter ? allUsers.filter(u=>[u.displayName,u.email].some(f=>f?.toLowerCase().includes(filter.toLowerCase()))) : allUsers;
+  $("userCount").textContent = `${list.length} users`;
+  $("usersBody").innerHTML = list.length ? list.map(u=>`
+    <tr>
+      <td><div class="user-cell"><div class="user-av">${initials(u.displayName||"U")}</div><div><div style="font-weight:600;color:var(--text-1)">${esc(u.displayName||"Unknown")}</div><div style="font-size:11px;color:var(--text-3)">${esc(u.uid?.slice(0,8)||"")}</div></div></div></td>
+      <td>${esc(u.email||"—")}</td>
+      <td><span class="badge ${u.role==="provider"?"badge-purple":"badge-info"}">${esc(u.role||"seeker")}</span></td>
+      <td style="color:var(--text-3)">${u.createdAt?.toDate?.()?.toLocaleDateString("en-NG")||"—"}</td>
+      <td><span class="badge ${u.suspended?"badge-danger":"badge-success"}">${u.suspended?"Suspended":"Active"}</span></td>
+      <td><div class="actions-cell">
+        <button class="tbl-btn ${u.suspended?"verify":"suspend"}" onclick="toggleSuspendUser('${u.id}',${!!u.suspended})">${u.suspended?"Reinstate":"Suspend"}</button>
+        <button class="tbl-btn delete" onclick="deleteUserDoc('${u.id}')">Delete</button>
+      </div></td>
+    </tr>`).join("")
+  : `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">👥</div><p class="empty-title">No users found</p></div></td></tr>`;
+}
+
+$("userSearch").addEventListener("input", e => renderUsers(e.target.value));
+
+window.toggleSuspendUser = async (uid, isSuspended) => {
+  try { showSpinner(); await updateDoc(doc(db,"users",uid),{suspended:!isSuspended}); const u=allUsers.find(x=>x.id===uid); if(u) u.suspended=!isSuspended; renderUsers($("userSearch").value); toast(`User ${!isSuspended?"suspended":"reinstated"}.`,!isSuspended?"warning":"success"); }
+  catch(e){toast("Failed.","error");} finally{hideSpinner();}
+};
+window.deleteUserDoc = async uid => {
+  if(!confirm("Permanently delete this user record? This cannot be undone."))return;
+  try { showSpinner(); await deleteDoc(doc(db,"users",uid)); allUsers=allUsers.filter(x=>x.id!==uid); renderUsers(); updateOverview(); toast("User deleted.","info"); }
+  catch(e){toast("Failed.","error");} finally{hideSpinner();}
+};
+
+// ── Providers ────────────────────────────────────────────
+function renderProviders(filter="",statusFilter="all") {
+  let list = filter ? allProviders.filter(p=>[p.name,p.role,p.category,p.location].some(f=>f?.toLowerCase().includes(filter.toLowerCase()))) : allProviders;
+  if (statusFilter==="pending")   list=list.filter(p=>!p.verified&&!p.suspended);
+  if (statusFilter==="verified")  list=list.filter(p=>p.verified);
+  if (statusFilter==="suspended") list=list.filter(p=>p.suspended);
+  $("provCount").textContent = `${list.length} providers`;
+  $("providersBody").innerHTML = list.length ? list.map(p=>`
+    <tr>
+      <td><div class="user-cell"><div class="user-av">${initials(p.name||"P")}</div><div><div style="font-weight:600">${esc(p.name||"Unknown")}</div><div style="font-size:11px;color:var(--text-3)">${esc(p.email||"")}</div></div></div></td>
+      <td>${esc(p.role||p.category||"—")}</td>
+      <td>${esc(p.city||p.location||"—")}</td>
+      <td>${starsHtml(p.rating||0)} <span style="font-size:11px;color:var(--text-3)">${parseFloat(p.rating||0).toFixed(1)}</span></td>
+      <td>${p.completedJobs||0}</td>
+      <td><span class="badge ${p.suspended?"badge-danger":p.verified?"badge-success":"badge-warning"}">${p.suspended?"Suspended":p.verified?"Verified":"Pending"}</span></td>
+      <td><div class="actions-cell">
+        ${!p.verified&&!p.suspended?`<button class="tbl-btn verify" onclick="verifyProvider('${p.id}')">Verify</button>`:""}
+        ${p.verified?`<button class="tbl-btn suspend" onclick="unverifyProvider('${p.id}')">Unverify</button>`:""}
+        <button class="tbl-btn ${p.suspended?"verify":"suspend"}" onclick="toggleSuspendProvider('${p.id}',${!!p.suspended})">${p.suspended?"Reinstate":"Suspend"}</button>
+      </div></td>
+    </tr>`).join("")
+  : `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🛠️</div><p class="empty-title">No providers found</p></div></td></tr>`;
+}
+
+$("provSearch").addEventListener("input", () => renderProviders($("provSearch").value, $("provFilter").value));
+$("provFilter").addEventListener("change", () => renderProviders($("provSearch").value, $("provFilter").value));
+
+window.verifyProvider = async id => {
+  try { showSpinner(); await setDoc(doc(db,"providers",id),{verified:true},{merge:true}); const p=allProviders.find(x=>x.id===id); if(p)p.verified=true; renderProviders(); updateOverview(); toast("Provider verified! ✅","success"); }
+  catch(e){toast("Failed.","error");} finally{hideSpinner();}
+};
+window.unverifyProvider = async id => {
+  try { showSpinner(); await setDoc(doc(db,"providers",id),{verified:false},{merge:true}); const p=allProviders.find(x=>x.id===id); if(p)p.verified=false; renderProviders(); toast("Verification removed.","info"); }
+  catch(e){toast("Failed.","error");} finally{hideSpinner();}
+};
+window.toggleSuspendProvider = async (id,isSusp) => {
+  try { showSpinner(); await setDoc(doc(db,"providers",id),{suspended:!isSusp},{merge:true}); const p=allProviders.find(x=>x.id===id); if(p)p.suspended=!isSusp; renderProviders(); toast(`Provider ${!isSusp?"suspended":"reinstated"}.`,!isSusp?"warning":"success"); }
+  catch(e){toast("Failed.","error");} finally{hideSpinner();}
+};
+
+// ── Bookings ─────────────────────────────────────────────
+function renderBookings(filter="",statusFilter="all") {
+  let list = filter ? allBookings.filter(b=>[b.seekerName,b.providerName,b.bookingRef,b.service].some(f=>f?.toLowerCase().includes(filter.toLowerCase()))) : allBookings;
+  if (statusFilter!=="all") list=list.filter(b=>b.status===statusFilter);
+  list.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+  $("bookCount").textContent = `${list.length} bookings`;
+  $("bookingsBody").innerHTML = list.length ? list.map(b=>`
+    <tr>
+      <td style="font-size:11px;font-weight:700;color:var(--text-3)">${esc(b.bookingRef||b.id.slice(0,8).toUpperCase())}</td>
+      <td>${esc(b.seekerName||"—")}</td>
+      <td>${esc(b.providerName||"—")}</td>
+      <td>${esc(b.service||"—")}</td>
+      <td style="color:var(--text-3)">${esc(b.date||"—")}</td>
+      <td style="font-weight:700;color:var(--brand)">${formatNGN(b.total||0)}</td>
+      <td><span class="badge badge-${esc(b.status)}">${esc(b.status)}</span>${b.disputed?`<span class="dispute-flag ml-1">⚠️ Dispute</span>`:""}</td>
+      <td><div class="actions-cell">
+        ${b.status==="disputed"?`<button class="tbl-btn resolve" onclick="resolveDispute('${b.id}')">Resolve</button>`:""}
+        ${b.status==="pending"?`<button class="tbl-btn verify" onclick="adminUpdateBooking('${b.id}','accepted')">Accept</button>`:""}
+        ${b.status==="accepted"?`<button class="tbl-btn verify" onclick="adminUpdateBooking('${b.id}','completed')">Complete</button>`:""}
+        <button class="tbl-btn delete" onclick="adminUpdateBooking('${b.id}','cancelled')">Cancel</button>
+      </div></td>
+    </tr>`).join("")
+  : `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📅</div><p class="empty-title">No bookings found</p></div></td></tr>`;
+}
+
+$("bookSearch").addEventListener("input", () => renderBookings($("bookSearch").value, $("bookFilter").value));
+$("bookFilter").addEventListener("change", () => renderBookings($("bookSearch").value, $("bookFilter").value));
+
+window.adminUpdateBooking = async (id,status) => {
+  try { showSpinner(); await updateDoc(doc(db,"bookings",id),{status,updatedAt:serverTimestamp()}); const b=allBookings.find(x=>x.id===id); if(b)b.status=status; renderBookings($("bookSearch").value,$("bookFilter").value); toast(`Booking ${status}.`,"success"); }
+  catch(e){toast("Failed.","error");} finally{hideSpinner();}
+};
+window.resolveDispute = async id => {
+  try { showSpinner(); await updateDoc(doc(db,"bookings",id),{status:"completed",disputed:false,updatedAt:serverTimestamp()}); const b=allBookings.find(x=>x.id===id); if(b){b.status="completed";b.disputed=false;} renderBookings(); toast("Dispute resolved — booking marked complete.","success"); }
+  catch(e){toast("Failed.","error");} finally{hideSpinner();}
+};
+
+// ── Categories ───────────────────────────────────────────
+function renderCategories() {
+  $("catAdminSub").textContent = `${allCats.length} categories on platform`;
+  $("catAdminGrid").innerHTML = allCats.map(c=>`
+    <div class="cat-admin-card">
+      <div class="cat-admin-icon">${c.icon||"📂"}</div>
+      <div class="cat-admin-name">${esc(c.name||"")}</div>
+      <div class="cat-admin-actions">
+        <button class="btn-icon-sm" onclick="editCat('${c.id}')" title="Edit"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="btn-icon-sm del" onclick="deleteCat('${c.id}')" title="Delete" style="border:1px solid var(--border)"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+      </div>
+    </div>`).join("")+`
+    <div class="cat-admin-card" style="border:1.5px dashed var(--border);cursor:pointer;justify-content:center;gap:8px;color:var(--accent)" onclick="openAddCat()">
+      <span style="font-size:22px">＋</span>
+      <span style="font-size:13px;font-weight:600">Add Category</span>
+    </div>`;
+}
+
+window.openAddCat = () => { editingCatId=null; $("catModalTitle").textContent="Add Category"; $("catName").value=$("catIcon").value=$("catDesc").value=""; $("catModal").classList.add("active"); };
+window.editCat = id => { editingCatId=id; const c=allCats.find(x=>x.id===id); if(!c)return; $("catModalTitle").textContent="Edit Category"; $("catName").value=c.name||""; $("catIcon").value=c.icon||""; $("catDesc").value=c.description||""; $("catModal").classList.add("active"); };
+window.deleteCat = async id => {
+  if(!confirm("Delete this category?"))return;
+  try { showSpinner(); await deleteDoc(doc(db,"category",id)); allCats=allCats.filter(x=>x.id!==id); renderCategories(); toast("Category deleted.","info"); }
+  catch(e){toast("Failed.","error");} finally{hideSpinner();}
+};
+
+$("addCatBtn").addEventListener("click", openAddCat);
+
+// ── Seed default categories ───────────────────────────
+$("seedCatsBtn").addEventListener("click", async () => {
+  const btn = $("seedCatsBtn");
+  setLoading(btn, true);
+  try {
+    const { added, skipped } = await seedDefaultCategories();
+
+    // Reload categories list from Firestore
+    const snap = await (await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"))
+      .getDocs((await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"))
+      .collection(db, "category"));
+    allCats = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderCategories();
+
+    if (added === 0) {
+      toast(`All ${skipped} categories already exist — nothing to seed.`, "info");
+    } else {
+      toast(`✅ Seeded ${added} new categor${added === 1 ? "y" : "ies"}. ${skipped} already existed.`, "success", 5000);
+    }
+  } catch(e) {
+    console.error("Seed error:", e);
+    toast("Failed to seed categories. Check console.", "error");
+  } finally {
+    setLoading(btn, false);
+  }
+});
+$("closeCatModal").addEventListener("click", () => $("catModal").classList.remove("active"));
+$("catModal").addEventListener("click", e => { if(e.target===$("catModal"))$("catModal").classList.remove("active"); });
+
+$("saveCatBtn").addEventListener("click", async () => {
+  const name=$("catName").value.trim(); if(!name){toast("Category name required.","warning");return;}
+  const data={name,icon:$("catIcon").value.trim()||"📂",description:$("catDesc").value.trim(),updatedAt:serverTimestamp()};
+  setLoading($("saveCatBtn"),true);
+  try {
+    if (editingCatId) { await setDoc(doc(db,"category",editingCatId),data,{merge:true}); const c=allCats.find(x=>x.id===editingCatId); if(c)Object.assign(c,data); }
+    else { const ref=await addDoc(collection(db,"category"),{...data,createdAt:serverTimestamp()}); allCats.push({id:ref.id,...data}); }
+    renderCategories(); $("catModal").classList.remove("active"); toast(editingCatId?"Category updated!":"Category added!","success");
+  } catch(e){toast("Failed.","error");} finally{setLoading($("saveCatBtn"),false);}
+});
+
+// ── Analytics ─────────────────────────────────────────────
+function renderAnalytics() {
+  const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const now=new Date();
+  const last6=Array.from({length:6},(_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-5+i,1);return{label:months[d.getMonth()],month:d.getMonth(),year:d.getFullYear(),bookings:0,revenue:0};});
+
+  allBookings.filter(b=>b.date).forEach(b=>{
+    const d=new Date(b.date); const e=last6.find(x=>x.month===d.getMonth()&&x.year===d.getFullYear());
+    if(e){e.bookings++;if(b.status==="completed")e.revenue+=(b.total||0)*0.05;}
+  });
+
+  const maxB=Math.max(...last6.map(e=>e.bookings),1);
+  const maxR=Math.max(...last6.map(e=>e.revenue),1);
+
+  $("chartBookings").innerHTML=last6.map(e=>`<div class="mini-bar-col"><div class="mini-bar-bg"><div class="mini-bar-fill" style="height:${Math.round((e.bookings/maxB)*100)}%"></div></div><div class="mini-bar-lbl">${e.label}</div></div>`).join("");
+  $("chartRevenue").innerHTML=last6.map(e=>`<div class="mini-bar-col"><div class="mini-bar-bg"><div class="mini-bar-fill" style="height:${Math.round((e.revenue/maxR)*100)}%;background:linear-gradient(to top,var(--success),#86efac)"></div></div><div class="mini-bar-lbl">${e.label}</div></div>`).join("");
+
+  // Top providers
+  const provMap={};
+  allBookings.filter(b=>b.status==="completed").forEach(b=>{if(b.providerId){if(!provMap[b.providerId])provMap[b.providerId]={name:b.providerName||"Provider",jobs:0,revenue:0};provMap[b.providerId].jobs++;provMap[b.providerId].revenue+=b.serviceFee||0;}});
+  const topProvs=Object.values(provMap).sort((a,b)=>b.jobs-a.jobs).slice(0,5);
+  $("topProviders").innerHTML=topProvs.length?topProvs.map((p,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid var(--border)"><span style="font-size:16px">${["🥇","🥈","🥉","4️⃣","5️⃣"][i]}</span><div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text-1)">${esc(p.name)}</div><div style="font-size:11px;color:var(--text-3)">${p.jobs} jobs · ${formatNGN(p.revenue)}</div></div></div>`).join(""):`<div class="empty-state" style="padding:20px"><p class="empty-sub">No completed bookings yet</p></div>`;
+
+  // Status split
+  const counts={pending:0,accepted:0,completed:0,cancelled:0,disputed:0};
+  allBookings.forEach(b=>{if(counts[b.status]!==undefined)counts[b.status]++;});
+  const total=allBookings.length||1;
+  const colors={pending:"#D97706",accepted:"#2962FF",completed:"#16A34A",cancelled:"#DC2626",disputed:"#9333EA"};
+  $("statusSplit").innerHTML=Object.entries(counts).map(([k,v])=>`
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="width:10px;height:10px;border-radius:50%;background:${colors[k]};flex-shrink:0"></div>
+      <div style="flex:1;font-size:12px;color:var(--text-2);font-weight:500">${k.charAt(0).toUpperCase()+k.slice(1)}</div>
+      <div style="font-size:12px;font-weight:700;color:var(--text-1)">${v}</div>
+      <div style="width:60px;height:4px;background:var(--border);border-radius:4px;overflow:hidden"><div style="height:100%;width:${Math.round((v/total)*100)}%;background:${colors[k]};border-radius:4px"></div></div>
+    </div>`).join("");
+}
+
+// ── Platform config ───────────────────────────────────────
+async function loadPlatformConfig() {
+  try {
+    const snap = await getDoc(doc(db,"config","platform"));
+    if (snap.exists()) {
+      const c=snap.data();
+      $("commRate").value    = c.commissionRate||5;
+      $("minBooking").value  = c.minBooking||500;
+      $("payoutDays").value  = c.payoutDays||3;
+      $("maintenanceMode").checked = c.maintenanceMode||false;
+      $("allowRegistrations").checked = c.allowRegistrations!==false;
+      $("allowProviders").checked     = c.allowProviders!==false;
+    }
+  } catch(e) {}
+}
+
+$("saveSettingsBtn").addEventListener("click", async () => {
+  setLoading($("saveSettingsBtn"),true);
+  try {
+    await setDoc(doc(db,"config","platform"), {
+      commissionRate:    parseFloat($("commRate").value)||5,
+      minBooking:        parseFloat($("minBooking").value)||500,
+      payoutDays:        parseInt($("payoutDays").value)||3,
+      maintenanceMode:   $("maintenanceMode").checked,
+      allowRegistrations:$("allowRegistrations").checked,
+      allowProviders:    $("allowProviders").checked,
+      updatedAt:         serverTimestamp()
+    }, {merge:true});
+    toast("Platform settings saved!","success");
+  } catch(e){toast("Failed to save.","error");} finally{setLoading($("saveSettingsBtn"),false);}
+});
+
+document.addEventListener("keydown", e => { if(e.key==="Escape") document.querySelectorAll(".modal-overlay.active").forEach(m=>m.classList.remove("active")); });
+</script>
+</body>
+</html>

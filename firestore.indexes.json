@@ -1,0 +1,279 @@
+{
+  "indexes": [
+
+    // ── BOOKINGS ────────────────────────────────────────
+    // Query: bookings by seeker, sorted newest first
+    // Used in: bookings.html, profile.html
+    {
+      "collectionGroup": "bookings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "seekerId",   "order": "ASCENDING"  },
+        { "fieldPath": "createdAt",  "order": "DESCENDING" }
+      ]
+    },
+
+    // Query: bookings by seeker + status filter
+    // Used in: bookings.html pill tabs
+    {
+      "collectionGroup": "bookings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "seekerId",   "order": "ASCENDING"  },
+        { "fieldPath": "status",     "order": "ASCENDING"  },
+        { "fieldPath": "createdAt",  "order": "DESCENDING" }
+      ]
+    },
+
+    // Query: bookings by provider, sorted newest first
+    // Used in: provider.html overview + bookings tab
+    {
+      "collectionGroup": "bookings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "providerId", "order": "ASCENDING"  },
+        { "fieldPath": "createdAt",  "order": "DESCENDING" }
+      ]
+    },
+
+    // Query: bookings by provider + status filter
+    // Used in: provider.html bookings tab
+    {
+      "collectionGroup": "bookings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "providerId", "order": "ASCENDING"  },
+        { "fieldPath": "status",     "order": "ASCENDING"  },
+        { "fieldPath": "createdAt",  "order": "DESCENDING" }
+      ]
+    },
+
+    // Query: bookings by provider + status + date (earnings chart)
+    {
+      "collectionGroup": "bookings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "providerId", "order": "ASCENDING"  },
+        { "fieldPath": "status",     "order": "ASCENDING"  },
+        { "fieldPath": "date",       "order": "DESCENDING" }
+      ]
+    },
+
+    // ── PROVIDERS ───────────────────────────────────────
+    // Query: providers by category, sorted by rating
+    // Used in: seeker.html, category.html
+    {
+      "collectionGroup": "providers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "category",   "order": "ASCENDING"  },
+        { "fieldPath": "rating",     "order": "DESCENDING" }
+      ]
+    },
+
+    // Query: providers by category + availability
+    {
+      "collectionGroup": "providers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "category",   "order": "ASCENDING"  },
+        { "fieldPath": "available",  "order": "ASCENDING"  },
+        { "fieldPath": "rating",     "order": "DESCENDING" }
+      ]
+    },
+
+    // Query: providers by location + rating
+    {
+      "collectionGroup": "providers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "location",   "order": "ASCENDING"  },
+        { "fieldPath": "rating",     "order": "DESCENDING" }
+      ]
+    },
+
+    // Query: verified providers sorted by rating
+    // Used in: seeker.html "Verified Only" filter
+    {
+      "collectionGroup": "providers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "verified",   "order": "ASCENDING"  },
+        { "fieldPath": "rating",     "order": "DESCENDING" }
+      ]
+    },
+
+    // Query: providers by city + category
+    {
+      "collectionGroup": "providers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "city",       "order": "ASCENDING"  },
+        { "fieldPath": "category",   "order": "ASCENDING"  },
+        { "fieldPath": "rating",     "order": "DESCENDING" }
+      ]
+    },
+
+    // ── CHATS ────────────────────────────────────────────
+    // Query: chats for a user, sorted by last message time
+    // Used in: chat.html sidebar
+    // Note: array-contains + orderBy requires a composite index
+    {
+      "collectionGroup": "chats",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "participants",    "arrayConfig": "CONTAINS"   },
+        { "fieldPath": "lastMessageAt",   "order": "DESCENDING"       }
+      ]
+    },
+
+    // ── MESSAGES ─────────────────────────────────────────
+    // Query: messages in a chat, ordered by time ascending
+    // Used in: chat.html message thread
+    {
+      "collectionGroup": "messages",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "createdAt",  "order": "ASCENDING"  }
+      ]
+    },
+
+    // Messages limited to recent (createdAt + limit)
+    {
+      "collectionGroup": "messages",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "senderId",   "order": "ASCENDING"  },
+        { "fieldPath": "createdAt",  "order": "DESCENDING" }
+      ]
+    },
+
+    // ── REVIEWS ──────────────────────────────────────────
+    // Query: reviews for a provider, sorted newest first
+    // Used in: review aggregation, provider public profile
+    {
+      "collectionGroup": "reviews",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "providerId", "order": "ASCENDING"  },
+        { "fieldPath": "createdAt",  "order": "DESCENDING" }
+      ]
+    },
+
+    // Query: reviews by seeker
+    // Used in: profile.html, checking if user reviewed
+    {
+      "collectionGroup": "reviews",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "seekerId",   "order": "ASCENDING"  },
+        { "fieldPath": "createdAt",  "order": "DESCENDING" }
+      ]
+    },
+
+    // Query: reviews by provider + rating (analytics)
+    {
+      "collectionGroup": "reviews",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "providerId", "order": "ASCENDING"  },
+        { "fieldPath": "rating",     "order": "DESCENDING" }
+      ]
+    },
+
+    // ── NOTIFICATIONS ─────────────────────────────────────
+    // Query: notifications for a user, unread first
+    {
+      "collectionGroup": "notifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId",     "order": "ASCENDING"  },
+        { "fieldPath": "read",       "order": "ASCENDING"  },
+        { "fieldPath": "createdAt",  "order": "DESCENDING" }
+      ]
+    },
+
+    // Query: notifications for a user, latest first
+    {
+      "collectionGroup": "notifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId",     "order": "ASCENDING"  },
+        { "fieldPath": "createdAt",  "order": "DESCENDING" }
+      ]
+    },
+
+    // ── USERS ────────────────────────────────────────────
+    // Query: users by role
+    // Used in: admin.html user management
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "role",       "order": "ASCENDING"  },
+        { "fieldPath": "createdAt",  "order": "DESCENDING" }
+      ]
+    },
+
+    // Query: suspended users
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "suspended",  "order": "ASCENDING"  },
+        { "fieldPath": "createdAt",  "order": "DESCENDING" }
+      ]
+    }
+
+  ],
+
+  "fieldOverrides": [
+
+    // ── Disable single-field indexes we don't need ──────
+    // Saves Firestore storage and speeds up writes.
+    // Only override fields that are NEVER queried alone.
+
+    // 'notes' field in bookings — never queried, only read
+    {
+      "collectionGroup": "bookings",
+      "fieldPath": "notes",
+      "indexes": []
+    },
+
+    // 'address' field in bookings — never queried
+    {
+      "collectionGroup": "bookings",
+      "fieldPath": "address",
+      "indexes": []
+    },
+
+    // 'bio' field in providers — never queried
+    {
+      "collectionGroup": "providers",
+      "fieldPath": "bio",
+      "indexes": []
+    },
+
+    // 'portfolio' array in providers — never queried as filter
+    {
+      "collectionGroup": "providers",
+      "fieldPath": "portfolio",
+      "indexes": []
+    },
+
+    // 'comment' in reviews — only read, never filtered
+    {
+      "collectionGroup": "reviews",
+      "fieldPath": "comment",
+      "indexes": []
+    },
+
+    // 'text' in messages — never queried
+    {
+      "collectionGroup": "messages",
+      "fieldPath": "text",
+      "indexes": []
+    }
+
+  ]
+}
