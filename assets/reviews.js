@@ -11,11 +11,6 @@
 //   4. Updates the provider document atomically
 //   5. Marks the booking as reviewed
 //   6. Sends notification + email to provider
-//
-// WHY NOT CLOUD FUNCTIONS?
-//   Cloud Functions require the Blaze (pay-as-you-go) plan.
-//   This approach uses a Firestore transaction to ensure
-//   the aggregation is consistent and atomic — no server needed.
 // ═══════════════════════════════════════════════════════
 
 import { db } from "./firebase.js";

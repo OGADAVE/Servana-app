@@ -364,17 +364,88 @@ let editingCatId = null;
 
 // ── Auth guard — admin only ──────────────────────────────
 onAuthStateChanged(auth, async user => {
-  if (!user) { location.href = "./login.html"; return; }
-  const snap = await getDoc(doc(db,"users",user.uid));
-  if (!snap.exists() || snap.data().role !== "admin") {
-    toast("Access denied. Admin only.", "error", 5000);
-    setTimeout(() => location.href = "./dashboard.html", 2000);
+
+  console.log("========== SERVANA ADMIN AUTH CHECK ==========");
+
+  if (!user) {
+    console.log("❌ NO AUTHENTICATED USER");
+    location.href = "./login.html";
     return;
   }
-  const name = user.displayName || "Admin";
-  $("adminName").textContent = name; $("sidebarAdminName").textContent = name;
-  await loadAllData();
-  loadPlatformConfig();
+
+  console.log("AUTH UID:", user.uid);
+  console.log("AUTH EMAIL:", user.email);
+
+  try {
+
+    const snap = await getDoc(doc(db, "users", user.uid));
+
+    console.log("USER DOCUMENT PATH:", `users/${user.uid}`);
+    console.log("DOCUMENT EXISTS:", snap.exists());
+
+    if (snap.exists()) {
+
+      const data = snap.data();
+
+      console.log("USER DOCUMENT DATA:", data);
+      console.log("ROLE:", data.role);
+      console.log("USER ID FIELD:", data.userId);
+
+      console.log(
+        "UID === userId:",
+        user.uid === data.userId
+      );
+
+    }
+
+    if (!snap.exists()) {
+
+      console.error("❌ ADMIN CHECK FAILED: USER DOCUMENT DOES NOT EXIST");
+
+      toast("Admin user record not found.", "error", 5000);
+
+      setTimeout(() => {
+        location.href = "./dashboard.html";
+      }, 2000);
+
+      return;
+    }
+
+    if (snap.data().role !== "admin") {
+
+      console.error(
+        "❌ ADMIN CHECK FAILED: ROLE IS",
+        snap.data().role
+      );
+
+      toast("Access denied. Admin only.", "error", 5000);
+
+      setTimeout(() => {
+        location.href = "./dashboard.html";
+      }, 2000);
+
+      return;
+    }
+
+    console.log("✅ ADMIN ACCESS GRANTED");
+
+    const name = user.displayName || "Admin";
+
+    $("adminName").textContent = name;
+    $("sidebarAdminName").textContent = name;
+
+    await loadAllData();
+    await loadPlatformConfig();
+
+  } catch (error) {
+
+    console.error("🔥 ADMIN AUTH CHECK ERROR:", error);
+    console.error("ERROR CODE:", error.code);
+    console.error("ERROR MESSAGE:", error.message);
+
+    toast("Failed to verify admin access. Check console.", "error", 5000);
+  }
+
 });
 
 // ── Navigation ───────────────────────────────────────────
