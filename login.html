@@ -305,11 +305,15 @@ const provider = new GoogleAuthProvider();
 const $ = id => document.getElementById(id);
 
 // Redirect if already logged in
-onAuthStateChanged(auth, user => { if (user) redirect(user); });
+let isLoggedIn = false;
+onAuthStateChanged(auth, user => { if (user && !isLoggedIn) { redirect(user); 
+}
+});
 
 // Check URL params for pre-selected tab/role
 const params = new URLSearchParams(location.search);
 if (params.get("tab") === "signup") showSignup();
+
 // Wire locations on page load
 wireCascade(
   document.getElementById("signupCountry"),
@@ -325,11 +329,43 @@ if (params.get("role") === "provider") {
 
 // ── Redirect based on role ───────────────────────────
 async function redirect(user) {
+
   try {
+
     const snap = await getDoc(doc(db, "users", user.uid));
-    const role = snap.exists() ? snap.data().role : "seeker";
-    location.href = role === "provider" ? "./provider.html" : "./dashboard.html";
-  } catch { location.href = "./dashboard.html"; }
+
+    const role = snap.exists()
+      ? snap.data().role
+      : "seeker";
+
+    console.log("LOGIN REDIRECT CHECK");
+    console.log("UID:", user.uid);
+    console.log("ROLE:", role);
+
+    if (role === "admin") {
+
+      console.log("→ Redirecting to ADMIN dashboard");
+      location.href = "./servana-admin.html";
+
+    } else if (role === "provider") {
+
+      console.log("→ Redirecting to PROVIDER dashboard");
+      location.href = "./provider.html";
+
+    } else {
+
+      console.log("→ Redirecting to SEEKER dashboard");
+      location.href = "./dashboard.html";
+
+    }
+
+  } catch (error) {
+
+    console.error("ROLE REDIRECT ERROR:", error);
+
+    location.href = "./dashboard.html";
+
+  }
 }
 
 // ── Ensure user doc exists ───────────────────────────
@@ -411,15 +447,21 @@ $("loginBtn").addEventListener("click", async () => {
   if (!ok) return;
 
   setLoading($("loginBtn"), true);
+  isLoggedIn = true;
+
   try {
     await setPersistence(auth, $("rememberMe").checked ? browserLocalPersistence : browserSessionPersistence);
     const cred = await signInWithEmailAndPassword(auth, email, pw);
     await ensureUserDoc(cred.user);
     toast("Logged in! Redirecting…", "success", 2000);
-    setTimeout(() => redirect(cred.user), 1400);
+    await redirect(cred.user);
+
   } catch(err) {
+    console.error("LOGIN ERROR:", err);
     const msg = friendlyError(err.code); if (msg) toast(msg, "error");
-  } finally { setLoading($("loginBtn"), false); }
+    isLoggedIn = false;
+  } finally { setLoading($("loginBtn"), false); 
+  }
 });
 
 // ── Sign up ───────────────────────────────────────────
