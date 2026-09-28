@@ -1,10 +1,16 @@
 // ═══════════════════════════════════════════════════════
 // SERVANA — Cloudinary Upload Utility
 // Replaces Firebase Storage across all pages
-//══════════════════════════════════════════════════════
+//
+// SETUP (one-time in your Cloudinary dashboard):
+//   1. Go to Settings → Upload → Upload Presets
+//   2. Create a new preset, set Signing Mode = "Unsigned"
+//   3. Copy the preset name into UPLOAD_PRESET below
+//   4. Copy your Cloud Name from the Dashboard
+// ═══════════════════════════════════════════════════════
 
 // ── ✏️  CONFIGURE THESE TWO VALUES ──────────────────────
-const CLOUD_NAME    = "pgstcx8v";
+const CLOUD_NAME    = "pgstcx8v"; 
 const UPLOAD_PRESET = "Servana";
 // ────────────────────────────────────────────────────────
 

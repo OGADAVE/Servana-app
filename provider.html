@@ -446,7 +446,16 @@ function updateAvailLabel(on) {
 
 $("availToggle").addEventListener("change", async () => {
   const on = $("availToggle").checked; updateAvailLabel(on);
-  try { await setDoc(doc(db,"providers",currentUser.uid),{available:on},{merge:true}); toast(on?"You're now available for bookings.":"You're now offline.", on?"success":"info"); }
+  try {
+      const provRef = doc(db,"providers",currentUser.uid);
+      const provSnap = await getDoc(provRef);
+      if (!provSnap.exists()) {
+        await setDoc(provRef,{uid:currentUser.uid,email:currentUser.email||"",available:on,verified:false,rating:0,reviewCount:0,completedJobs:0,services:[],createdAt:serverTimestamp()});
+      } else {
+        await setDoc(provRef,{available:on},{merge:true});
+      }
+      toast(on?"You're now available for bookings.":"You're now offline.", on?"success":"info");
+    }
   catch(e) { toast("Failed to update availability.","error"); $("availToggle").checked=!on; updateAvailLabel(!on); }
 });
 
@@ -589,15 +598,60 @@ window.deleteSvc = async i => {
 $("saveSvcBtn").addEventListener("click", async()=>{
   const name=$("svcName").value.trim();
   if(!name){toast("Service name required.","warning");return;}
-  const entry={name,description:$("svcDesc").value.trim(),price:parseFloat($("svcPrice").value)||0,duration:$("svcDuration").value.trim()};
+  if(!currentUser){toast("You must be logged in.","error");return;}
+
+  const entry={
+    name,
+    description: $("svcDesc").value.trim(),
+    price:       parseFloat($("svcPrice").value)||0,
+    duration:    $("svcDuration").value.trim()
+  };
   const svcs=[...(provData.services||[])];
   if(editingSvcIdx!==null) svcs[editingSvcIdx]=entry; else svcs.push(entry);
   setLoading($("saveSvcBtn"),true);
+
   try {
-    await setDoc(doc(db,"providers",currentUser.uid),{services:svcs},{merge:true});
-    provData.services=svcs; renderServices(); closeModal("svcModal");
-    toast(editingSvcIdx!==null?"Service updated!":"Service added!","success");
-  } catch(e){toast("Failed to save service.","error");} finally{setLoading($("saveSvcBtn"),false);}
+    const provRef = doc(db,"providers",currentUser.uid);
+    const provSnap = await getDoc(provRef);
+
+    if (!provSnap.exists()) {
+      // Provider document does not exist yet — create it with base fields first.
+      // This happens when a user signed up as seeker and switches to provider,
+      // or if the signup flow did not complete the provider doc creation.
+      await setDoc(provRef, {
+        uid:           currentUser.uid,
+        name:          currentUser.displayName || "",
+        email:         currentUser.email       || "",
+        available:     true,
+        verified:      false,
+        rating:        0,
+        reviewCount:   0,
+        completedJobs: 0,
+        services:      [],
+        createdAt:     serverTimestamp()
+      });
+      console.log("[Provider] Base document created for:", currentUser.uid);
+    }
+
+    // Now safely merge the services array
+    await setDoc(provRef, { services: svcs, updatedAt: serverTimestamp() }, { merge: true });
+
+    // Keep local state in sync
+    provData.services = svcs;
+    renderServices();
+    closeModal("svcModal");
+    toast(editingSvcIdx!==null?"Service updated! ✅":"Service added! ✅","success");
+  } catch(e) {
+    console.error("[Provider] Save service error:", e.code, e.message);
+    const msg = e.code === "permission-denied"
+      ? "Permission denied. Please log out and log back in."
+      : e.code === "unavailable"
+      ? "No internet connection. Please try again."
+      : "Failed to save service. Try again.";
+    toast(msg, "error");
+  } finally {
+    setLoading($("saveSvcBtn"),false);
+  }
 });
 
 // ── Portfolio ─────────────────────────────────────────────
@@ -685,11 +739,32 @@ $("saveProfileBtn").addEventListener("click", async()=>{
   const data={name,role:$("pfRole").value.trim(),category:$("pfCat").value,phone:$("pfPhone").value.trim(),country:$("pfCountry").value,state:$("pfState").value,city:$("pfCity").value,location:$("pfCity").value,bio:$("pfBio").value.trim(),tags,startingPrice:parseFloat($("pfPrice").value)||0,experience:parseInt($("pfExp").value)||0,updatedAt:serverTimestamp()};
   setLoading($("saveProfileBtn"),true);
   try {
-    await setDoc(doc(db,"providers",currentUser.uid),data,{merge:true});
+    const provRef = doc(db,"providers",currentUser.uid);
+    const provSnap = await getDoc(provRef);
+
+    if (!provSnap.exists()) {
+      // First time saving profile — create base document
+      await setDoc(provRef, {
+        uid: currentUser.uid, email: currentUser.email || "",
+        available: true, verified: false, rating: 0,
+        reviewCount: 0, completedJobs: 0, services: [],
+        createdAt: serverTimestamp()
+      });
+    }
+
+    await setDoc(provRef, data, {merge:true});
     await updateProfile(currentUser,{displayName:name});
-    Object.assign(provData,data); $("heroName").textContent=name; $("heroRole").textContent=data.role||"Service Provider";
-    renderStrength(); toast("Profile saved!","success");
-  } catch(e){toast("Failed to save profile.","error");} finally{setLoading($("saveProfileBtn"),false);}
+    Object.assign(provData,data);
+    $("heroName").textContent=name;
+    $("heroRole").textContent=data.role||"Service Provider";
+    renderStrength(); toast("Profile saved! ✅","success");
+  } catch(e){
+    console.error("[Provider] Save profile error:",e.code,e.message);
+    const msg = e.code==="permission-denied"
+      ? "Permission denied. Please log out and log back in."
+      : "Failed to save profile. Try again.";
+    toast(msg,"error");
+  } finally{setLoading($("saveProfileBtn"),false);}
 });
 
 // ── Profile photo upload ──────────────────────────────────

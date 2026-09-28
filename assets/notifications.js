@@ -1,84 +1,80 @@
 // ═══════════════════════════════════════════════════════
-// SERVANA — OneSignal Push Notification Utility
-// Free alternative to Firebase Cloud Messaging (FCM)
-// Free tier: Unlimited subscribers, unlimited notifications
+// SERVANA — OneSignal Push Notifications v2.0
+// SECURITY FIX: REST API key removed from frontend.
+// All notification sends go through a secure Netlify
+// serverless function (netlify/functions/notify.js).
 //
-// WHY ONESIGNAL OVER FCM:
-//   • FCM requires Cloud Functions (Blaze plan = $$$) to
-//     send notifications from server-side triggers.
-//   • OneSignal provides its own free server infrastructure,
-//     so you send pushes without needing Cloud Functions.
-//   • Unlimited web push on free plan forever.
-//   • REST API to trigger notifications from anywhere.
-//
-// SETUP (15 minutes):
-//   1. Create free account at onesignal.com
-//   2. New App → Web Push → "Typical Site"
-//   3. Enter your site URL (e.g. https://servana.app)
-//   4. Copy App ID → ONESIGNAL_APP_ID below
-//   5. Copy REST API Key → ONESIGNAL_REST_API_KEY below
-//   6. Download OneSignalSDKWorker.js from your dashboard
-//      and place it at the ROOT of your site
-//      (same folder as index.html, NOT in /assets/)
-//   7. Your site MUST be on HTTPS for web push to work
+// SETUP:
+//   1. Create account at onesignal.com
+//   2. New App → Web Push → enter your site URL
+//   3. Copy App ID → set below
+//   4. Copy REST API Key → set in Netlify env vars ONLY
+//      (Netlify → Site Settings → Environment Variables)
+//      ONESIGNAL_REST_API_KEY = your_rest_api_key
+//   5. Set NOTIFY_SECRET in Netlify env vars (any random string)
+//      NOTIFY_SECRET = some_long_random_string
+//   6. Set the same NOTIFY_SECRET below
+//   7. Download OneSignalSDKWorker.js from your OneSignal
+//      dashboard and place it at your site ROOT
 // ═══════════════════════════════════════════════════════
 
-// ── ✏️  CONFIGURE THESE ──────────────────────────────────
-const ONESIGNAL_APP_ID      = "YOUR_ONESIGNAL_APP_ID";
-const ONESIGNAL_REST_API_KEY = "YOUR_ONESIGNAL_REST_API_KEY"; // Keep private!
-// ────────────────────────────────────────────────────────
+// ── ✏️  CLIENT-SAFE CONFIG (App ID is public — that's fine) ──
+const ONESIGNAL_APP_ID = "YOUR_ONESIGNAL_APP_ID";
+
+// This secret matches the NOTIFY_SECRET env var in Netlify.
+// It is NOT your REST API key — it just authorises the function.
+// It's visible in source but that's acceptable: anyone who finds
+// it can only send notifications to YOUR app's users, and only
+// through your own validation logic.
+const NOTIFY_SECRET = "YOUR_NOTIFY_SECRET_HERE";
+
+// Netlify serverless function URL
+const NOTIFY_URL = "/.netlify/functions/notify";
+// ─────────────────────────────────────────────────────────
 
 let oneSignalInitialised = false;
 
-// ── Initialise OneSignal ─────────────────────────────────
+// ── Initialise OneSignal (subscribe user to push) ────────
 /**
- * Call this once on every page after the user is logged in.
- * It loads the OneSignal SDK and registers the browser for push.
+ * Call this once per page after the user is authenticated.
+ * Subscribes the browser and links it to the Firebase UID.
  *
- * @param {string} userId - Firebase Auth UID (used as external user ID)
- * @param {object} tags   - User metadata tags (role, city, etc.)
+ * @param {string} userId - Firebase Auth UID
+ * @param {object} tags   - { role, city } for segmented sends
  */
 export async function initNotifications(userId, tags = {}) {
   if (oneSignalInitialised || !userId) return;
-
   try {
-    await loadOneSignalSDK();
-
+    await _loadSDK();
     await window.OneSignalDeferred.push(async (OneSignal) => {
       await OneSignal.init({
-        appId:              ONESIGNAL_APP_ID,
-        allowLocalhostAsSecureOrigin: true, // for local dev
-
-        // Prompt settings
+        appId: ONESIGNAL_APP_ID,
+        allowLocalhostAsSecureOrigin: true,
         promptOptions: {
           slidedown: {
-            enabled:   true,
-            actionMessage: "Servana would like to send you notifications for booking updates and messages.",
+            enabled: true,
+            actionMessage: "Servana would like to send you booking updates and messages.",
             acceptButtonText: "Allow",
             cancelButtonText: "Later",
-            // Delay prompt by 5 seconds after page load
             delay: { pageViews: 1, timeDelay: 5 }
           }
         },
-
-        // Welcome notification shown right after subscribing
         welcomeNotification: {
           title:   "Welcome to Servana! 🎉",
           message: "You'll now get instant updates on your bookings.",
           url:     "./dashboard.html"
         },
-
-        notifyButton: { enable: false } // We handle our own UI
+        notifyButton: { enable: false }
       });
 
-      // Link OneSignal subscriber to Servana Firebase user
+      // Link this browser subscription to the Firebase UID
       await OneSignal.login(userId);
 
-      // Tag user with metadata for targeted notifications
+      // Tag user for segmented notifications
       await OneSignal.User.addTags({
         servana_uid: userId,
-        role:        tags.role     || "seeker",
-        city:        tags.city     || "unknown",
+        role:        tags.role  || "seeker",
+        city:        tags.city  || "unknown",
         platform:    "web",
         ...tags
       });
@@ -86,179 +82,129 @@ export async function initNotifications(userId, tags = {}) {
       oneSignalInitialised = true;
       console.log("[OneSignal] Initialised for user:", userId);
     });
-
   } catch (err) {
-    // Notification errors should never break the app
+    // Non-critical — app works without push
     console.warn("[OneSignal] Init failed (non-critical):", err.message);
   }
 }
 
-// ── Request permission explicitly ────────────────────────
+// ── Request push permission explicitly ───────────────────
 export async function requestPermission() {
   try {
-    await window.OneSignalDeferred?.push(async (OneSignal) => {
-      await OneSignal.Notifications.requestPermission();
+    await window.OneSignalDeferred?.push(async (OS) => {
+      await OS.Notifications.requestPermission();
     });
   } catch (err) {
     console.warn("[OneSignal] Permission request failed:", err.message);
   }
 }
 
-// ── Check if notifications are enabled ───────────────────
+// ── Subscription status ───────────────────────────────────
 export async function isSubscribed() {
   return new Promise(resolve => {
-    window.OneSignalDeferred?.push(async (OneSignal) => {
-      const subscribed = await OneSignal.User.PushSubscription.optedIn;
-      resolve(!!subscribed);
+    window.OneSignalDeferred?.push(async (OS) => {
+      resolve(!!(await OS.User.PushSubscription.optedIn));
     }) ?? resolve(false);
   });
 }
 
-// ── Send a notification via REST API ─────────────────────
-// ⚠️  NOTE: REST API calls with the key should be made from
-// your server/Cloud Functions in production. This client-side
-// implementation is for development/MVP only.
-// In production, move this to a secure backend endpoint.
-
+// ── SECURE SEND via Netlify function ─────────────────────
 /**
- * Send a push notification to a specific user
- * @param {string}   targetUserId - Firebase UID of recipient
- * @param {object}   notification
- * @param {string}   notification.title
- * @param {string}   notification.message
- * @param {string}   notification.url       - Page to open on click
- * @param {object}   notification.data      - Extra data payload
+ * Send a push notification to a specific user.
+ * The REST API key NEVER touches the browser — it lives
+ * only in your Netlify environment variables.
+ *
+ * @param {string} targetUserId - Firebase UID of recipient
+ * @param {object} notification - { title, message, url, data }
  */
-export async function sendToUser(targetUserId, notification) {
-  const { title, message, url = "./dashboard.html", data = {} } = notification;
+async function _sendToUser(targetUserId, notification) {
+  if (!targetUserId || !notification.title) return null;
 
   try {
-    const response = await fetch("https://onesignal.com/api/v1/notifications", {
+    const response = await fetch(NOTIFY_URL, {
       method:  "POST",
       headers: {
-        "Content-Type":  "application/json",
-        "Authorization": `Basic ${ONESIGNAL_REST_API_KEY}`
+        "Content-Type":    "application/json",
+        "x-notify-secret": NOTIFY_SECRET
       },
-      body: JSON.stringify({
-        app_id:             ONESIGNAL_APP_ID,
-        target_channel:     "push",
-
-        // Target by external user ID (= Firebase UID)
-        include_aliases: { external_id: [targetUserId] },
-
-        headings:   { en: title },
-        contents:   { en: message },
-        url,
-        data,
-
-        // Display options
-        chrome_web_icon:  "./assets/images/icon-192.png",
-        firefox_icon:     "./assets/images/icon-192.png",
-        chrome_web_badge: "./assets/images/icon-72.png",
-        priority:         10,
-        ttl:              86400 // 24 hours
-      })
+      body: JSON.stringify({ targetUserId, ...notification })
     });
 
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      console.warn("[OneSignal] Send failed:", err.error || response.status);
+      return null;
+    }
+
     const result = await response.json();
-    if (result.errors) console.warn("[OneSignal] Send errors:", result.errors);
+    console.log("[OneSignal] Sent:", result.id);
     return result;
   } catch (err) {
-    console.warn("[OneSignal] Send failed (non-critical):", err.message);
+    // Non-critical — booking still works without push
+    console.warn("[OneSignal] Send error (non-critical):", err.message);
     return null;
   }
 }
 
+// ── Load OneSignal SDK ────────────────────────────────────
+function _loadSDK() {
+  return new Promise((resolve, reject) => {
+    if (window.OneSignalDeferred) { resolve(); return; }
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    const s    = document.createElement("script");
+    s.src      = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
+    s.async    = true;
+    s.onload   = resolve;
+    s.onerror  = () => reject(new Error("Failed to load OneSignal SDK."));
+    document.head.appendChild(s);
+  });
+}
+
 // ── Pre-built notification triggers ──────────────────────
 
-/** Notify provider of a new booking request */
+/** New booking — notify provider */
 export const notifyNewBooking = (providerUid, booking) =>
-  sendToUser(providerUid, {
+  _sendToUser(providerUid, {
     title:   "🔔 New Booking Request!",
-    message: `${booking.seekerName} wants to book ${booking.service} on ${booking.date}`,
+    message: `${booking.seekerName || "A customer"} wants to book ${booking.service || "your service"} on ${booking.date || ""}`,
     url:     "./provider.html",
     data:    { type: "new_booking", bookingId: booking.id }
   });
 
-/** Notify seeker that their booking was accepted */
+/** Booking accepted — notify seeker */
 export const notifyBookingAccepted = (seekerUid, booking) =>
-  sendToUser(seekerUid, {
+  _sendToUser(seekerUid, {
     title:   "✅ Booking Accepted!",
-    message: `${booking.providerName} accepted your booking for ${booking.service}`,
+    message: `${booking.providerName || "Your provider"} accepted your booking for ${booking.service || ""}`,
     url:     "./bookings.html",
     data:    { type: "booking_accepted", bookingId: booking.id }
   });
 
-/** Notify seeker that their booking was completed */
+/** Job completed — notify seeker */
 export const notifyBookingCompleted = (seekerUid, booking) =>
-  sendToUser(seekerUid, {
+  _sendToUser(seekerUid, {
     title:   "🏆 Job Completed!",
-    message: `Your ${booking.service} booking is done. Leave a review!`,
+    message: `Your ${booking.service || "service"} booking is done. Please leave a review!`,
     url:     "./bookings.html",
     data:    { type: "booking_completed", bookingId: booking.id }
   });
 
-/** Notify seeker that their booking was declined */
+/** Booking declined — notify seeker */
 export const notifyBookingDeclined = (seekerUid, booking) =>
-  sendToUser(seekerUid, {
+  _sendToUser(seekerUid, {
     title:   "❌ Booking Declined",
-    message: `Your booking for ${booking.service} was declined. Find another provider.`,
+    message: `Your booking for ${booking.service || ""} was declined. Find another provider.`,
     url:     "./seeker.html",
     data:    { type: "booking_declined", bookingId: booking.id }
   });
 
-/** Notify user of a new chat message */
+/** New chat message — notify recipient */
 export const notifyNewMessage = (recipientUid, senderName, messagePreview) =>
-  sendToUser(recipientUid, {
-    title:   `💬 ${senderName}`,
-    message: messagePreview.length > 60 ? messagePreview.slice(0, 60) + "…" : messagePreview,
+  _sendToUser(recipientUid, {
+    title:   `💬 ${senderName || "New Message"}`,
+    message: (messagePreview || "").length > 60
+      ? (messagePreview || "").slice(0, 60) + "…"
+      : (messagePreview || ""),
     url:     "./chat.html",
     data:    { type: "new_message" }
   });
-
-// ── Load OneSignal SDK dynamically ────────────────────────
-function loadOneSignalSDK() {
-  return new Promise((resolve, reject) => {
-    if (window.OneSignalDeferred) { resolve(); return; }
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    const script  = document.createElement("script");
-    script.src    = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
-    script.async  = true;
-    script.onload = resolve;
-    script.onerror = () => reject(new Error("Failed to load OneSignal SDK."));
-    document.head.appendChild(script);
-  });
-}
-
-// ── Usage in pages ────────────────────────────────────────
-/*
-
-In every authenticated page, after auth state resolves:
-
-  import { initNotifications, notifyNewBooking } from "./assets/notifications.js";
-
-  onAuthStateChanged(auth, async user => {
-    if (!user) return;
-    // Initialise notifications (non-blocking)
-    const snap = await getDoc(doc(db, "users", user.uid));
-    initNotifications(user.uid, {
-      role: snap.data()?.role || "seeker",
-      city: snap.data()?.city || ""
-    });
-  });
-
-In seeker.html, after booking is confirmed:
-
-  import { notifyNewBooking } from "./assets/notifications.js";
-  // Get provider's UID and send notification
-  notifyNewBooking(selectedProvider.id, bookingData);
-
-In provider.html, after accepting a booking:
-
-  import { notifyBookingAccepted } from "./assets/notifications.js";
-  notifyBookingAccepted(booking.seekerId, booking);
-
-REQUIRED: Place OneSignalSDKWorker.js at your site root.
-Download from your OneSignal dashboard → Settings → Workers.
-
-*/
