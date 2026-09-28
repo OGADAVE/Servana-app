@@ -1,0 +1,339 @@
+// ═══════════════════════════════════════════════════════
+// SERVANA — Production Firestore Security Rules v2.0
+// Covers every collection, every operation, every role.
+//
+// DEPLOY:
+//   firebase deploy --only firestore:rules
+//
+// ROLES:
+//   seeker   — can browse, book, review, chat
+//   provider — can manage profile, accept/complete bookings, chat
+//   admin    — full platform access
+// ═══════════════════════════════════════════════════════
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─────────────────────────────────────────────────
+    // HELPER FUNCTIONS
+    // ─────────────────────────────────────────────────
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isAuth() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return isAuth() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    function notSuspended() {
+      return isAuth() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.suspended != true;
+    }
+
+    function unchanged(field) {
+      return !(field in request.resource.data) ||
+             request.resource.data[field] == resource.data[field];
+    }
+
+    function notIn(field) {
+      return !(field in request.resource.data);
+    }
+
+    function incomingIs(field, value) {
+      return field in request.resource.data &&
+             request.resource.data[field] == value;
+    }
+
+    function isChatParticipant(chatId) {
+      return isAuth() &&
+        request.auth.uid in
+          get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+    }
+
+    function validStr(field, maxLen) {
+      return field in request.resource.data &&
+             request.resource.data[field] is string &&
+             request.resource.data[field].size() <= maxLen;
+    }
+
+    function validNum(field, min, max) {
+      return field in request.resource.data &&
+             request.resource.data[field] is number &&
+             request.resource.data[field] >= min &&
+             request.resource.data[field] <= max;
+    }
+
+    // ─────────────────────────────────────────────────
+    // USERS  /users/{userId}
+    // ─────────────────────────────────────────────────
+    match /users/{userId} {
+
+      allow read: if isAuth();
+
+      allow create: if isOwner(userId) &&
+                       incomingIs("uid", request.auth.uid) &&
+                       (!("role" in request.resource.data) ||
+                         request.resource.data.role in ["seeker","provider"]) &&
+                       notIn("suspended");
+
+      allow update: if isAuth() && (
+        (isOwner(userId) &&
+         unchanged("uid") &&
+         unchanged("role") &&
+         unchanged("suspended")) ||
+        isAdmin()
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────────
+    // PROVIDERS  /providers/{providerId}
+    // ─────────────────────────────────────────────────
+    match /providers/{providerId} {
+
+      allow read: if true;
+
+      allow create: if isOwner(providerId) &&
+                       notSuspended() &&
+                       notIn("verified") &&
+                       notIn("completedJobs") &&
+                       (!("rating" in request.resource.data) ||
+                         request.resource.data.rating == 0) &&
+                       (!("reviewCount" in request.resource.data) ||
+                         request.resource.data.reviewCount == 0);
+
+      allow update: if isAuth() && (
+        // Provider updates own profile — protected fields locked
+        (isOwner(providerId) &&
+         notSuspended() &&
+         unchanged("verified") &&
+         unchanged("suspended") &&
+         unchanged("rating") &&
+         unchanged("reviewCount") &&
+         unchanged("ratingBreakdown") &&
+         unchanged("completedJobs")) ||
+        // Review aggregation system updates rating fields only
+        (isAuth() &&
+         notSuspended() &&
+         request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(["rating","reviewCount","ratingBreakdown","lastReviewedAt"])) ||
+        isAdmin()
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────────
+    // BOOKINGS  /bookings/{bookingId}
+    // ─────────────────────────────────────────────────
+    match /bookings/{bookingId} {
+
+      allow read: if isAuth() && (
+        resource.data.seekerId   == request.auth.uid ||
+        resource.data.providerId == request.auth.uid ||
+        isAdmin()
+      );
+
+      allow create: if isAuth() &&
+                       notSuspended() &&
+                       incomingIs("seekerId", request.auth.uid) &&
+                       incomingIs("status", "pending") &&
+                       notIn("reviewed") &&
+                       request.resource.data.keys().hasAll([
+                         "seekerId","providerId","service",
+                         "date","time","address","status","total"
+                       ]) &&
+                       request.resource.data.seekerId != request.resource.data.providerId &&
+                       request.resource.data.total is number &&
+                       request.resource.data.total > 0;
+
+      allow update: if isAuth() && (
+
+        // SEEKER: cancel own pending booking only
+        (resource.data.seekerId == request.auth.uid &&
+         notSuspended() &&
+         resource.data.status == "pending" &&
+         incomingIs("status", "cancelled") &&
+         unchanged("seekerId") &&
+         unchanged("providerId") &&
+         unchanged("service") &&
+         unchanged("serviceFee") &&
+         unchanged("platformFee") &&
+         unchanged("total") &&
+         unchanged("bookingRef")) ||
+
+        // SEEKER: mark as reviewed after completion
+        (resource.data.seekerId == request.auth.uid &&
+         resource.data.status == "completed" &&
+         resource.data.reviewed != true &&
+         request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(["reviewed","reviewedAt","updatedAt"])) ||
+
+        // PROVIDER: accept, decline, complete, or flag dispute
+        (resource.data.providerId == request.auth.uid &&
+         notSuspended() &&
+         (
+           (resource.data.status == "pending"   && incomingIs("status","accepted"))  ||
+           (resource.data.status == "pending"   && incomingIs("status","cancelled")) ||
+           (resource.data.status == "accepted"  && incomingIs("status","completed")) ||
+           (resource.data.status == "accepted"  && incomingIs("status","disputed"))
+         ) &&
+         unchanged("seekerId") &&
+         unchanged("providerId") &&
+         unchanged("service") &&
+         unchanged("serviceFee") &&
+         unchanged("platformFee") &&
+         unchanged("total") &&
+         unchanged("bookingRef") &&
+         unchanged("reviewed")) ||
+
+        // EITHER PARTY: update payment status from Paystack callback
+        ((resource.data.seekerId   == request.auth.uid ||
+          resource.data.providerId == request.auth.uid) &&
+         request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(["paymentStatus","paymentRef","paidAt","updatedAt"])) ||
+
+        isAdmin()
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────────
+    // CHATS  /chats/{chatId}
+    // ─────────────────────────────────────────────────
+    match /chats/{chatId} {
+
+      allow read: if isAuth() &&
+                     request.auth.uid in resource.data.participants;
+
+      allow create: if isAuth() &&
+                       notSuspended() &&
+                       // Caller must be in participants
+                       request.auth.uid in request.resource.data.participants &&
+                       // Exactly 2 participants — no group chats
+                       request.resource.data.participants.size() == 2 &&
+                       // Cannot chat with yourself
+                       request.resource.data.participants[0] !=
+                         request.resource.data.participants[1] &&
+                       // participantNames map must exist
+                       "participantNames" in request.resource.data &&
+                       request.resource.data.participantNames is map;
+
+      allow update: if isAuth() &&
+                       request.auth.uid in resource.data.participants &&
+                       // Participant list is immutable after creation
+                       unchanged("participants") &&
+                       unchanged("participantNames") &&
+                       request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(["lastMessage","lastMessageAt","unread","updatedAt"]);
+
+      allow delete: if isAdmin();
+
+      // ── MESSAGES  /chats/{chatId}/messages/{messageId} ──
+      match /messages/{messageId} {
+
+        allow read: if isChatParticipant(chatId);
+
+        allow create: if isChatParticipant(chatId) &&
+                         notSuspended() &&
+                         incomingIs("senderId", request.auth.uid) &&
+                         validStr("text", 2000) &&
+                         (!("read" in request.resource.data) ||
+                           request.resource.data.read == false);
+
+        // Messages are immutable — no editing
+        allow update: if isAdmin();
+        allow delete: if isAdmin();
+      }
+    }
+
+    // ─────────────────────────────────────────────────
+    // REVIEWS  /reviews/{reviewId}
+    // ─────────────────────────────────────────────────
+    match /reviews/{reviewId} {
+
+      allow read: if true;
+
+      allow create: if isAuth() &&
+                       notSuspended() &&
+                       incomingIs("seekerId", request.auth.uid) &&
+                       validNum("rating", 1, 5) &&
+                       (!("comment" in request.resource.data) ||
+                         (request.resource.data.comment is string &&
+                          request.resource.data.comment.size() <= 1000)) &&
+                       request.resource.data.keys().hasAll([
+                         "bookingId","providerId","seekerId","rating"
+                       ]) &&
+                       // Cannot review yourself
+                       request.resource.data.seekerId != request.resource.data.providerId;
+
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────────
+    // CATEGORIES  /category/{catId}
+    // ─────────────────────────────────────────────────
+    match /category/{catId} {
+      allow read: if true;
+      // Auth users can create (for auto-seed on provider signup)
+      allow create: if isAuth() && notSuspended();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────────
+    // SERVICES  /services/{serviceId}
+    // ─────────────────────────────────────────────────
+    match /services/{serviceId} {
+      allow read: if true;
+      allow create: if isAuth() && notSuspended() &&
+                       incomingIs("providerId", request.auth.uid);
+      allow update: if isAuth() && (
+        resource.data.providerId == request.auth.uid || isAdmin()
+      );
+      allow delete: if isAuth() && (
+        resource.data.providerId == request.auth.uid || isAdmin()
+      );
+    }
+
+    // ─────────────────────────────────────────────────
+    // NOTIFICATIONS  /notifications/{notifId}
+    // ─────────────────────────────────────────────────
+    match /notifications/{notifId} {
+      allow read:   if isAuth() && resource.data.userId == request.auth.uid;
+      allow create: if isAuth() && incomingIs("userId", request.auth.uid);
+      allow update: if isAuth() &&
+                       resource.data.userId == request.auth.uid &&
+                       request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(["read","readAt"]);
+      allow delete: if isAuth() && resource.data.userId == request.auth.uid;
+    }
+
+    // ─────────────────────────────────────────────────
+    // PLATFORM CONFIG  /config/{docId}
+    // ─────────────────────────────────────────────────
+    match /config/{docId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────────
+    // DENY EVERYTHING ELSE
+    // Any collection not listed above is fully locked.
+    // ─────────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

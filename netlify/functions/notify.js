@@ -1,18 +1,6 @@
 // ═══════════════════════════════════════════════════════
 // SERVANA — Netlify Serverless Function: /notify
 // Secure OneSignal proxy — REST key never exposed to client
-//
-// SETUP (one-time in Netlify dashboard):
-//   1. Go to your site → Site Settings → Environment Variables
-//   2. Add:  ONESIGNAL_APP_ID      = your_app_id
-//            ONESIGNAL_REST_API_KEY = your_rest_api_key
-//            NOTIFY_SECRET          = any_random_string_you_choose
-//   3. Deploy — done. The frontend calls this function instead.
-//
-// HOW IT'S CALLED (from assets/notifications.js):
-//   POST /.netlify/functions/notify
-//   Headers: { "x-notify-secret": NOTIFY_SECRET }
-//   Body:    { targetUserId, title, message, url, data }
 // ═══════════════════════════════════════════════════════
 
 exports.handler = async (event) => {
@@ -77,9 +65,9 @@ exports.handler = async (event) => {
         include_aliases: { external_id: [targetUserId] },
         headings:        { en: title },
         contents:        { en: message },
-        url:             url || "https://servana.app/dashboard.html",
+        url:             url || "https://servana.top/dashboard.html",
         data:            data || {},
-        chrome_web_icon: "https://servana.app/assets/images/icon-192.png",
+        chrome_web_icon: "https://servana.top/assets/images/icon-192.png",
         priority:        10,
         ttl:             86400 // 24 hours
       })
