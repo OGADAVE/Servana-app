@@ -106,25 +106,13 @@
         </div>
         <div class="field"><label>Email Address</label><input type="email" id="email" placeholder="you@email.com" readonly style="opacity:.6;cursor:not-allowed"></div>
         <div class="field"><label>Phone Number</label><input type="tel" id="phone" placeholder="+234 801 234 5678"></div>
-        <div class="field-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-          <div class="field">
-            <label>Country</label>
-            <select id="countrySelect" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-subtle);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;width:100%">
-              <option value="">Select country</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>State / Region</label>
-            <select id="stateSelect" disabled style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-subtle);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;width:100%">
-              <option value="">Select state/region</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>City / Town</label>
-            <select id="city" disabled style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-subtle);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;width:100%">
-              <option value="">Select city/town</option>
-            </select>
-          </div>
+        <div class="field">
+          <label>City</label>
+          <select id="city">
+            <option value="">Select city</option>
+            <option>Abuja</option><option>Lagos</option><option>Port Harcourt</option>
+            <option>Ibadan</option><option>Kano</option><option>Enugu</option><option>Benin City</option>
+          </select>
         </div>
         <div class="field"><label>Bio (optional)</label><textarea id="bio" placeholder="Tell us a little about yourself…"></textarea></div>
         <button class="btn btn-primary" id="saveInfoBtn" style="align-self:flex-start">
@@ -207,10 +195,9 @@
 
 <script type="module">
 import { auth, db, storage, toast, showSpinner, hideSpinner, esc, formatNGN, initials, setLoading } from "./assets/firebase.js";
-import { wireCascade, getLocationString } from "./assets/locations.js";
 import { onAuthStateChanged, updateProfile, updatePassword, deleteUser, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { doc, getDoc, setDoc, getDocs, collection, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { uploadToCloudinary } from "./assets/cloudinary.js";
+import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const $ = id => document.getElementById(id);
 let currentUser = null, userData = {};
@@ -248,12 +235,7 @@ async function loadProfile() {
     $("lastName").value  = parts.slice(1).join(" ") || "";
     $("email").value     = currentUser.email || "";
     $("phone").value     = userData.phone || "";
-    // Wire cascading location
-    wireCascade($("countrySelect"), $("stateSelect"), $("city"), {
-      country: userData.country || "",
-      state:   userData.state   || "",
-      city:    userData.city    || ""
-    });
+    $("city").value      = userData.city || "";
     $("bio").value       = userData.bio || "";
 
   } catch(e) { toast("Failed to load profile.", "error"); }
@@ -314,7 +296,7 @@ $("saveInfoBtn").addEventListener("click", async () => {
     await updateProfile(currentUser, { displayName: fullName });
     await setDoc(doc(db,"users",currentUser.uid), {
       displayName: fullName, phone: $("phone").value.trim(),
-      country: $("countrySelect").value, state: $("stateSelect").value, city: $("city").value, bio: $("bio").value.trim(), updatedAt: serverTimestamp()
+      city: $("city").value, bio: $("bio").value.trim(), updatedAt: serverTimestamp()
     }, { merge: true });
     $("heroName").textContent = fullName;
     toast("Profile saved!", "success");
@@ -330,10 +312,9 @@ $("photoInput").addEventListener("change", async () => {
   if (file.size > 5*1024*1024) { toast("Image must be under 5MB.", "warning"); return; }
   try {
     showSpinner();
-    const url = await uploadToCloudinary(file, {
-      folder: `servana/users/${currentUser.uid}`,
-      transformation: "w_400,h_400,c_thumb,q_auto,f_auto"
-    });
+    const r   = ref(storage, `users/${currentUser.uid}/profile-photo`);
+    await uploadBytes(r, file);
+    const url = await getDownloadURL(r);
     await updateProfile(currentUser, { photoURL: url });
     await setDoc(doc(db,"users",currentUser.uid), { photoURL: url }, { merge: true });
     $("avatarImg").src = url; $("avatarImg").style.display = "block";

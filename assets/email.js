@@ -16,7 +16,7 @@ const CONFIG = {
   publicKey:   "ZjEg-j4VgpnD-HoWX",  // EmailJS public key
   serviceId:   "service_qcb99rh",
   adminEmail:  "noreplyservanaapp@gmail.com",
-  siteUrl:     "https://servana.app",
+  siteUrl:     "https://servana.top",
   templates: {
     user:  "template_8lqauun",  // Template: servana_user_email
     admin: "template_xp0heym"   // Template: servana_admin_email

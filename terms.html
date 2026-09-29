@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Servana — Terms of Service</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand:      #1A237E;
+      --brand-deep: #0D1560;
+      --accent:     #6C3CE1;
+      --gold:       #FFD60A;
+      --text-1:     #0D1B4B;
+      --text-2:     #4A5880;
+      --text-3:     #8C9BBF;
+      --border:     #E2E8F8;
+      --bg:         #EEF2FF;
+      --bg-card:    #FFFFFF;
+      --bg-subtle:  #F5F7FF;
+      --r-lg:       16px;
+      --r-md:       10px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --text-1: #E4EAFF; --text-2: #7D8FC4; --text-3: #3D4E7A;
+        --border: #1C2860; --bg: #080E30; --bg-card: #0F1848; --bg-subtle: #111D52;
+      }
+    }
+
+    html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text-1);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .site-header {
+      background: linear-gradient(135deg, var(--brand-deep), var(--brand));
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 16px rgba(13,21,96,.25);
+    }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none;
+    }
+    .logo img {
+      width: 30px; height: 30px; border-radius: 8px; object-fit: cover;
+    }
+    .logo-text {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 15px; font-weight: 700;
+      color: #fff; letter-spacing: 2px;
+    }
+    .back-link {
+      font-size: 13px; font-weight: 600;
+      color: rgba(255,255,255,.75);
+      text-decoration: none;
+      display: flex; align-items: center; gap: 6px;
+      transition: color .15s;
+    }
+    .back-link:hover { color: #fff; }
+    .back-link svg {
+      width: 15px; height: 15px; stroke: currentColor;
+      fill: none; stroke-width: 2.2; stroke-linecap: round;
+    }
+
+    /* ── Hero ── */
+    .doc-hero {
+      background: linear-gradient(130deg, var(--brand-deep) 0%, var(--brand) 55%, var(--accent) 100%);
+      padding: 48px 24px 56px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .doc-hero::before {
+      content: ''; position: absolute;
+      width: 320px; height: 320px; border-radius: 50%;
+      top: -80px; right: -60px;
+      background: rgba(255,255,255,.04); pointer-events: none;
+    }
+    .doc-hero::after {
+      content: ''; position: absolute;
+      width: 200px; height: 200px; border-radius: 50%;
+      bottom: -40px; left: 40px;
+      background: rgba(255,214,10,.05); pointer-events: none;
+    }
+    .doc-badge {
+      display: inline-block;
+      font-size: 11px; font-weight: 700;
+      color: var(--gold);
+      background: rgba(255,214,10,.12);
+      border: 1px solid rgba(255,214,10,.22);
+      padding: 4px 14px; border-radius: 20px;
+      margin-bottom: 14px; letter-spacing: .5px;
+      position: relative; z-index: 1;
+    }
+    .doc-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(22px, 4vw, 32px);
+      font-weight: 700; color: #fff;
+      line-height: 1.2; margin-bottom: 12px;
+      position: relative; z-index: 1;
+    }
+    .doc-subtitle {
+      font-size: 14px; color: rgba(255,255,255,.65);
+      position: relative; z-index: 1;
+    }
+
+    /* ── Layout ── */
+    .page-wrap {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    /* ── Meta strip ── */
+    .meta-strip {
+      display: flex; align-items: center; gap: 20px;
+      flex-wrap: wrap;
+      background: var(--bg-card);
+      border: .5px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 16px 20px;
+      margin-bottom: 32px;
+      box-shadow: 0 2px 12px rgba(13,21,96,.06);
+    }
+    .meta-item {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--text-3);
+    }
+    .meta-item svg {
+      width: 14px; height: 14px; stroke: var(--accent);
+      fill: none; stroke-width: 2; stroke-linecap: round;
+    }
+    .meta-item strong { color: var(--text-2); font-weight: 600; }
+
+    /* ── Table of contents ── */
+    .toc {
+      background: var(--bg-subtle);
+      border: .5px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: var(--r-md);
+      padding: 20px 24px;
+      margin-bottom: 36px;
+    }
+    .toc-title {
+      font-size: 11px; font-weight: 700;
+      color: var(--text-3); letter-spacing: 1px;
+      text-transform: uppercase; margin-bottom: 12px;
+    }
+    .toc ol {
+      padding-left: 18px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 16px;
+    }
+    @media (max-width: 480px) { .toc ol { grid-template-columns: 1fr; } }
+    .toc li { margin: 0; }
+    .toc a {
+      font-size: 13px; font-weight: 500;
+      color: var(--accent); text-decoration: none;
+      line-height: 1.8;
+      transition: color .15s;
+    }
+    .toc a:hover { color: var(--brand); }
+
+    /* ── Section cards ── */
+    .section {
+      background: var(--bg-card);
+      border: .5px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 28px 28px 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 12px rgba(13,21,96,.04);
+      scroll-margin-top: 80px;
+    }
+    .section-header {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 16px;
+      padding-bottom: 14px;
+      border-bottom: .5px solid var(--border);
+    }
+    .section-num {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--brand), var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: #fff;
+      flex-shrink: 0;
+    }
+    .section-title {
+      font-size: 17px; font-weight: 700; color: var(--text-1);
+    }
+    .section p {
+      font-size: 14px; color: var(--text-2);
+      line-height: 1.8; margin-bottom: 12px;
+    }
+    .section p:last-child { margin-bottom: 0; }
+    .section ul, .section ol {
+      padding-left: 20px; margin-bottom: 12px;
+    }
+    .section li {
+      font-size: 14px; color: var(--text-2);
+      line-height: 1.8; margin-bottom: 4px;
+    }
+    .section strong { color: var(--text-1); font-weight: 600; }
+    .section a { color: var(--accent); text-decoration: none; }
+    .section a:hover { text-decoration: underline; }
+
+    /* ── Highlight box ── */
+    .highlight {
+      background: rgba(108,60,225,.06);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 var(--r-md) var(--r-md) 0;
+      padding: 12px 16px;
+      margin: 14px 0;
+      font-size: 13px;
+      color: var(--text-2);
+      line-height: 1.7;
+    }
+    .highlight strong { color: var(--accent); }
+
+    /* ── Warning box ── */
+    .warn-box {
+      background: rgba(220,38,38,.04);
+      border-left: 3px solid #DC2626;
+      border-radius: 0 var(--r-md) var(--r-md) 0;
+      padding: 12px 16px;
+      margin: 14px 0;
+      font-size: 13px;
+      color: var(--text-2);
+      line-height: 1.7;
+    }
+
+    /* ── Contact card ── */
+    .contact-card {
+      background: linear-gradient(130deg, var(--brand-deep), var(--brand) 60%, var(--accent));
+      border-radius: var(--r-lg);
+      padding: 32px 28px;
+      text-align: center;
+      margin-top: 36px;
+    }
+    .contact-card h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px; font-weight: 700;
+      color: #fff; margin-bottom: 8px;
+    }
+    .contact-card p {
+      font-size: 13px; color: rgba(255,255,255,.7);
+      margin-bottom: 18px; line-height: 1.6;
+    }
+    .contact-card a {
+      display: inline-block;
+      padding: 11px 28px;
+      background: var(--gold);
+      color: var(--brand-deep);
+      font-size: 13px; font-weight: 700;
+      border-radius: 10px; text-decoration: none;
+      transition: opacity .2s;
+    }
+    .contact-card a:hover { opacity: .88; }
+
+    /* ── Footer ── */
+    .doc-footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 12px;
+      color: var(--text-3);
+      border-top: .5px solid var(--border);
+      margin-top: 40px;
+    }
+    .doc-footer a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <a class="logo" href="./index.html">
+      <img src="./assets/images/logo.png" alt="Servana"
+           onerror="this.style.display='none'">
+      <span class="logo-text">SERVANA</span>
+    </a>
+    <a class="back-link" href="javascript:history.back()">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Go Back
+    </a>
+  </header>
+
+  <!-- Hero -->
+  <div class="doc-hero">
+    <div class="doc-badge">📋 Legal Document</div>
+    <h1 class="doc-title">Terms of Service</h1>
+    <p class="doc-subtitle">Please read these terms carefully before using Servana.</p>
+  </div>
+
+  <div class="page-wrap">
+
+    <!-- Meta -->
+    <div class="meta-strip">
+      <div class="meta-item">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Last updated: <strong>September 2025</strong></span>
+      </div>
+      <div class="meta-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Effective: <strong>September 2025</strong></span>
+      </div>
+      <div class="meta-item">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span>Jurisdiction: <strong>Federal Republic of Nigeria</strong></span>
+      </div>
+    </div>
+
+    <!-- Table of Contents -->
+    <div class="toc">
+      <div class="toc-title">Table of Contents</div>
+      <ol>
+        <li><a href="#acceptance">Acceptance of Terms</a></li>
+        <li><a href="#platform">About Servana</a></li>
+        <li><a href="#accounts">User Accounts</a></li>
+        <li><a href="#seeker">Seeker Terms</a></li>
+        <li><a href="#provider">Provider Terms</a></li>
+        <li><a href="#payments">Payments & Fees</a></li>
+        <li><a href="#conduct">Conduct & Prohibited Use</a></li>
+        <li><a href="#content">User Content</a></li>
+        <li><a href="#disputes">Disputes & Resolution</a></li>
+        <li><a href="#liability">Limitation of Liability</a></li>
+        <li><a href="#termination">Termination</a></li>
+        <li><a href="#changes">Changes to Terms</a></li>
+        <li><a href="#contact">Contact Us</a></li>
+      </ol>
+    </div>
+
+    <!-- 1. Acceptance -->
+    <div class="section" id="acceptance">
+      <div class="section-header">
+        <div class="section-num">1</div>
+        <div class="section-title">Acceptance of Terms</div>
+      </div>
+      <p>Welcome to Servana. By accessing or using the Servana platform, mobile application, or any related services (collectively, the "Platform"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, you must not use the Platform.</p>
+      <p>These Terms constitute a legally binding agreement between you and Servana ("we", "us", or "our"). By creating an account, you confirm that you are at least <strong>18 years of age</strong>, have read and understood these Terms, and have the legal authority to enter into this agreement.</p>
+      <div class="highlight">
+        <strong>Important:</strong> These Terms apply to all users of the Platform, including seekers (customers looking for services) and providers (individuals or businesses offering services).
+      </div>
+    </div>
+
+    <!-- 2. About Servana -->
+    <div class="section" id="platform">
+      <div class="section-header">
+        <div class="section-num">2</div>
+        <div class="section-title">About Servana</div>
+      </div>
+      <p>Servana is an online marketplace that connects individuals who need services ("Seekers") with individuals or businesses that provide services ("Providers"). Servana acts as an intermediary platform only and is <strong>not a party to any service contract</strong> formed between Seekers and Providers.</p>
+      <p>Servana does not:</p>
+      <ul>
+        <li>Employ service providers or act as a staffing agency</li>
+        <li>Guarantee the quality, safety, or legality of services listed</li>
+        <li>Guarantee the accuracy of provider listings or reviews</li>
+        <li>Control how providers perform their services</li>
+      </ul>
+      <p>Providers are independent contractors and sole traders, not employees, agents, or partners of Servana.</p>
+    </div>
+
+    <!-- 3. User Accounts -->
+    <div class="section" id="accounts">
+      <div class="section-header">
+        <div class="section-num">3</div>
+        <div class="section-title">User Accounts</div>
+      </div>
+      <p>To use Servana, you must register for an account. When registering, you agree to:</p>
+      <ul>
+        <li>Provide accurate, current, and complete information</li>
+        <li>Maintain and update your information as necessary</li>
+        <li>Keep your password secure and confidential</li>
+        <li>Notify us immediately of any unauthorised use of your account</li>
+        <li>Accept responsibility for all activities under your account</li>
+      </ul>
+      <p>You may not create more than one account, transfer your account to another person, or use another person's account without permission.</p>
+      <div class="warn-box">
+        Servana reserves the right to suspend or terminate accounts that contain false information, are used for fraudulent activity, or violate these Terms.
+      </div>
+    </div>
+
+    <!-- 4. Seeker Terms -->
+    <div class="section" id="seeker">
+      <div class="section-header">
+        <div class="section-num">4</div>
+        <div class="section-title">Seeker Terms</div>
+      </div>
+      <p>As a Seeker, when you make a booking through Servana, you agree that:</p>
+      <ul>
+        <li>You are responsible for accurately describing the work required</li>
+        <li>You will make payment as agreed at the time of booking</li>
+        <li>You will be present or available at the agreed time and location</li>
+        <li>You will treat providers with respect and professionalism</li>
+        <li>Cancellations made within 24 hours of the scheduled appointment may attract a cancellation fee</li>
+        <li>You will leave honest and fair reviews based on your actual experience</li>
+      </ul>
+      <p>Servana cannot guarantee that a provider will be available at any given time, and we are not liable for any loss arising from a provider's cancellation or failure to appear.</p>
+    </div>
+
+    <!-- 5. Provider Terms -->
+    <div class="section" id="provider">
+      <div class="section-header">
+        <div class="section-num">5</div>
+        <div class="section-title">Provider Terms</div>
+      </div>
+      <p>As a Provider on Servana, you agree to:</p>
+      <ul>
+        <li>Provide accurate information about your qualifications, experience, and services</li>
+        <li>Hold any required licences, certifications, or permits for your trade</li>
+        <li>Deliver services to the standard described in your profile</li>
+        <li>Respond to booking requests promptly (within 1 hour where possible)</li>
+        <li>Maintain professional conduct with all customers at all times</li>
+        <li>Not solicit or accept payments outside of the Servana platform</li>
+        <li>Comply with all applicable Nigerian laws and regulations</li>
+      </ul>
+      <div class="highlight">
+        <strong>Verification:</strong> Servana may, at its discretion, verify provider credentials. A verified badge does not constitute an endorsement of the provider's services. It simply confirms that the provider's identity has been reviewed.
+      </div>
+      <p>Servana reserves the right to remove any provider listing that violates these Terms or that we believe could endanger customer safety.</p>
+    </div>
+
+    <!-- 6. Payments -->
+    <div class="section" id="payments">
+      <div class="section-header">
+        <div class="section-num">6</div>
+        <div class="section-title">Payments &amp; Fees</div>
+      </div>
+      <p>Payments on Servana are processed through a secure third-party payment processor. By using our payment services, you also agree to the processor's terms of service.</p>
+      <p><strong>Platform Fee:</strong> Servana charges a platform fee of <strong>5% on each completed transaction</strong>. This fee is deducted from the total payment and covers platform maintenance, customer support, and payment processing costs.</p>
+      <p><strong>Provider Payouts:</strong> Providers will receive their net earnings (service fee minus platform fee) within <strong>3 business days</strong> of a booking being marked as complete, subject to no active disputes.</p>
+      <p><strong>Refunds:</strong> Refunds may be issued at Servana's discretion in the following circumstances:</p>
+      <ul>
+        <li>The provider failed to show up without cancelling</li>
+        <li>The service was significantly different from what was described</li>
+        <li>A verified dispute is resolved in the seeker's favour</li>
+      </ul>
+      <div class="warn-box">
+        Servana does not facilitate, encourage, or accept any payments made outside of the platform. Off-platform transactions are at your own risk and are not covered by our dispute resolution process.
+      </div>
+    </div>
+
+    <!-- 7. Conduct -->
+    <div class="section" id="conduct">
+      <div class="section-header">
+        <div class="section-num">7</div>
+        <div class="section-title">Conduct &amp; Prohibited Use</div>
+      </div>
+      <p>You agree not to use the Servana Platform to:</p>
+      <ul>
+        <li>Post false, misleading, or fraudulent information</li>
+        <li>Harass, threaten, or abuse other users</li>
+        <li>Discriminate against any user on the basis of race, religion, gender, or disability</li>
+        <li>Circumvent the platform by arranging off-platform payments after initial contact</li>
+        <li>Post content that is obscene, defamatory, or illegal</li>
+        <li>Impersonate another person or misrepresent your qualifications</li>
+        <li>Scrape, harvest, or collect data from the Platform</li>
+        <li>Introduce viruses or malicious code to the Platform</li>
+        <li>Attempt to gain unauthorised access to any part of the Platform</li>
+        <li>List services that are illegal, dangerous, or harmful</li>
+      </ul>
+      <p>Violations of this section may result in immediate account suspension and, where applicable, reporting to relevant Nigerian authorities.</p>
+    </div>
+
+    <!-- 8. Content -->
+    <div class="section" id="content">
+      <div class="section-header">
+        <div class="section-num">8</div>
+        <div class="section-title">User Content</div>
+      </div>
+      <p>When you submit content to Servana (including photos, descriptions, reviews, and messages), you grant us a non-exclusive, royalty-free, worldwide licence to use, display, and distribute that content in connection with operating the Platform.</p>
+      <p>You represent and warrant that:</p>
+      <ul>
+        <li>You own or have the right to share all content you submit</li>
+        <li>Your content does not infringe any third-party intellectual property rights</li>
+        <li>Your content is accurate and not misleading</li>
+      </ul>
+      <p>Servana does not claim ownership of your content, but we reserve the right to remove any content that violates these Terms or our Community Guidelines.</p>
+    </div>
+
+    <!-- 9. Disputes -->
+    <div class="section" id="disputes">
+      <div class="section-header">
+        <div class="section-num">9</div>
+        <div class="section-title">Disputes &amp; Resolution</div>
+      </div>
+      <p>In the event of a dispute between a Seeker and a Provider, the following process applies:</p>
+      <ol>
+        <li><strong>Direct Resolution:</strong> Both parties should first attempt to resolve the issue through the in-app chat within 24 hours.</li>
+        <li><strong>Raise a Dispute:</strong> If unresolved, either party may raise a formal dispute through the Platform. The booking will be frozen pending resolution.</li>
+        <li><strong>Servana Review:</strong> Our team will review the dispute, consider evidence from both parties, and issue a decision within <strong>48–72 hours</strong>.</li>
+        <li><strong>Final Decision:</strong> Servana's decision on disputes is final and binding within the Platform.</li>
+      </ol>
+      <div class="highlight">
+        <strong>Note:</strong> Servana's dispute resolution process is a goodwill service. For legal disputes, you may seek independent legal counsel under Nigerian law.
+      </div>
+    </div>
+
+    <!-- 10. Liability -->
+    <div class="section" id="liability">
+      <div class="section-header">
+        <div class="section-num">10</div>
+        <div class="section-title">Limitation of Liability</div>
+      </div>
+      <p>To the fullest extent permitted by Nigerian law, Servana shall not be liable for:</p>
+      <ul>
+        <li>Any direct, indirect, incidental, or consequential loss arising from use of the Platform</li>
+        <li>The quality, safety, or legality of services provided by Providers</li>
+        <li>Any loss arising from reliance on provider reviews or ratings</li>
+        <li>Interruptions to the Platform due to maintenance, technical issues, or circumstances beyond our control</li>
+        <li>Loss of data, revenue, or profits arising from Platform use</li>
+      </ul>
+      <p>Our total liability to you in connection with your use of the Platform shall not exceed the total fees paid by you to Servana in the three months preceding the claim.</p>
+    </div>
+
+    <!-- 11. Termination -->
+    <div class="section" id="termination">
+      <div class="section-header">
+        <div class="section-num">11</div>
+        <div class="section-title">Termination</div>
+      </div>
+      <p>You may close your account at any time from the Settings page. Upon account deletion:</p>
+      <ul>
+        <li>Your profile will be removed from public listings immediately</li>
+        <li>Active bookings will be cancelled and the relevant parties notified</li>
+        <li>Any outstanding payments owed to you as a Provider will be processed within 7 business days</li>
+        <li>Your data will be handled in accordance with our Privacy Policy</li>
+      </ul>
+      <p>Servana may suspend or terminate your account at any time if we believe you have violated these Terms, engaged in fraudulent activity, or posed a risk to other users or the Platform.</p>
+    </div>
+
+    <!-- 12. Changes -->
+    <div class="section" id="changes">
+      <div class="section-header">
+        <div class="section-num">12</div>
+        <div class="section-title">Changes to These Terms</div>
+      </div>
+      <p>Servana reserves the right to update or modify these Terms at any time. When we make significant changes, we will:</p>
+      <ul>
+        <li>Update the "Last updated" date at the top of this page</li>
+        <li>Send a notification to your registered email address</li>
+        <li>Display a notice on the Platform for at least 14 days</li>
+      </ul>
+      <p>Your continued use of the Platform after any changes constitutes your acceptance of the revised Terms. If you do not agree with the changes, you must stop using the Platform and may close your account.</p>
+    </div>
+
+    <!-- 13. Contact -->
+    <div class="section" id="contact">
+      <div class="section-header">
+        <div class="section-num">13</div>
+        <div class="section-title">Governing Law &amp; Contact</div>
+      </div>
+      <p>These Terms shall be governed by and construed in accordance with the laws of the <strong>Federal Republic of Nigeria</strong>. Any disputes arising from these Terms shall be subject to the jurisdiction of Nigerian courts.</p>
+      <p>If you have any questions about these Terms, please contact us:</p>
+      <ul>
+        <li><strong>Email:</strong> <a href="mailto:hello@servana.top">hello@servana.top</a></li>
+        <li><strong>Platform:</strong> <a href="./dashboard.html">servana.top</a></li>
+      </ul>
+    </div>
+
+    <!-- Contact Card -->
+    <div class="contact-card">
+      <h3>Questions About These Terms?</h3>
+      <p>Our support team is happy to explain anything in plain English. Don't hesitate to reach out.</p>
+      <a href="mailto:hello@servana.top">Contact Support →</a>
+    </div>
+
+  </div>
+
+  <footer class="doc-footer">
+    <p>© 2026 Servana. All rights reserved. &nbsp;·&nbsp;
+      <a href="./privacy.html">Privacy Policy</a> &nbsp;·&nbsp;
+      <a href="./terms.html">Terms of Service</a>
+    </p>
+  </footer>
+
+</body>
+</html>

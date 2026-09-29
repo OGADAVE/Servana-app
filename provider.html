@@ -450,7 +450,7 @@ $("availToggle").addEventListener("change", async () => {
       const provRef = doc(db,"providers",currentUser.uid);
       const provSnap = await getDoc(provRef);
       if (!provSnap.exists()) {
-        await setDoc(provRef,{uid:currentUser.uid,email:currentUser.email||"",available:on,verified:false,rating:0,reviewCount:0,completedJobs:0,services:[],createdAt:serverTimestamp()});
+        await setDoc(provRef,{uid:currentUser.uid,name:currentUser.displayName||"",email:currentUser.email||"",available:on,rating:0,reviewCount:0,services:[],createdAt:serverTimestamp()});
       } else {
         await setDoc(provRef,{available:on},{merge:true});
       }
@@ -615,20 +615,16 @@ $("saveSvcBtn").addEventListener("click", async()=>{
     const provSnap = await getDoc(provRef);
 
     if (!provSnap.exists()) {
-      // Provider document does not exist yet — create it with base fields first.
-      // This happens when a user signed up as seeker and switches to provider,
-      // or if the signup flow did not complete the provider doc creation.
+      // Provider document does not exist yet — create base doc first.
       await setDoc(provRef, {
-        uid:           currentUser.uid,
-        name:          currentUser.displayName || "",
-        email:         currentUser.email       || "",
-        available:     true,
-        verified:      false,
-        rating:        0,
-        reviewCount:   0,
-        completedJobs: 0,
-        services:      [],
-        createdAt:     serverTimestamp()
+        uid:         currentUser.uid,
+        name:        currentUser.displayName || "",
+        email:       currentUser.email       || "",
+        available:   true,
+        rating:      0,
+        reviewCount: 0,
+        services:    [],
+        createdAt:   serverTimestamp()
       });
       console.log("[Provider] Base document created for:", currentUser.uid);
     }
@@ -680,8 +676,14 @@ $("portfolioInput").addEventListener("change", async()=>{
     await setDoc(doc(db,"providers",currentUser.uid),{portfolio},{merge:true});
     provData.portfolio=portfolio; renderPortfolio();
     toast(`${urls.length} photo${urls.length>1?"s":""} uploaded!`,"success");
-  } catch(e){toast("Upload failed.","error");}
-  finally{hideSpinner();$("portfolioInput").value="";}
+  } catch(e){
+    console.error("[Upload] Portfolio error:", e.message);
+    if(e.message.includes("CLOUDINARY_NOT_CONFIGURED")){
+      toast("Photo upload not ready — Cloudinary needs to be configured.","warning",6000);
+    } else {
+      toast("Upload failed: "+(e.message||"Try again."),"error");
+    }
+  } finally{hideSpinner();$("portfolioInput").value="";}
 });
 
 // ── Earnings chart ────────────────────────────────────────
@@ -726,10 +728,25 @@ $("savePayoutBtn").addEventListener("click", async()=>{
   if(accountNumber.length!==10){toast("Account number must be 10 digits.","warning");return;}
   setLoading($("savePayoutBtn"),true);
   try {
-    await setDoc(doc(db,"providers",currentUser.uid),{bankName,accountNumber,accountName},{merge:true});
+    const provRef = doc(db,"providers",currentUser.uid);
+    const provSnap = await getDoc(provRef);
+    if (!provSnap.exists()) {
+      await setDoc(provRef, {
+        uid: currentUser.uid, name: currentUser.displayName||"",
+        email: currentUser.email||"", available: true,
+        rating: 0, reviewCount: 0, services: [], createdAt: serverTimestamp()
+      });
+    }
+    await setDoc(provRef, { bankName, accountNumber, accountName, updatedAt: serverTimestamp() }, { merge: true });
     Object.assign(provData,{bankName,accountNumber,accountName});
-    toast("Payout details saved!","success");
-  } catch(e){toast("Failed to save payout info.","error");} finally{setLoading($("savePayoutBtn"),false);}
+    toast("Payout details saved! ✅","success");
+  } catch(e) {
+    console.error("[Provider] Save payout error:", e.code, e.message);
+    const msg = e.code==="permission-denied"
+      ? "Permission denied. Please log out and log back in."
+      : "Failed to save payout info. Try again.";
+    toast(msg,"error");
+  } finally { setLoading($("savePayoutBtn"),false); }
 });
 
 // ── Save profile ──────────────────────────────────────────
@@ -745,9 +762,9 @@ $("saveProfileBtn").addEventListener("click", async()=>{
     if (!provSnap.exists()) {
       // First time saving profile — create base document
       await setDoc(provRef, {
-        uid: currentUser.uid, email: currentUser.email || "",
-        available: true, verified: false, rating: 0,
-        reviewCount: 0, completedJobs: 0, services: [],
+        uid: currentUser.uid, name: currentUser.displayName||"",
+        email: currentUser.email || "", available: true,
+        rating: 0, reviewCount: 0, services: [],
         createdAt: serverTimestamp()
       });
     }
@@ -782,7 +799,14 @@ $("profilePhotoInput").addEventListener("change", async()=>{
     await setDoc(doc(db,"providers",currentUser.uid),{photoURL:url},{merge:true});
     $("heroAv").src=url; $("heroAv").style.display="block"; $("heroAvFb").style.display="none"; $("photoPreview").src=url;
     provData.photoURL=url; renderStrength(); toast("Profile photo updated!","success");
-  } catch(e){toast("Upload failed.","error");} finally{hideSpinner();$("profilePhotoInput").value="";}
+  } catch(e){
+    console.error("[Upload] Profile photo error:", e.message);
+    if(e.message.includes("CLOUDINARY_NOT_CONFIGURED")){
+      toast("Photo upload not ready — Cloudinary needs to be configured.","warning",6000);
+    } else {
+      toast("Upload failed: "+(e.message||"Try again."),"error");
+    }
+  } finally{hideSpinner();$("profilePhotoInput").value="";}
 });
 
 // ── Verify ────────────────────────────────────────────────
