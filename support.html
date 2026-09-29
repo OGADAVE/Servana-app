@@ -1,0 +1,110 @@
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <title>Support — Servana</title>
+      <meta name="description" content="Find answers, understand how Servana works, and contact our team when you need assistance."/>
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+      <style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+ --brand:#1A237E;--brand-deep:#0D1560;--accent:#6C3CE1;--gold:#FFD60A;
+ --text-1:#0D1B4B;--text-2:#4A5880;--text-3:#8C9BBF;--border:#E2E8F8;
+ --bg:#EEF2FF;--bg-card:#fff;--bg-subtle:#F5F7FF;--success:#16A34A;
+ --danger:#DC2626;--r-lg:16px;--r-md:10px
+}
+@media(prefers-color-scheme:dark){:root{
+ --text-1:#E4EAFF;--text-2:#9AA9D3;--text-3:#6173A8;--border:#1C2860;
+ --bg:#080E30;--bg-card:#0F1848;--bg-subtle:#111D52
+}}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-1);min-height:100vh}
+a{color:inherit}
+.site-header{height:64px;padding:0 24px;background:linear-gradient(135deg,var(--brand-deep),var(--brand));
+display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(13,21,96,.25)}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}.logo img{width:30px;height:30px;border-radius:8px;object-fit:cover}
+.logo-text{font-family:Orbitron,sans-serif;font-size:15px;font-weight:700;color:#fff;letter-spacing:2px}
+.header-actions{display:flex;align-items:center;gap:10px}.back-link{font-size:13px;font-weight:600;color:rgba(255,255,255,.78);text-decoration:none}
+.back-link:hover{color:#fff}.menu-link{display:none}
+.hero{background:linear-gradient(130deg,#0D1560 0%,#1A237E 52%,#6C3CE1 100%);
+padding:58px 20px 64px;text-align:center;position:relative;overflow:hidden}
+.hero:before,.hero:after{content:'';position:absolute;border-radius:50%;pointer-events:none}
+.hero:before{width:360px;height:360px;right:-90px;top:-140px;background:rgba(255,255,255,.045)}
+.hero:after{width:220px;height:220px;left:-70px;bottom:-100px;background:rgba(255,214,10,.07)}
+.badge{display:inline-block;font-size:11px;font-weight:700;color:#ffe76a;background:rgba(255,214,10,.12);
+border:1px solid rgba(255,214,10,.24);padding:5px 14px;border-radius:20px;margin-bottom:15px;letter-spacing:.6px;position:relative;z-index:1}
+.hero h1{font-family:Orbitron,sans-serif;font-size:clamp(24px,5vw,38px);line-height:1.2;color:#fff;margin-bottom:12px;position:relative;z-index:1}
+.hero p{max-width:650px;margin:auto;font-size:14px;line-height:1.7;color:rgba(255,255,255,.72);position:relative;z-index:1}
+.wrap{max-width:1000px;margin:auto;padding:38px 20px 80px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+.card{background:var(--bg-card);border:.5px solid var(--border);border-radius:var(--r-lg);padding:24px;box-shadow:0 2px 12px rgba(13,21,96,.05)}
+.card h2,.card h3{color:var(--text-1);margin-bottom:9px}.card h2{font-size:19px}.card h3{font-size:15px}
+.card p,.card li{font-size:13px;line-height:1.75;color:var(--text-2)}.card ul{padding-left:19px}
+.icon{width:42px;height:42px;border-radius:12px;background:rgba(108,60,225,.1);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:15px}
+.section-title{text-align:center;margin:10px auto 22px}.section-title h2{font-size:23px;margin-bottom:6px}.section-title p{font-size:13px;color:var(--text-3)}
+.pill{display:inline-block;padding:5px 10px;border-radius:999px;background:rgba(108,60,225,.1);color:var(--accent);font-size:10px;font-weight:700;margin-bottom:10px}
+.faq{border:.5px solid var(--border);background:var(--bg-card);border-radius:var(--r-md);margin-bottom:10px;overflow:hidden}
+.faq summary{cursor:pointer;padding:17px 18px;font-size:13px;font-weight:700;color:var(--text-1);list-style:none}
+.faq summary::-webkit-details-marker{display:none}.faq summary:after{content:'+';float:right;color:var(--accent);font-size:18px}
+.faq[open] summary:after{content:'−'}.faq p{padding:0 18px 17px;font-size:13px;line-height:1.7;color:var(--text-2)}
+.cta{background:linear-gradient(130deg,#0D1560,#1A237E 55%,#6C3CE1);border-radius:var(--r-lg);padding:34px 26px;text-align:center;margin-top:30px}
+.cta h2{font-family:Orbitron,sans-serif;color:#fff;font-size:19px;margin-bottom:8px}.cta p{color:rgba(255,255,255,.72);font-size:13px;line-height:1.6;margin-bottom:18px}
+.btn{display:inline-block;padding:11px 20px;border-radius:10px;background:var(--gold);color:#151515;text-decoration:none;font-size:12px;font-weight:800;margin:4px}
+.btn.alt{background:#fff;color:var(--brand)}
+.meta{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0;color:var(--text-3);font-size:11px}
+.article{display:flex;gap:18px}.article-mark{width:100px;min-width:100px;height:90px;border-radius:12px;background:linear-gradient(135deg,var(--brand),var(--accent));display:flex;align-items:center;justify-content:center;font-size:30px}
+.article h3{margin-bottom:6px}.article a{text-decoration:none}.article a:hover{color:var(--accent)}
+.job{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}.job-main{flex:1}.job-meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.job-meta span{font-size:10px;padding:5px 8px;border-radius:999px;background:var(--bg-subtle);color:var(--text-2)}
+.value{min-height:170px}.timeline{border-left:2px solid var(--border);padding-left:22px}.step{position:relative;margin-bottom:24px}.step:before{content:'';position:absolute;width:10px;height:10px;border-radius:50%;background:var(--accent);left:-28px;top:5px}
+.doc-footer{text-align:center;padding:25px 20px;border-top:.5px solid var(--border);font-size:12px;color:var(--text-3)}
+.doc-footer a{color:var(--accent);text-decoration:none}
+@media(max-width:760px){.grid{grid-template-columns:1fr 1fr}.back-link{display:none}.menu-link{display:inline-block;color:#fff;text-decoration:none;font-size:12px}.job{flex-direction:column}.article{flex-direction:column}.article-mark{width:100%;height:120px}}
+@media(max-width:480px){.grid{grid-template-columns:1fr}.wrap{padding-left:15px;padding-right:15px}.card{padding:20px}.hero{padding:45px 18px 50px}}
+</style>
+    </head>
+    <body>
+      <header class="site-header">
+        <a class="logo" href="./index.html"><img src="./assets/images/logo.png" alt="Servana" onerror="this.style.display='none'"><span class="logo-text">SERVANA</span></a>
+        <div class="header-actions"><a class="menu-link" href="./index.html">Home</a><a class="back-link" href="javascript:history.back()">‹&nbsp; Go Back</a></div>
+      </header>
+      <section class="hero">
+        <div class="badge">SERVANA SUPPORT</div>
+        <h1>We're Here to Help</h1>
+        <p>Find answers, understand how Servana works, and contact our team when you need assistance.</p>
+      </section>
+      <main class="wrap">
+
+<div class="grid">
+  <div class="card"><div class="icon">🔎</div><h3>Find a Service</h3><p>Search for providers by service category and location, review their profiles, and choose the service that fits your needs.</p></div>
+  <div class="card"><div class="icon">📅</div><h3>Bookings</h3><p>Need help with a booking? Check your booking status and use the available communication tools to stay connected with your provider.</p></div>
+  <div class="card"><div class="icon">💳</div><h3>Payments</h3><p>Payment questions can relate to authorization, transaction status, references, or a booking. Keep your transaction reference when contacting support.</p></div>
+</div>
+
+<div class="section-title"><h2>Frequently Asked Questions</h2><p>Quick answers to common Servana questions.</p></div>
+<details class="faq"><summary>What is Servana?</summary><p>Servana is a service marketplace designed to connect people looking for services with service providers. Users can discover providers, review service information, make bookings, communicate, and manage their activity through the platform.</p></details>
+<details class="faq"><summary>How do I find a service provider?</summary><p>Use the Find section to browse available services and providers. You can use category and location information to narrow your search, then review a provider's profile before making a booking.</p></details>
+<details class="faq"><summary>How do I become a provider?</summary><p>Create a Servana account and choose the provider option where available. Complete your provider profile and add the services you offer so seekers can discover and contact you.</p></details>
+<details class="faq"><summary>What should I do if I have a booking problem?</summary><p>First check the booking status and the information attached to the booking. If the issue remains unresolved, contact Servana support with your account email and booking reference. Do not send passwords, card numbers, or private authentication codes.</p></details>
+<details class="faq"><summary>Why did my payment not go through?</summary><p>A payment can fail for several reasons, including authorization or transaction issues. Check the payment status and transaction reference. If you were charged but the booking status did not update, contact support with the transaction reference.</p></details>
+<details class="faq"><summary>How do I change my profile information?</summary><p>Open your profile and edit the information available in your account settings. For security-sensitive changes, Servana may require additional verification.</p></details>
+<details class="faq"><summary>How do I report a provider or user?</summary><p>Use the support channel and provide the relevant profile, booking, or conversation details. Include specific facts about the issue so the support team can investigate it.</p></details>
+<details class="faq"><summary>How do I request deletion of my account?</summary><p>Use the account deletion option described in your account settings or contact the privacy team at privacy@servana.top. More information is available in our Privacy Policy.</p></details>
+
+<div class="cta">
+  <h2>Still Need Help?</h2>
+  <p>Tell us what happened and include the relevant booking or transaction reference where applicable.</p>
+  <a class="btn" href="mailto:hello@servana.top">Contact Support</a>
+  <a class="btn alt" href="./privacy.html">Privacy &amp; Data</a>
+</div>
+
+      </main>
+      <footer class="doc-footer">
+        <p>© 2026 Servana. All rights reserved. &nbsp;·&nbsp;
+        <a href="./terms.html">Terms of Service</a> &nbsp;·&nbsp;
+        <a href="./privacy.html">Privacy Policy</a> &nbsp;·&nbsp;
+        <a href="./support.html">Support</a></p>
+      </footer>
+    </body>
+    </html>
