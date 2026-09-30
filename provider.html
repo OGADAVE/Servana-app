@@ -371,7 +371,7 @@
 <script type="module">
 import { auth, db, storage, toast, showSpinner, hideSpinner, esc, starsHtml, initials, formatNGN, setLoading } from "./assets/firebase.js";
 import { wireCascade } from "./assets/locations.js";
-import { uploadToCloudinary } from "./assets/cloudinary.js";
+import { uploadToCloudinary, avatarUrl, serviceImageUrl } from "./assets/cloudinary.js";
 import { onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { doc, getDoc, setDoc, getDocs, updateDoc, addDoc, collection, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 // Cloudinary handles file uploads — see assets/cloudinary.js
