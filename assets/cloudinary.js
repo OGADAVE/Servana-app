@@ -1,12 +1,5 @@
 // ═══════════════════════════════════════════════════════
 // SERVANA — Cloudinary Upload Utility v2.1
-//
-// FIX: Removed transformation from FormData upload call.
-// Unsigned Cloudinary presets do NOT accept inline
-// transformations in the upload request — 400 error.
-// Transformations are applied via URL AFTER upload instead.
-//
-// Config: pgstcx8v / Servana (your live settings)
 // ═══════════════════════════════════════════════════════
 
 const CLOUD_NAME    = "pgstcx8v";
@@ -112,9 +105,7 @@ export async function uploadMultiple(files, options = {}, onEach) {
 }
 
 /**
- * Apply display transformations to an existing Cloudinary URL.
- * This is the correct way to resize/crop — NOT during upload.
- *
+ * Optimise a Cloudinary URL with display transforms.
  * @param {string} url        - Raw Cloudinary URL from upload
  * @param {object} transforms
  * @returns {string}          - Optimised URL
@@ -148,6 +139,17 @@ export function avatarUrl(url) {
 export function thumbnailUrl(url, size = 100) {
   return optimiseUrl(url, { width: size, height: size, crop: "thumb", quality: "auto" });
 }
+
+/**
+ * Optimized image URL for service/provider listing images
+ */
+export const serviceImageUrl = (url, width = 800, height = 600) => {
+  return optimiseUrl(url, {
+    width,
+    height,
+    crop: "fill"
+  });
+};
 
 /**
  * Validate a file before uploading
