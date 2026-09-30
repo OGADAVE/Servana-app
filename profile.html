@@ -210,7 +210,7 @@ import { auth, db, toast, showSpinner, hideSpinner, esc, formatNGN, initials, se
 import { wireCascade, getLocationString } from "./assets/locations.js";
 import { onAuthStateChanged, updateProfile, updatePassword, deleteUser, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { doc, getDoc, setDoc, getDocs, collection, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { uploadToCloudinary } from "./assets/cloudinary.js";
+import { uploadToCloudinary, avatarUrl } from "./assets/cloudinary.js";
 
 const $ = id => document.getElementById(id);
 let currentUser = null, userData = {};
