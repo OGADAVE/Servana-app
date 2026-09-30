@@ -1,49 +1,43 @@
 // ═══════════════════════════════════════════════════════
-// SERVANA — Cloudinary Upload Utility v2.0
+// SERVANA — Cloudinary Upload Utility v2.1
+//
+// FIX: Removed transformation from FormData upload call.
+// Unsigned Cloudinary presets do NOT accept inline
+// transformations in the upload request — 400 error.
+// Transformations are applied via URL AFTER upload instead.
+//
+// Config: pgstcx8v / Servana (your live settings)
 // ═══════════════════════════════════════════════════════
 
-const CLOUD_NAME    = "pgstcx8v";      
+const CLOUD_NAME    = "pgstcx8v";
 const UPLOAD_PRESET = "Servana";
 
 const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 
-// ── Config validation ─────────────────────────────────
-function _checkConfig() {
-  if (CLOUD_NAME === "your_cloud_name" || !CLOUD_NAME) {
-    throw new Error(
-      "CLOUDINARY_NOT_CONFIGURED: Open assets/cloudinary.js and set your CLOUD_NAME. " +
-      "Sign up free at cloudinary.com — takes 5 minutes."
-    );
-  }
-}
-
 /**
- * Upload a single file to Cloudinary
+ * Upload a single file to Cloudinary.
+ * Returns the raw secure URL — apply display transforms via optimiseUrl().
  *
- * @param {File}   file
- * @param {object} options
- * @param {string} options.folder          - e.g. "servana/users/uid123"
- * @param {string} options.transformation  - e.g. "w_400,h_400,c_fill,q_auto"
- * @param {Function} options.onProgress    - (percent) => void
- * @returns {Promise<string>}              - secure URL
+ * @param {File}     file
+ * @param {object}   options
+ * @param {string}   options.folder       - e.g. "servana/users/uid123"
+ * @param {Function} options.onProgress   - (percent: number) => void
+ * @returns {Promise<string>}             - secure_url from Cloudinary
  */
 export async function uploadToCloudinary(file, options = {}) {
-  _checkConfig();
-
   if (!file) throw new Error("No file provided.");
   if (!file.type.startsWith("image/")) throw new Error("Only image files are supported.");
   if (file.size > 10 * 1024 * 1024) throw new Error("Image must be under 10MB.");
 
   const formData = new FormData();
-  formData.append("file",           file);
-  formData.append("upload_preset",  UPLOAD_PRESET);
-  formData.append("resource_type",  "image");
+  formData.append("file",          file);
+  formData.append("upload_preset", UPLOAD_PRESET);
+  // NOTE: Do NOT append "transformation" here.
+  // Unsigned presets reject it with HTTP 400.
+  // Use optimiseUrl() on the returned URL instead.
 
   if (options.folder) {
     formData.append("folder", options.folder);
-  }
-  if (options.transformation) {
-    formData.append("transformation", options.transformation);
   }
 
   if (options.onProgress) {
@@ -62,12 +56,20 @@ export async function uploadToCloudinary(file, options = {}) {
   return data.secure_url;
 }
 
+/**
+ * Upload with XMLHttpRequest for progress tracking
+ * @private
+ */
 function _uploadWithProgress(formData, onProgress) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
+
     xhr.upload.addEventListener("progress", e => {
-      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+      if (e.lengthComputable) {
+        onProgress(Math.round((e.loaded / e.total) * 100));
+      }
     });
+
     xhr.addEventListener("load", () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         const data = JSON.parse(xhr.responseText);
@@ -81,15 +83,22 @@ function _uploadWithProgress(formData, onProgress) {
         }
       }
     });
-    xhr.addEventListener("error",  () => reject(new Error("Network error during upload.")));
-    xhr.addEventListener("abort",  () => reject(new Error("Upload was cancelled.")));
+
+    xhr.addEventListener("error", () => reject(new Error("Network error during upload.")));
+    xhr.addEventListener("abort", () => reject(new Error("Upload was cancelled.")));
+
     xhr.open("POST", CLOUDINARY_URL);
     xhr.send(formData);
   });
 }
 
 /**
- * Upload multiple files (e.g. portfolio)
+ * Upload multiple files (e.g. portfolio images)
+ *
+ * @param {FileList|File[]} files
+ * @param {object}          options  - same as uploadToCloudinary
+ * @param {Function}        onEach   - called after each: (url, index) => void
+ * @returns {Promise<string[]>}
  */
 export async function uploadMultiple(files, options = {}, onEach) {
   const fileArray = Array.from(files);
@@ -103,36 +112,68 @@ export async function uploadMultiple(files, options = {}, onEach) {
 }
 
 /**
- * Optimise an existing Cloudinary URL with transformations
+ * Apply display transformations to an existing Cloudinary URL.
+ * This is the correct way to resize/crop — NOT during upload.
+ *
+ * @param {string} url        - Raw Cloudinary URL from upload
+ * @param {object} transforms
+ * @returns {string}          - Optimised URL
+ *
+ * @example
+ * const displayUrl = optimiseUrl(rawUrl, { width: 400, height: 400, crop: "fill" });
  */
 export function optimiseUrl(url, transforms = {}) {
   if (!url || !url.includes("cloudinary.com")) return url;
-  const { width = 400, height = 400, crop = "fill", quality = "auto" } = transforms;
-  return url.replace("/upload/", `/upload/w_${width},h_${height},c_${crop},q_${quality},f_auto/`);
+  const {
+    width   = 400,
+    height  = 400,
+    crop    = "fill",
+    quality = "auto",
+    format  = "auto"
+  } = transforms;
+  const t = `w_${width},h_${height},c_${crop},q_${quality},f_${format}`;
+  return url.replace("/upload/", `/upload/${t}/`);
 }
 
-export const avatarUrl    = url => optimiseUrl(url, { width: 200, height: 200, crop: "thumb" });
-export const thumbnailUrl = (url, size = 100) => optimiseUrl(url, { width: size, height: size, crop: "thumb" });
+/**
+ * Get an avatar-sized URL (200×200, face-cropped)
+ */
+export function avatarUrl(url) {
+  return optimiseUrl(url, { width: 200, height: 200, crop: "thumb", quality: "auto" });
+}
 
 /**
- * Check if Cloudinary is configured
- * Use this to show a helpful message instead of a generic error
+ * Get a thumbnail URL
  */
-export function isCloudinaryConfigured() {
-  return CLOUD_NAME !== "your_cloud_name" && !!CLOUD_NAME && !!UPLOAD_PRESET;
+export function thumbnailUrl(url, size = 100) {
+  return optimiseUrl(url, { width: size, height: size, crop: "thumb", quality: "auto" });
 }
 
 /**
  * Validate a file before uploading
  */
 export function validateFile(file, options = {}) {
-  const { maxSizeMB = 5, types = ["image/jpeg","image/png","image/webp","image/gif"] } = options;
+  const {
+    maxSizeMB = 5,
+    types = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+  } = options;
+
   if (!file) return { valid: false, error: "No file selected." };
-  if (!types.some(t => t.endsWith("*") ? file.type.startsWith(t.split("*")[0]) : file.type === t)) {
+
+  if (!types.some(t =>
+    t.endsWith("*")
+      ? file.type.startsWith(t.split("*")[0])
+      : file.type === t
+  )) {
     return { valid: false, error: "Invalid file type. Please select a JPG, PNG, or WebP image." };
   }
+
   if (file.size > maxSizeMB * 1024 * 1024) {
-    return { valid: false, error: `Image must be under ${maxSizeMB}MB. Yours is ${(file.size/1024/1024).toFixed(1)}MB.` };
+    return {
+      valid: false,
+      error: `Image must be under ${maxSizeMB}MB. Yours is ${(file.size / 1024 / 1024).toFixed(1)}MB.`
+    };
   }
+
   return { valid: true };
 }

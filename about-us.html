@@ -1,125 +1,288 @@
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8"/>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-      <title>About Us — Servana</title>
-      <meta name="description" content="Servana brings service seekers and providers together through a simple digital marketplace."/>
-      <link rel="preconnect" href="https://fonts.googleapis.com">
-      <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-      <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
- --brand:#1A237E;--brand-deep:#0D1560;--accent:#6C3CE1;--gold:#FFD60A;
- --text-1:#0D1B4B;--text-2:#4A5880;--text-3:#8C9BBF;--border:#E2E8F8;
- --bg:#EEF2FF;--bg-card:#fff;--bg-subtle:#F5F7FF;--success:#16A34A;
- --danger:#DC2626;--r-lg:16px;--r-md:10px
-}
-@media(prefers-color-scheme:dark){:root{
- --text-1:#E4EAFF;--text-2:#9AA9D3;--text-3:#6173A8;--border:#1C2860;
- --bg:#080E30;--bg-card:#0F1848;--bg-subtle:#111D52
-}}
-html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-1);min-height:100vh}
-a{color:inherit}
-.site-header{height:64px;padding:0 24px;background:linear-gradient(135deg,var(--brand-deep),var(--brand));
-display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(13,21,96,.25)}
-.logo{display:flex;align-items:center;gap:10px;text-decoration:none}.logo img{width:30px;height:30px;border-radius:8px;object-fit:cover}
-.logo-text{font-family:Orbitron,sans-serif;font-size:15px;font-weight:700;color:#fff;letter-spacing:2px}
-.header-actions{display:flex;align-items:center;gap:10px}.back-link{font-size:13px;font-weight:600;color:rgba(255,255,255,.78);text-decoration:none}
-.back-link:hover{color:#fff}.menu-link{display:none}
-.hero{background:linear-gradient(130deg,#0D1560 0%,#1A237E 52%,#6C3CE1 100%);
-padding:58px 20px 64px;text-align:center;position:relative;overflow:hidden}
-.hero:before,.hero:after{content:'';position:absolute;border-radius:50%;pointer-events:none}
-.hero:before{width:360px;height:360px;right:-90px;top:-140px;background:rgba(255,255,255,.045)}
-.hero:after{width:220px;height:220px;left:-70px;bottom:-100px;background:rgba(255,214,10,.07)}
-.badge{display:inline-block;font-size:11px;font-weight:700;color:#ffe76a;background:rgba(255,214,10,.12);
-border:1px solid rgba(255,214,10,.24);padding:5px 14px;border-radius:20px;margin-bottom:15px;letter-spacing:.6px;position:relative;z-index:1}
-.hero h1{font-family:Orbitron,sans-serif;font-size:clamp(24px,5vw,38px);line-height:1.2;color:#fff;margin-bottom:12px;position:relative;z-index:1}
-.hero p{max-width:650px;margin:auto;font-size:14px;line-height:1.7;color:rgba(255,255,255,.72);position:relative;z-index:1}
-.wrap{max-width:1000px;margin:auto;padding:38px 20px 80px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
-.card{background:var(--bg-card);border:.5px solid var(--border);border-radius:var(--r-lg);padding:24px;box-shadow:0 2px 12px rgba(13,21,96,.05)}
-.card h2,.card h3{color:var(--text-1);margin-bottom:9px}.card h2{font-size:19px}.card h3{font-size:15px}
-.card p,.card li{font-size:13px;line-height:1.75;color:var(--text-2)}.card ul{padding-left:19px}
-.icon{width:42px;height:42px;border-radius:12px;background:rgba(108,60,225,.1);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:15px}
-.section-title{text-align:center;margin:10px auto 22px}.section-title h2{font-size:23px;margin-bottom:6px}.section-title p{font-size:13px;color:var(--text-3)}
-.pill{display:inline-block;padding:5px 10px;border-radius:999px;background:rgba(108,60,225,.1);color:var(--accent);font-size:10px;font-weight:700;margin-bottom:10px}
-.faq{border:.5px solid var(--border);background:var(--bg-card);border-radius:var(--r-md);margin-bottom:10px;overflow:hidden}
-.faq summary{cursor:pointer;padding:17px 18px;font-size:13px;font-weight:700;color:var(--text-1);list-style:none}
-.faq summary::-webkit-details-marker{display:none}.faq summary:after{content:'+';float:right;color:var(--accent);font-size:18px}
-.faq[open] summary:after{content:'−'}.faq p{padding:0 18px 17px;font-size:13px;line-height:1.7;color:var(--text-2)}
-.cta{background:linear-gradient(130deg,#0D1560,#1A237E 55%,#6C3CE1);border-radius:var(--r-lg);padding:34px 26px;text-align:center;margin-top:30px}
-.cta h2{font-family:Orbitron,sans-serif;color:#fff;font-size:19px;margin-bottom:8px}.cta p{color:rgba(255,255,255,.72);font-size:13px;line-height:1.6;margin-bottom:18px}
-.btn{display:inline-block;padding:11px 20px;border-radius:10px;background:var(--gold);color:#151515;text-decoration:none;font-size:12px;font-weight:800;margin:4px}
-.btn.alt{background:#fff;color:var(--brand)}
-.meta{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0;color:var(--text-3);font-size:11px}
-.article{display:flex;gap:18px}.article-mark{width:100px;min-width:100px;height:90px;border-radius:12px;background:linear-gradient(135deg,var(--brand),var(--accent));display:flex;align-items:center;justify-content:center;font-size:30px}
-.article h3{margin-bottom:6px}.article a{text-decoration:none}.article a:hover{color:var(--accent)}
-.job{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}.job-main{flex:1}.job-meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.job-meta span{font-size:10px;padding:5px 8px;border-radius:999px;background:var(--bg-subtle);color:var(--text-2)}
-.value{min-height:170px}.timeline{border-left:2px solid var(--border);padding-left:22px}.step{position:relative;margin-bottom:24px}.step:before{content:'';position:absolute;width:10px;height:10px;border-radius:50%;background:var(--accent);left:-28px;top:5px}
-.doc-footer{text-align:center;padding:25px 20px;border-top:.5px solid var(--border);font-size:12px;color:var(--text-3)}
-.doc-footer a{color:var(--accent);text-decoration:none}
-@media(max-width:760px){.grid{grid-template-columns:1fr 1fr}.back-link{display:none}.menu-link{display:inline-block;color:#fff;text-decoration:none;font-size:12px}.job{flex-direction:column}.article{flex-direction:column}.article-mark{width:100%;height:120px}}
-@media(max-width:480px){.grid{grid-template-columns:1fr}.wrap{padding-left:15px;padding-right:15px}.card{padding:20px}.hero{padding:45px 18px 50px}}
-</style>
-    </head>
-    <body>
-      <header class="site-header">
-        <a class="logo" href="./index.html"><img src="./assets/images/logo.png" alt="Servana" onerror="this.style.display='none'"><span class="logo-text">SERVANA</span></a>
-        <div class="header-actions"><a class="menu-link" href="./index.html">Home</a><a class="back-link" href="javascript:history.back()">‹&nbsp; Go Back</a></div>
-      </header>
-      <section class="hero">
-        <div class="badge">ABOUT SERVANA</div>
-        <h1>Connecting People. Powering Services.</h1>
-        <p>Servana brings service seekers and providers together through a simple digital marketplace.</p>
-      </section>
-      <main class="wrap">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Servana — About Us</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --brand:#1A237E;--brand-deep:#0D1560;--accent:#6C3CE1;
+      --gold:#FFD60A;--success:#16A34A;
+      --text-1:#0D1B4B;--text-2:#4A5880;--text-3:#8C9BBF;
+      --border:#E2E8F8;--bg:#EEF2FF;--bg-card:#FFFFFF;--bg-subtle:#F5F7FF;
+      --r-lg:16px;--r-md:10px;
+    }
+    @media(prefers-color-scheme:dark){:root{
+      --text-1:#E4EAFF;--text-2:#7D8FC4;--text-3:#3D4E7A;
+      --border:#1C2860;--bg:#080E30;--bg-card:#0F1848;--bg-subtle:#111D52;
+    }}
+    html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-1);min-height:100vh}
 
-<div class="card" style="margin-bottom:18px">
-  <span class="pill">ABOUT SERVANA</span>
-  <h2>Making everyday services easier to discover and access.</h2>
-  <p>Servana is built around a simple idea: people should be able to find the services they need, while skilled providers should have a practical way to present what they do and connect with potential customers.</p>
-  <p>Our marketplace brings service discovery, provider profiles, bookings, communication, payments, and reviews into one digital experience.</p>
+    /* ── Header ── */
+    .site-header{background:linear-gradient(135deg,var(--brand-deep),var(--brand));padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(13,21,96,.25)}
+    .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+    .logo img{width:30px;height:30px;border-radius:8px;object-fit:cover}
+    .logo-text{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700;color:#fff;letter-spacing:2px}
+    .back-link{font-size:13px;font-weight:600;color:rgba(255,255,255,.75);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .15s}
+    .back-link:hover{color:#fff}
+    .back-link svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round}
+
+    /* ── Hero ── */
+    .hero{background:linear-gradient(130deg,var(--brand-deep) 0%,var(--brand) 55%,var(--accent) 100%);padding:64px 24px 80px;text-align:center;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;width:400px;height:400px;border-radius:50%;top:-100px;right:-80px;background:rgba(255,255,255,.04);pointer-events:none}
+    .hero::after{content:'';position:absolute;width:200px;height:200px;border-radius:50%;bottom:-40px;left:60px;background:rgba(255,214,10,.05);pointer-events:none}
+    .hero-badge{display:inline-block;font-size:11px;font-weight:700;color:var(--gold);background:rgba(255,214,10,.12);border:1px solid rgba(255,214,10,.22);padding:4px 14px;border-radius:20px;margin-bottom:16px;letter-spacing:.5px;position:relative;z-index:1}
+    .hero h1{font-family:'Orbitron',sans-serif;font-size:clamp(24px,4.5vw,40px);font-weight:700;color:#fff;margin-bottom:16px;position:relative;z-index:1;line-height:1.2}
+    .hero h1 span{color:var(--gold)}
+    .hero p{font-size:16px;color:rgba(255,255,255,.72);max-width:540px;margin:0 auto;position:relative;z-index:1;line-height:1.7}
+
+    /* ── Layout ── */
+    .page-wrap{max-width:860px;margin:0 auto;padding:48px 20px 80px}
+
+    /* ── Stats ── */
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;background:var(--bg-card);border:.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:0 4px 24px rgba(13,21,96,.08);margin-bottom:56px;margin-top:-40px;position:relative;z-index:2}
+    .stat-item{padding:24px 16px;text-align:center;border-right:.5px solid var(--border)}
+    .stat-item:last-child{border-right:none}
+    .stat-num{font-family:'Orbitron',sans-serif;font-size:26px;font-weight:700;color:var(--brand);line-height:1}
+    .stat-lbl{font-size:11px;color:var(--text-3);font-weight:600;margin-top:6px;letter-spacing:.3px}
+
+    /* ── Section heading ── */
+    .sec-label{font-size:11px;font-weight:700;color:var(--accent);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
+    .sec-title{font-family:'Orbitron',sans-serif;font-size:clamp(18px,3vw,24px);font-weight:700;color:var(--text-1);margin-bottom:14px;line-height:1.3}
+    .sec-body{font-size:14.5px;color:var(--text-2);line-height:1.8}
+
+    /* ── Story section ── */
+    .story-section{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;margin-bottom:64px}
+    @media(max-width:640px){.story-section{grid-template-columns:1fr;gap:28px}}
+    .story-visual{background:linear-gradient(135deg,var(--brand-deep),var(--accent));border-radius:20px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:80px;box-shadow:0 16px 48px rgba(108,60,225,.25)}
+
+    /* ── Mission / Vision ── */
+    .mv-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:64px}
+    @media(max-width:540px){.mv-grid{grid-template-columns:1fr}}
+    .mv-card{border-radius:var(--r-lg);padding:28px 24px;position:relative;overflow:hidden}
+    .mv-card.mission{background:linear-gradient(135deg,rgba(26,35,126,.06),rgba(108,60,225,.06));border:.5px solid rgba(108,60,225,.15)}
+    .mv-card.vision{background:linear-gradient(135deg,rgba(22,163,74,.05),rgba(22,163,74,.08));border:.5px solid rgba(22,163,74,.15)}
+    .mv-icon{font-size:36px;margin-bottom:14px}
+    .mv-title{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;color:var(--text-1);margin-bottom:10px;letter-spacing:.5px}
+    .mv-body{font-size:13.5px;color:var(--text-2);line-height:1.75}
+
+    /* ── Values ── */
+    .values-section{margin-bottom:64px}
+    .values-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-top:28px}
+    .value-card{background:var(--bg-card);border:.5px solid var(--border);border-radius:var(--r-lg);padding:24px 20px;box-shadow:0 2px 8px rgba(13,21,96,.04)}
+    .value-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px}
+    .v1{background:rgba(26,35,126,.08)} .v2{background:rgba(108,60,225,.08)}
+    .v3{background:rgba(22,163,74,.08)} .v4{background:rgba(255,214,10,.1)}
+    .v5{background:rgba(220,38,38,.06)} .v6{background:rgba(41,98,255,.08)}
+    .value-title{font-size:14px;font-weight:700;color:var(--text-1);margin-bottom:6px}
+    .value-body{font-size:13px;color:var(--text-2);line-height:1.65}
+
+    /* ── Team ── */
+    .team-section{margin-bottom:64px}
+    .team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px;margin-top:28px}
+    .team-card{background:var(--bg-card);border:.5px solid var(--border);border-radius:var(--r-lg);padding:24px 16px;text-align:center;box-shadow:0 2px 8px rgba(13,21,96,.04);transition:box-shadow .2s,transform .2s}
+    .team-card:hover{box-shadow:0 8px 28px rgba(13,21,96,.1);transform:translateY(-3px)}
+    .team-av{width:72px;height:72px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#fff}
+    .av1{background:linear-gradient(135deg,#1A237E,#6C3CE1)}
+    .av2{background:linear-gradient(135deg,#0D1560,#2962FF)}
+    .av3{background:linear-gradient(135deg,#16A34A,#059669)}
+    .av4{background:linear-gradient(135deg,#D97706,#F59E0B)}
+    .team-name{font-size:14px;font-weight:700;color:var(--text-1);margin-bottom:4px}
+    .team-role{font-size:12px;color:var(--text-3);margin-bottom:10px}
+    .team-bio{font-size:12px;color:var(--text-2);line-height:1.6}
+
+    /* ── Presence ── */
+    .presence-section{margin-bottom:64px}
+    .countries-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-top:24px}
+    .country-pill{background:var(--bg-card);border:.5px solid var(--border);border-radius:var(--r-md);padding:14px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 1px 4px rgba(13,21,96,.04)}
+    .country-flag{font-size:22px;flex-shrink:0}
+    .country-name{font-size:13px;font-weight:600;color:var(--text-1)}
+    .country-status{font-size:10px;color:var(--text-3);margin-top:1px}
+
+    /* ── CTA ── */
+    .cta-section{background:linear-gradient(130deg,var(--brand-deep),var(--brand) 60%,var(--accent));border-radius:24px;padding:48px 32px;text-align:center}
+    .cta-section h2{font-family:'Orbitron',sans-serif;font-size:clamp(18px,3vw,24px);font-weight:700;color:#fff;margin-bottom:12px}
+    .cta-section p{font-size:14px;color:rgba(255,255,255,.7);margin-bottom:28px;max-width:420px;margin-left:auto;margin-right:auto;line-height:1.65}
+    .cta-buttons{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+    .btn-gold{padding:12px 28px;background:var(--gold);color:var(--brand-deep);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;border-radius:10px;text-decoration:none;border:none;cursor:pointer;transition:opacity .2s}
+    .btn-gold:hover{opacity:.88}
+    .btn-white{padding:12px 28px;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.25);color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;border-radius:10px;text-decoration:none;transition:background .2s}
+    .btn-white:hover{background:rgba(255,255,255,.2)}
+
+    /* ── Footer ── */
+    .doc-footer{text-align:center;padding:24px;font-size:12px;color:var(--text-3);border-top:.5px solid var(--border);margin-top:40px}
+    .doc-footer a{color:var(--accent);text-decoration:none}
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="logo" href="./index.html">
+    <img src="./assets/images/logo.png" alt="Servana" onerror="this.style.display='none'">
+    <span class="logo-text">SERVANA</span>
+  </a>
+  <a class="back-link" href="javascript:history.back()">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    Go Back
+  </a>
+</header>
+
+<div class="hero">
+  <div class="hero-badge">🌍 About Servana</div>
+  <h1>Africa's <span>Personal Service</span> Genie</h1>
+  <p>We're building the infrastructure that connects Africa's skilled workforce with the people who need them — fast, trusted, and stress-free.</p>
 </div>
 
-<div class="section-title"><h2>How Servana Works</h2><p>A simple marketplace journey for both sides.</p></div>
-<div class="grid">
-  <div class="card value"><div class="icon">👤</div><h3>1. Create an Account</h3><p>Join Servana and set up your profile with the information needed to use the marketplace.</p></div>
-  <div class="card value"><div class="icon">🔍</div><h3>2. Discover</h3><p>Seekers can explore service providers using categories, profiles, and location information.</p></div>
-  <div class="card value"><div class="icon">🤝</div><h3>3. Connect &amp; Book</h3><p>Review the service, communicate where appropriate, and proceed with a booking.</p></div>
+<div class="page-wrap">
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-item"><div class="stat-num">7+</div><div class="stat-lbl">Countries</div></div>
+    <div class="stat-item"><div class="stat-num">30+</div><div class="stat-lbl">Service Categories</div></div>
+    <div class="stat-item"><div class="stat-num">4.8★</div><div class="stat-lbl">Avg Provider Rating</div></div>
+    <div class="stat-item"><div class="stat-num">2025</div><div class="stat-lbl">Founded</div></div>
+  </div>
+
+  <!-- Story -->
+  <div class="story-section">
+    <div>
+      <div class="sec-label">Our Story</div>
+      <div class="sec-title">Born from a Real Problem</div>
+      <div class="sec-body">
+        <p style="margin-bottom:14px">It started with a frustrating afternoon in Abuja. A burst pipe, three phone calls, two no-shows, and a flooded bathroom floor. Finding a reliable plumber — or any skilled tradesperson — felt like a lottery.</p>
+        <p style="margin-bottom:14px">The problem wasn't that skilled people didn't exist. They did. In every street, every neighbourhood across Africa. The problem was <strong>discovery and trust</strong>. How do you find a good electrician in your area? How do you know they're reliable? How do you pay safely?</p>
+        <p>Servana was built to answer those questions. A single platform where Africa's skilled workforce can be found, trusted, booked, and paid — all in one place.</p>
+      </div>
+    </div>
+    <div class="story-visual">🔧</div>
+  </div>
+
+  <!-- Mission & Vision -->
+  <div class="mv-grid">
+    <div class="mv-card mission">
+      <div class="mv-icon">🎯</div>
+      <div class="mv-title">Our Mission</div>
+      <div class="mv-body">To create economic opportunity for Africa's skilled workforce by making it effortless for people to discover, book, and pay for trusted local services — no stress, no guesswork.</div>
+    </div>
+    <div class="mv-card vision">
+      <div class="mv-icon">🌍</div>
+      <div class="mv-title">Our Vision</div>
+      <div class="mv-body">A continent where every skilled person has a digital presence, every home owner can get help in minutes, and every transaction is safe, transparent, and fair.</div>
+    </div>
+  </div>
+
+  <!-- Values -->
+  <div class="values-section">
+    <div class="sec-label">What We Stand For</div>
+    <div class="sec-title">Our Core Values</div>
+    <div class="values-grid">
+      <div class="value-card">
+        <div class="value-icon v1">🤝</div>
+        <div class="value-title">Trust First</div>
+        <div class="value-body">Every feature we build starts with trust. Verified profiles, transparent pricing, and a review system that keeps everyone honest.</div>
+      </div>
+      <div class="value-card">
+        <div class="value-icon v2">⚡</div>
+        <div class="value-title">Speed Matters</div>
+        <div class="value-body">When your tap is leaking or your power is out, every minute counts. We obsess over reducing the time from "I need help" to "help is here."</div>
+      </div>
+      <div class="value-card">
+        <div class="value-icon v3">💚</div>
+        <div class="value-title">Provider First</div>
+        <div class="value-body">Providers are the backbone of Servana. We keep our platform fees low, pay out fast, and build tools that help them grow real businesses.</div>
+      </div>
+      <div class="value-card">
+        <div class="value-icon v4">🌍</div>
+        <div class="value-title">Built for Africa</div>
+        <div class="value-body">Not a copy-paste from another market. Every design decision accounts for African realities — from payment methods to local languages.</div>
+      </div>
+      <div class="value-card">
+        <div class="value-icon v5">🔒</div>
+        <div class="value-title">Safety Always</div>
+        <div class="value-body">Data privacy, secure payments, and user safety are non-negotiables. We protect seekers and providers with the same care.</div>
+      </div>
+      <div class="value-card">
+        <div class="value-icon v6">🚀</div>
+        <div class="value-title">Keep Improving</div>
+        <div class="value-body">Servana is not done. We ship updates, fix bugs fast, listen to feedback, and build what our community actually needs.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Team -->
+  <div class="team-section">
+    <div class="sec-label">The People</div>
+    <div class="sec-title">Who Builds Servana</div>
+    <div class="sec-body" style="margin-bottom:0">A small, focused team from Nigeria building big things for Africa.</div>
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="team-av av1">OG</div>
+        <div class="team-name">Obuo David James</div>
+        <div class="team-role">Founder & CEO</div>
+        <div class="team-bio">Product visionary, developer, and the person who had that flooded bathroom. Building Servana from Abuja, Nigeria.</div>
+      </div>
+      <div class="team-card">
+        <div class="team-av av2">DE</div>
+        <div class="team-name">Design Team</div>
+        <div class="team-role">Product & UX</div>
+        <div class="team-bio">Crafting the Servana experience — clean, fast, and built for how Africans actually use their phones.</div>
+      </div>
+      <div class="team-card">
+        <div class="team-av av3">EN</div>
+        <div class="team-name">Engineering</div>
+        <div class="team-role">Platform & Security</div>
+        <div class="team-bio">Keeping Servana fast, secure, and reliable.</div>
+      </div>
+      <div class="team-card">
+        <div class="team-av av4">GR</div>
+        <div class="team-name">Growth Team</div>
+        <div class="team-role">Community & Partnerships</div>
+        <div class="team-bio">Building the provider network and bringing Servana to every city and town across Africa.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Presence -->
+  <div class="presence-section">
+    <div class="sec-label">Where We Are</div>
+    <div class="sec-title">Serving Africa, Starting Here</div>
+    <div class="sec-body">Servana is live across 7 countries with more on the way. Our platform supports local currencies, languages, and locations for each market.</div>
+    <div class="countries-grid">
+      <div class="country-pill"><div class="country-flag">🇳🇬</div><div><div class="country-name">Nigeria</div><div class="country-status">🟢 Live</div></div></div>
+      <div class="country-pill"><div class="country-flag">🇬🇭</div><div><div class="country-name">Ghana</div><div class="country-status">🟢 Live</div></div></div>
+      <div class="country-pill"><div class="country-flag">🇰🇪</div><div><div class="country-name">Kenya</div><div class="country-status">🟢 Live</div></div></div>
+      <div class="country-pill"><div class="country-flag">🇿🇦</div><div><div class="country-name">South Africa</div><div class="country-status">🟢 Live</div></div></div>
+      <div class="country-pill"><div class="country-flag">🇺🇬</div><div><div class="country-name">Uganda</div><div class="country-status">🟢 Live</div></div></div>
+      <div class="country-pill"><div class="country-flag">🇨🇲</div><div><div class="country-name">Cameroon</div><div class="country-status">🟢 Live</div></div></div>
+      <div class="country-pill"><div class="country-flag">🇪🇬</div><div><div class="country-name">Egypt</div><div class="country-status">🟢 Live</div></div></div>
+      <div class="country-pill"><div class="country-flag">🌍</div><div><div class="country-name">More Soon</div><div class="country-status">🔵 Coming</div></div></div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-section">
+    <h2>Join the Servana Movement</h2>
+    <p>Whether you need a service or you provide one — Servana is your platform. Fast help. No stress.</p>
+    <div class="cta-buttons">
+      <a class="btn-gold" href="./login.html">Get Started Free →</a>
+      <a class="btn-white" href="./careers.html">Join Our Team</a>
+    </div>
+  </div>
+
 </div>
 
-<div class="section-title"><h2>What We Stand For</h2><p>The principles behind the Servana experience.</p></div>
-<div class="grid">
-  <div class="card value"><div class="icon">🛡️</div><h3>Trust</h3><p>Clear profiles, reviews, secure account practices, and transparent service information help users make informed decisions.</p></div>
-  <div class="card value"><div class="icon">⚡</div><h3>Simplicity</h3><p>We aim to reduce the friction involved in finding, comparing, booking, and managing everyday services.</p></div>
-  <div class="card value"><div class="icon">🌍</div><h3>Opportunity</h3><p>We give service providers a digital place to showcase their skills and reach people looking for their services.</p></div>
-</div>
+<footer class="doc-footer">
+  <p>© 2025 Servana. All rights reserved. &nbsp;·&nbsp;
+    <a href="./terms.html">Terms</a> &nbsp;·&nbsp;
+    <a href="./privacy.html">Privacy</a> &nbsp;·&nbsp;
+    <a href="./support.html">Support</a> &nbsp;·&nbsp;
+    <a href="./careers.html">Careers</a>
+  </p>
+</footer>
 
-<div class="card">
-  <span class="pill">FOR SEEKERS</span>
-  <h2>Find people who can help.</h2>
-  <p>From discovering a provider to managing a booking, Servana is designed to put useful service information in one place.</p>
-  <br>
-  <span class="pill">FOR PROVIDERS</span>
-  <h2>Put your service in front of people who need it.</h2>
-  <p>Providers can build a profile, present their services, manage bookings, communicate with customers, and develop a track record through completed work and reviews.</p>
-</div>
-
-<div class="cta">
-  <h2>Be Part of Servana</h2>
-  <p>Whether you need a service or provide one, Servana is built to help you connect.</p>
-  <a class="btn" href="./login.html">Get Started</a>
-  <a class="btn alt" href="./support.html">Visit Support</a>
-</div>
-
-      </main>
-      <footer class="doc-footer">
-        <p>© 2026 Servana. All rights reserved. &nbsp;·&nbsp;
-        <a href="./terms.html">Terms of Service</a> &nbsp;·&nbsp;
-        <a href="./privacy.html">Privacy Policy</a> &nbsp;·&nbsp;
-        <a href="./support.html">Support</a></p>
-      </footer>
-    </body>
-    </html>
+</body>
+</html>

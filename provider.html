@@ -666,10 +666,10 @@ $("portfolioInput").addEventListener("change", async()=>{
   if(files.some(f=>f.size>5*1024*1024)){toast("Each image must be under 5MB.","warning");return;}
   try {
     showSpinner();
+    // No transformation in upload — unsigned preset rejects it
     const urls = await Promise.all(files.map(f =>
       uploadToCloudinary(f, {
-        folder: `servana/providers/${currentUser.uid}/portfolio`,
-        transformation: "w_800,h_800,c_fill,q_auto,f_auto"
+        folder: `servana/providers/${currentUser.uid}/portfolio`
       })
     ));
     const portfolio=[...(provData.portfolio||[]),...urls];
@@ -791,12 +791,13 @@ $("profilePhotoInput").addEventListener("change", async()=>{
   if(file.size>5*1024*1024){toast("Image must be under 5MB.","warning");return;}
   try {
     showSpinner();
-    const url = await uploadToCloudinary(file, {
-      folder: `servana/providers/${currentUser.uid}`,
-      transformation: "w_400,h_400,c_thumb,q_auto,f_auto"
+    // No transformation in upload call — unsigned preset rejects it (HTTP 400)
+    const rawUrl = await uploadToCloudinary(file, {
+      folder: `servana/providers/${currentUser.uid}`
     });
-    await updateProfile(currentUser,{photoURL:url});
-    await setDoc(doc(db,"providers",currentUser.uid),{photoURL:url},{merge:true});
+    const url = avatarUrl(rawUrl);
+    await updateProfile(currentUser,{photoURL:rawUrl});
+    await setDoc(doc(db,"providers",currentUser.uid),{photoURL:rawUrl},{merge:true});
     $("heroAv").src=url; $("heroAv").style.display="block"; $("heroAvFb").style.display="none"; $("photoPreview").src=url;
     provData.photoURL=url; renderStrength(); toast("Profile photo updated!","success");
   } catch(e){
