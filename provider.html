@@ -54,7 +54,9 @@
     .btn-add-svc:hover{background:rgba(108,60,225,.05);border-color:var(--accent)}
     /* Portfolio */
     .port-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px}
-    .port-img{aspect-ratio:1;border-radius:var(--r-sm);object-fit:cover;border:.5px solid var(--border);cursor:pointer;transition:transform .2s,box-shadow .2s}
+    /* Each portfolio cell is a fixed square — image cannot overflow */
+    .port-cell{position:relative;width:100%;padding-top:100%;border-radius:var(--r-sm);overflow:hidden}
+    .port-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border:.5px solid var(--border);cursor:pointer;transition:transform .2s,box-shadow .2s;border-radius:var(--r-sm)}
     .port-img:hover{transform:scale(1.05);box-shadow:var(--shadow-md)}
     .port-add{aspect-ratio:1;border-radius:var(--r-sm);border:1.5px dashed var(--border);background:var(--bg-subtle);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;transition:background .2s,border-color .2s;color:var(--text-3);font-size:11px;font-weight:500}
     .port-add:hover{background:rgba(108,60,225,.05);border-color:var(--accent);color:var(--accent)}
@@ -371,7 +373,7 @@
 <script type="module">
 import { auth, db, storage, toast, showSpinner, hideSpinner, esc, starsHtml, initials, formatNGN, setLoading } from "./assets/firebase.js";
 import { wireCascade } from "./assets/locations.js";
-import { uploadToCloudinary, avatarUrl, serviceImageUrl } from "./assets/cloudinary.js";
+import { uploadToCloudinary } from "./assets/cloudinary.js";
 import { onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { doc, getDoc, setDoc, getDocs, updateDoc, addDoc, collection, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 // Cloudinary handles file uploads — see assets/cloudinary.js
@@ -656,8 +658,10 @@ function renderPortfolio() {
   const add  = grid.querySelector(".port-add");
   grid.querySelectorAll(".port-img").forEach(i=>i.remove());
   (provData.portfolio||[]).forEach(url=>{
-    const img=document.createElement("img"); img.src=url; img.className="port-img"; img.alt="Portfolio";
-    img.addEventListener("click",()=>window.open(url,"_blank")); grid.insertBefore(img,add);
+    const cell = document.createElement("div"); cell.className = "port-cell";
+    const img  = document.createElement("img"); img.src=url; img.className="port-img"; img.alt="Portfolio";
+    img.addEventListener("click",()=>window.open(url,"_blank"));
+    cell.appendChild(img); grid.insertBefore(cell,add);
   });
 }
 

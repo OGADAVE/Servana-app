@@ -1,123 +1,388 @@
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8"/>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-      <title>Careers — Servana</title>
-      <meta name="description" content="We're building a marketplace that makes everyday services easier to discover, access, and deliver."/>
-      <link rel="preconnect" href="https://fonts.googleapis.com">
-      <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-      <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
- --brand:#1A237E;--brand-deep:#0D1560;--accent:#6C3CE1;--gold:#FFD60A;
- --text-1:#0D1B4B;--text-2:#4A5880;--text-3:#8C9BBF;--border:#E2E8F8;
- --bg:#EEF2FF;--bg-card:#fff;--bg-subtle:#F5F7FF;--success:#16A34A;
- --danger:#DC2626;--r-lg:16px;--r-md:10px
-}
-@media(prefers-color-scheme:dark){:root{
- --text-1:#E4EAFF;--text-2:#9AA9D3;--text-3:#6173A8;--border:#1C2860;
- --bg:#080E30;--bg-card:#0F1848;--bg-subtle:#111D52
-}}
-html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-1);min-height:100vh}
-a{color:inherit}
-.site-header{height:64px;padding:0 24px;background:linear-gradient(135deg,var(--brand-deep),var(--brand));
-display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(13,21,96,.25)}
-.logo{display:flex;align-items:center;gap:10px;text-decoration:none}.logo img{width:30px;height:30px;border-radius:8px;object-fit:cover}
-.logo-text{font-family:Orbitron,sans-serif;font-size:15px;font-weight:700;color:#fff;letter-spacing:2px}
-.header-actions{display:flex;align-items:center;gap:10px}.back-link{font-size:13px;font-weight:600;color:rgba(255,255,255,.78);text-decoration:none}
-.back-link:hover{color:#fff}.menu-link{display:none}
-.hero{background:linear-gradient(130deg,#0D1560 0%,#1A237E 52%,#6C3CE1 100%);
-padding:58px 20px 64px;text-align:center;position:relative;overflow:hidden}
-.hero:before,.hero:after{content:'';position:absolute;border-radius:50%;pointer-events:none}
-.hero:before{width:360px;height:360px;right:-90px;top:-140px;background:rgba(255,255,255,.045)}
-.hero:after{width:220px;height:220px;left:-70px;bottom:-100px;background:rgba(255,214,10,.07)}
-.badge{display:inline-block;font-size:11px;font-weight:700;color:#ffe76a;background:rgba(255,214,10,.12);
-border:1px solid rgba(255,214,10,.24);padding:5px 14px;border-radius:20px;margin-bottom:15px;letter-spacing:.6px;position:relative;z-index:1}
-.hero h1{font-family:Orbitron,sans-serif;font-size:clamp(24px,5vw,38px);line-height:1.2;color:#fff;margin-bottom:12px;position:relative;z-index:1}
-.hero p{max-width:650px;margin:auto;font-size:14px;line-height:1.7;color:rgba(255,255,255,.72);position:relative;z-index:1}
-.wrap{max-width:1000px;margin:auto;padding:38px 20px 80px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
-.card{background:var(--bg-card);border:.5px solid var(--border);border-radius:var(--r-lg);padding:24px;box-shadow:0 2px 12px rgba(13,21,96,.05)}
-.card h2,.card h3{color:var(--text-1);margin-bottom:9px}.card h2{font-size:19px}.card h3{font-size:15px}
-.card p,.card li{font-size:13px;line-height:1.75;color:var(--text-2)}.card ul{padding-left:19px}
-.icon{width:42px;height:42px;border-radius:12px;background:rgba(108,60,225,.1);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:15px}
-.section-title{text-align:center;margin:10px auto 22px}.section-title h2{font-size:23px;margin-bottom:6px}.section-title p{font-size:13px;color:var(--text-3)}
-.pill{display:inline-block;padding:5px 10px;border-radius:999px;background:rgba(108,60,225,.1);color:var(--accent);font-size:10px;font-weight:700;margin-bottom:10px}
-.faq{border:.5px solid var(--border);background:var(--bg-card);border-radius:var(--r-md);margin-bottom:10px;overflow:hidden}
-.faq summary{cursor:pointer;padding:17px 18px;font-size:13px;font-weight:700;color:var(--text-1);list-style:none}
-.faq summary::-webkit-details-marker{display:none}.faq summary:after{content:'+';float:right;color:var(--accent);font-size:18px}
-.faq[open] summary:after{content:'−'}.faq p{padding:0 18px 17px;font-size:13px;line-height:1.7;color:var(--text-2)}
-.cta{background:linear-gradient(130deg,#0D1560,#1A237E 55%,#6C3CE1);border-radius:var(--r-lg);padding:34px 26px;text-align:center;margin-top:30px}
-.cta h2{font-family:Orbitron,sans-serif;color:#fff;font-size:19px;margin-bottom:8px}.cta p{color:rgba(255,255,255,.72);font-size:13px;line-height:1.6;margin-bottom:18px}
-.btn{display:inline-block;padding:11px 20px;border-radius:10px;background:var(--gold);color:#151515;text-decoration:none;font-size:12px;font-weight:800;margin:4px}
-.btn.alt{background:#fff;color:var(--brand)}
-.meta{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0;color:var(--text-3);font-size:11px}
-.article{display:flex;gap:18px}.article-mark{width:100px;min-width:100px;height:90px;border-radius:12px;background:linear-gradient(135deg,var(--brand),var(--accent));display:flex;align-items:center;justify-content:center;font-size:30px}
-.article h3{margin-bottom:6px}.article a{text-decoration:none}.article a:hover{color:var(--accent)}
-.job{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}.job-main{flex:1}.job-meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.job-meta span{font-size:10px;padding:5px 8px;border-radius:999px;background:var(--bg-subtle);color:var(--text-2)}
-.value{min-height:170px}.timeline{border-left:2px solid var(--border);padding-left:22px}.step{position:relative;margin-bottom:24px}.step:before{content:'';position:absolute;width:10px;height:10px;border-radius:50%;background:var(--accent);left:-28px;top:5px}
-.doc-footer{text-align:center;padding:25px 20px;border-top:.5px solid var(--border);font-size:12px;color:var(--text-3)}
-.doc-footer a{color:var(--accent);text-decoration:none}
-@media(max-width:760px){.grid{grid-template-columns:1fr 1fr}.back-link{display:none}.menu-link{display:inline-block;color:#fff;text-decoration:none;font-size:12px}.job{flex-direction:column}.article{flex-direction:column}.article-mark{width:100%;height:120px}}
-@media(max-width:480px){.grid{grid-template-columns:1fr}.wrap{padding-left:15px;padding-right:15px}.card{padding:20px}.hero{padding:45px 18px 50px}}
-</style>
-    </head>
-    <body>
-      <header class="site-header">
-        <a class="logo" href="./index.html"><img src="./assets/images/logo.png" alt="Servana" onerror="this.style.display='none'"><span class="logo-text">SERVANA</span></a>
-        <div class="header-actions"><a class="menu-link" href="./index.html">Home</a><a class="back-link" href="javascript:history.back()">‹&nbsp; Go Back</a></div>
-      </header>
-      <section class="hero">
-        <div class="badge">JOIN SERVANA</div>
-        <h1>Build the Future of Services With Us</h1>
-        <p>We're building a marketplace that makes everyday services easier to discover, access, and deliver.</p>
-      </section>
-      <main class="wrap">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Servana — Careers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --brand:#1A237E;--brand-deep:#0D1560;--accent:#6C3CE1;
+      --gold:#FFD60A;--success:#16A34A;--info:#2962FF;
+      --text-1:#0D1B4B;--text-2:#4A5880;--text-3:#8C9BBF;
+      --border:#E2E8F8;--bg:#EEF2FF;--bg-card:#FFFFFF;--bg-subtle:#F5F7FF;
+      --r-lg:16px;--r-md:10px;--r-sm:8px;
+    }
+    @media(prefers-color-scheme:dark){:root{
+      --text-1:#E4EAFF;--text-2:#7D8FC4;--text-3:#3D4E7A;
+      --border:#1C2860;--bg:#080E30;--bg-card:#0F1848;--bg-subtle:#111D52;
+    }}
+    html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-1);min-height:100vh}
 
-<div class="card" style="margin-bottom:18px">
-  <span class="pill">CAREERS AT SERVANA</span>
-  <h2>Build the future of everyday services.</h2>
-  <p>Servana is building a marketplace where people can discover services and providers can build sustainable digital businesses around their skills. We are interested in people who enjoy solving practical problems, building useful products, and working with a growing team.</p>
-</div>
+    /* ── Header ── */
+    .site-header{background:linear-gradient(135deg,var(--brand-deep),var(--brand));padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(13,21,96,.25)}
+    .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+    .logo img{width:30px;height:30px;border-radius:8px;object-fit:cover}
+    .logo-text{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700;color:#fff;letter-spacing:2px}
+    .back-link{font-size:13px;font-weight:600;color:rgba(255,255,255,.75);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .15s}
+    .back-link:hover{color:#fff}
+    .back-link svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round}
 
-<div class="section-title"><h2>Where You Could Make an Impact</h2><p>Our work spans product, technology, marketplace operations, and growth.</p></div>
-<div class="grid">
-  <div class="card value"><div class="icon">💻</div><h3>Technology</h3><p>Web development, mobile experiences, cloud infrastructure, security, data, and product engineering.</p></div>
-  <div class="card value"><div class="icon">📣</div><h3>Growth &amp; Marketing</h3><p>Content, social media, partnerships, community, acquisition, and marketplace growth.</p></div>
-  <div class="card value"><div class="icon">🤝</div><h3>Operations</h3><p>Customer support, provider success, marketplace quality, research, and day-to-day operations.</p></div>
-</div>
+    /* ── Hero ── */
+    .hero{background:linear-gradient(130deg,var(--brand-deep) 0%,var(--brand) 50%,var(--accent) 100%);padding:64px 24px 100px;text-align:center;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;width:420px;height:420px;border-radius:50%;top:-100px;right:-80px;background:rgba(255,255,255,.04)}
+    .hero::after{content:'';position:absolute;width:180px;height:180px;border-radius:50%;bottom:-30px;left:60px;background:rgba(255,214,10,.06)}
+    .hero-badge{display:inline-block;font-size:11px;font-weight:700;color:var(--gold);background:rgba(255,214,10,.12);border:1px solid rgba(255,214,10,.22);padding:4px 14px;border-radius:20px;margin-bottom:16px;letter-spacing:.5px;position:relative;z-index:1}
+    .hero h1{font-family:'Orbitron',sans-serif;font-size:clamp(22px,4vw,38px);font-weight:700;color:#fff;margin-bottom:16px;position:relative;z-index:1;line-height:1.2}
+    .hero h1 em{color:var(--gold);font-style:normal}
+    .hero p{font-size:15px;color:rgba(255,255,255,.7);max-width:520px;margin:0 auto 32px;position:relative;z-index:1;line-height:1.7}
+    .hero-chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;position:relative;z-index:1}
+    .hero-chip{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.85);font-size:12px;font-weight:600;padding:6px 16px;border-radius:20px}
 
-<div class="section-title"><h2>How We Work</h2><p>Practical principles for a growing product team.</p></div>
-<div class="card">
-  <div class="timeline">
-    <div class="step"><h3>Start with the user</h3><p>Understand the problem before deciding on the solution.</p></div>
-    <div class="step"><h3>Build, test, improve</h3><p>Ship useful improvements, learn from real usage, and iterate.</p></div>
-    <div class="step"><h3>Own the outcome</h3><p>Take responsibility for the quality and impact of the work you contribute.</p></div>
-    <div class="step"><h3>Keep learning</h3><p>Technology and marketplace behavior change. We expect curiosity and continuous improvement.</p></div>
+    /* ── Layout ── */
+    .page-wrap{max-width:860px;margin:0 auto;padding:48px 20px 80px}
+
+    /* ── Why join ── */
+    .why-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-bottom:60px;margin-top:-56px;position:relative;z-index:2}
+    .why-card{background:var(--bg-card);border:.5px solid var(--border);border-radius:var(--r-lg);padding:24px 20px;box-shadow:0 4px 20px rgba(13,21,96,.08)}
+    .why-icon{font-size:30px;margin-bottom:12px}
+    .why-title{font-size:14px;font-weight:700;color:var(--text-1);margin-bottom:6px}
+    .why-body{font-size:13px;color:var(--text-2);line-height:1.65}
+
+    /* ── Section ── */
+    .sec-label{font-size:11px;font-weight:700;color:var(--accent);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
+    .sec-title{font-family:'Orbitron',sans-serif;font-size:clamp(17px,2.5vw,22px);font-weight:700;color:var(--text-1);margin-bottom:10px;line-height:1.3}
+    .sec-body{font-size:14px;color:var(--text-2);line-height:1.75;margin-bottom:0}
+
+    /* ── Culture ── */
+    .culture-section{margin-bottom:60px}
+    .culture-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:24px}
+    @media(max-width:540px){.culture-grid{grid-template-columns:1fr}}
+    .culture-card{background:var(--bg-subtle);border:.5px solid var(--border);border-radius:var(--r-md);padding:18px 18px;display:flex;gap:14px;align-items:flex-start}
+    .culture-emoji{font-size:24px;flex-shrink:0;margin-top:2px}
+    .culture-title{font-size:13px;font-weight:700;color:var(--text-1);margin-bottom:4px}
+    .culture-body{font-size:12.5px;color:var(--text-2);line-height:1.6}
+
+    /* ── Benefits ── */
+    .benefits-section{margin-bottom:60px}
+    .benefits-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-top:24px}
+    .benefit-item{background:var(--bg-card);border:.5px solid var(--border);border-radius:var(--r-md);padding:16px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(13,21,96,.04)}
+    .benefit-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0}
+    .benefit-text{font-size:13px;font-weight:500;color:var(--text-1)}
+
+    /* ── Jobs ── */
+    .jobs-section{margin-bottom:60px}
+    .dept-filter{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}
+    .dept-btn{padding:7px 16px;border-radius:20px;border:1px solid var(--border);background:var(--bg-card);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--text-2);cursor:pointer;transition:all .18s}
+    .dept-btn:hover{border-color:var(--accent);color:var(--accent)}
+    .dept-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .jobs-list{display:flex;flex-direction:column;gap:12px}
+    .job-card{background:var(--bg-card);border:.5px solid var(--border);border-radius:var(--r-lg);padding:22px 22px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;box-shadow:0 2px 8px rgba(13,21,96,.04);transition:box-shadow .2s,border-color .2s;cursor:pointer}
+    .job-card:hover{box-shadow:0 8px 28px rgba(13,21,96,.1);border-color:rgba(108,60,225,.2)}
+    .job-info{flex:1;min-width:0}
+    .job-title{font-size:15px;font-weight:700;color:var(--text-1);margin-bottom:6px}
+    .job-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+    .job-tag{font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px}
+    .tag-dept{background:rgba(108,60,225,.08);color:var(--accent)}
+    .tag-type{background:rgba(22,163,74,.08);color:var(--success)}
+    .tag-loc{background:rgba(41,98,255,.08);color:var(--info)}
+    .job-desc{font-size:13px;color:var(--text-2);line-height:1.6}
+    .job-apply{flex-shrink:0;padding:10px 22px;background:linear-gradient(135deg,var(--brand),var(--accent));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;border:none;border-radius:var(--r-sm);cursor:pointer;text-decoration:none;transition:opacity .2s;white-space:nowrap;align-self:center}
+    .job-apply:hover{opacity:.88}
+    @media(max-width:540px){.job-card{flex-direction:column}.job-apply{align-self:flex-start}}
+
+    /* ── No openings ── */
+    .no-jobs{text-align:center;padding:48px 20px;background:var(--bg-card);border:.5px solid var(--border);border-radius:var(--r-lg)}
+    .no-jobs-icon{font-size:48px;margin-bottom:14px}
+    .no-jobs-title{font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:6px}
+    .no-jobs-sub{font-size:13px;color:var(--text-2);line-height:1.6;max-width:340px;margin:0 auto 20px}
+
+    /* ── Application CTA ── */
+    .apply-cta{background:linear-gradient(130deg,var(--brand-deep),var(--brand) 60%,var(--accent));border-radius:24px;padding:48px 32px;text-align:center}
+    .apply-cta h2{font-family:'Orbitron',sans-serif;font-size:clamp(17px,3vw,22px);font-weight:700;color:#fff;margin-bottom:10px}
+    .apply-cta p{font-size:14px;color:rgba(255,255,255,.7);margin-bottom:24px;max-width:420px;margin-left:auto;margin-right:auto;line-height:1.65}
+    .btn-gold{display:inline-block;padding:12px 28px;background:var(--gold);color:var(--brand-deep);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;border-radius:10px;text-decoration:none;border:none;cursor:pointer;transition:opacity .2s}
+    .btn-gold:hover{opacity:.88}
+
+    /* ── Footer ── */
+    .doc-footer{text-align:center;padding:24px;font-size:12px;color:var(--text-3);border-top:.5px solid var(--border);margin-top:40px}
+    .doc-footer a{color:var(--accent);text-decoration:none}
+
+    /* ── Modal ── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+    .modal-overlay.open{opacity:1;pointer-events:all}
+    .modal-box{background:var(--bg-card);border-radius:20px 20px 0 0;padding:28px 24px 36px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;transform:translateY(40px);transition:transform .3s var(--ease,cubic-bezier(.25,.8,.25,1))}
+    .modal-overlay.open .modal-box{transform:none}
+    .modal-handle{width:40px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 20px}
+    .modal-title{font-family:'Orbitron',sans-serif;font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:4px}
+    .modal-sub{font-size:13px;color:var(--text-3);margin-bottom:24px}
+    .field{margin-bottom:16px}
+    .field label{display:block;font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:6px;letter-spacing:.3px}
+    .field input,.field textarea,.field select{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .18s}
+    .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
+    .field textarea{min-height:100px;resize:vertical}
+    .btn-submit{width:100%;padding:13px;background:linear-gradient(135deg,var(--brand),var(--accent));color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;border:none;border-radius:10px;cursor:pointer;transition:opacity .2s;margin-top:4px}
+    .btn-submit:hover{opacity:.88}
+    .close-btn{position:absolute;top:20px;right:20px;width:32px;height:32px;border-radius:50%;background:var(--bg-subtle);border:.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:var(--text-3);line-height:1}
+  </style>
+</head>
+<body>
+
+<!-- Application modal -->
+<div class="modal-overlay" id="applyModal">
+  <div class="modal-box" style="position:relative">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalJobTitle">Apply for Position</div>
+    <div class="modal-sub">Send us your details and we'll be in touch within 5 business days.</div>
+    <div class="field"><label>Full Name</label><input type="text" id="applyName" placeholder="Ada Okafor"></div>
+    <div class="field"><label>Email Address</label><input type="email" id="applyEmail" placeholder="ada@email.com"></div>
+    <div class="field"><label>LinkedIn / Portfolio URL (optional)</label><input type="url" id="applyLink" placeholder="https://linkedin.com/in/yourname"></div>
+    <div class="field"><label>Why Servana? Tell us about yourself</label><textarea id="applyMessage" placeholder="What excites you about this role and what makes you the right person for it?"></textarea></div>
+    <button class="btn-submit" id="submitApplication">Send Application →</button>
+    <button class="close-btn" onclick="closeModal()">×</button>
   </div>
 </div>
 
-<div class="section-title" style="margin-top:32px"><h2>Open Opportunities</h2><p>We'll publish active roles here as positions become available.</p></div>
-<div class="card">
-  <div class="job">
-    <div class="job-main"><span class="pill">COMING SOON</span><h3>New Servana opportunities</h3><p>Current openings will be listed here with the role, responsibilities, location/work arrangement, requirements, and application instructions.</p><div class="job-meta"><span>Technology</span><span>Operations</span><span>Growth</span></div></div>
+<header class="site-header">
+  <a class="logo" href="./index.html">
+    <img src="./assets/images/logo.png" alt="Servana" onerror="this.style.display='none'">
+    <span class="logo-text">SERVANA</span>
+  </a>
+  <a class="back-link" href="javascript:history.back()">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    Go Back
+  </a>
+</header>
+
+<div class="hero">
+  <div class="hero-badge">🚀 We're Hiring</div>
+  <h1>Build the Future of<br><em>African Services</em></h1>
+  <p>Join a small, ambitious team building the platform that connects Africa's skilled workforce with millions of people who need them. Every role matters. Every person ships.</p>
+  <div class="hero-chips">
+    <span class="hero-chip">🌍 Remote-friendly</span>
+    <span class="hero-chip">🇳🇬 Based in Nigeria</span>
+    <span class="hero-chip">🚀 Early-stage startup</span>
+    <span class="hero-chip">💚 Mission-driven</span>
   </div>
 </div>
 
-<div class="cta">
-  <h2>Want to Work With Us?</h2>
-  <p>For future opportunities, send a concise introduction and your CV or portfolio to our team. Please use “Careers — [Role]” as the subject when a specific role is advertised.</p>
-  <a class="btn" href="mailto:hello@servana.top?subject=Servana%20Careers%20Enquiry">Contact Servana</a>
+<div class="page-wrap">
+
+  <!-- Why join -->
+  <div class="why-grid">
+    <div class="why-card">
+      <div class="why-icon">🌍</div>
+      <div class="why-title">Real Impact</div>
+      <div class="why-body">Your work reaches real people across 7 African countries. You'll see your impact in reviews, bookings, and livelihoods improved.</div>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">⚡</div>
+      <div class="why-title">Move Fast</div>
+      <div class="why-body">No bureaucracy. No committees. You ship, you own, you iterate. Ideas become features in days, not quarters.</div>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">📈</div>
+      <div class="why-title">Grow With Us</div>
+      <div class="why-body">Joining early means growing early. The person who ships our first 100 features will help shape what comes next.</div>
+    </div>
+  </div>
+
+  <!-- Culture -->
+  <div class="culture-section">
+    <div class="sec-label">Life at Servana</div>
+    <div class="sec-title">How We Work</div>
+    <div class="culture-grid">
+      <div class="culture-card"><div class="culture-emoji">🎯</div><div><div class="culture-title">Outcomes, not hours</div><div class="culture-body">We care about what you build, not when you build it. Results speak louder than schedules.</div></div></div>
+      <div class="culture-card"><div class="culture-emoji">🔊</div><div><div class="culture-title">Radical transparency</div><div class="culture-body">Everyone knows the numbers, the roadmap, and the challenges. No surprises, no politics.</div></div></div>
+      <div class="culture-card"><div class="culture-emoji">🤝</div><div><div class="culture-title">Collaborate deeply</div><div class="culture-body">Small team means everyone works closely. Designers code. Developers do support. Everyone learns.</div></div></div>
+      <div class="culture-card"><div class="culture-emoji">📚</div><div><div class="culture-title">Always learning</div><div class="culture-body">We budget for courses, books, and conferences. Getting smarter as a team is part of the job.</div></div></div>
+      <div class="culture-card"><div class="culture-emoji">🌱</div><div><div class="culture-title">Build to last</div><div class="culture-body">We write clean code, document our work, and think long-term — even when moving fast.</div></div></div>
+      <div class="culture-card"><div class="culture-emoji">🎉</div><div><div class="culture-title">Celebrate wins</div><div class="culture-body">Every milestone matters. We celebrate bookings, launches, and the small things that compound.</div></div></div>
+    </div>
+  </div>
+
+  <!-- Benefits -->
+  <div class="benefits-section">
+    <div class="sec-label">What You Get</div>
+    <div class="sec-title">Benefits & Perks</div>
+    <div class="benefits-grid">
+      <div class="benefit-item"><div class="benefit-dot"></div><div class="benefit-text">Competitive salary (₦)</div></div>
+      <div class="benefit-item"><div class="benefit-dot"></div><div class="benefit-text">Remote-first culture</div></div>
+      <div class="benefit-item"><div class="benefit-dot"></div><div class="benefit-text">Flexible working hours</div></div>
+      <div class="benefit-item"><div class="benefit-dot"></div><div class="benefit-text">Learning & development budget</div></div>
+      <div class="benefit-item"><div class="benefit-dot"></div><div class="benefit-text">Equipment allowance</div></div>
+      <div class="benefit-item"><div class="benefit-dot"></div><div class="benefit-text">Health insurance (Nigeria)</div></div>
+      <div class="benefit-item"><div class="benefit-dot"></div><div class="benefit-text">Equity / profit sharing (senior)</div></div>
+      <div class="benefit-item"><div class="benefit-dot"></div><div class="benefit-text">Annual team retreat</div></div>
+      <div class="benefit-item"><div class="benefit-dot"></div><div class="benefit-text">Servana Pro account</div></div>
+      <div class="benefit-item"><div class="benefit-dot"></div><div class="benefit-text">Paid leave (25 days/year)</div></div>
+    </div>
+  </div>
+
+  <!-- Open roles -->
+  <div class="jobs-section">
+    <div class="sec-label">Open Positions</div>
+    <div class="sec-title">Join the Team</div>
+    <div class="sec-body">We're a small team hiring for impact. Every role is critical.</div>
+
+    <!-- Department filter -->
+    <div class="dept-filter" id="deptFilter">
+      <button class="dept-btn active" data-dept="all">All Roles</button>
+      <button class="dept-btn" data-dept="engineering">Engineering</button>
+      <button class="dept-btn" data-dept="design">Design</button>
+      <button class="dept-btn" data-dept="growth">Growth</button>
+      <button class="dept-btn" data-dept="operations">Operations</button>
+    </div>
+
+    <div class="jobs-list" id="jobsList">
+
+      <div class="job-card" data-dept="engineering">
+        <div class="job-info">
+          <div class="job-title">Senior Frontend Developer</div>
+          <div class="job-meta">
+            <span class="job-tag tag-dept">Engineering</span>
+            <span class="job-tag tag-type">Full-time</span>
+            <span class="job-tag tag-loc">Remote (Nigeria)</span>
+          </div>
+          <div class="job-desc">Build and improve Servana's web app experience. You'll work across all pages — from the booking flow to the provider dashboard — shipping features that reach users in 7 countries.</div>
+        </div>
+        <button class="job-apply" onclick="openApply('Senior Frontend Developer')">Apply →</button>
+      </div>
+
+      <div class="job-card" data-dept="engineering">
+        <div class="job-info">
+          <div class="job-title">Backend Engineer (Firebase / Node.js)</div>
+          <div class="job-meta">
+            <span class="job-tag tag-dept">Engineering</span>
+            <span class="job-tag tag-type">Full-time</span>
+            <span class="job-tag tag-loc">Remote (Africa)</span>
+          </div>
+          <div class="job-desc">Own Servana's Firestore architecture, Cloud Functions, and integrations. You'll design data models, write security rules, and build the APIs that power bookings and payments.</div>
+        </div>
+        <button class="job-apply" onclick="openApply('Backend Engineer (Firebase / Node.js)')">Apply →</button>
+      </div>
+
+      <div class="job-card" data-dept="design">
+        <div class="job-info">
+          <div class="job-title">Product Designer (UI/UX)</div>
+          <div class="job-meta">
+            <span class="job-tag tag-dept">Design</span>
+            <span class="job-tag tag-type">Full-time</span>
+            <span class="job-tag tag-loc">Remote</span>
+          </div>
+          <div class="job-desc">Shape the look and feel of Servana across mobile and web. You'll run user research, design flows, and work hand-in-hand with engineering to ship beautiful, functional product.</div>
+        </div>
+        <button class="job-apply" onclick="openApply('Product Designer (UI/UX)')">Apply →</button>
+      </div>
+
+      <div class="job-card" data-dept="growth">
+        <div class="job-info">
+          <div class="job-title">Growth & Community Manager</div>
+          <div class="job-meta">
+            <span class="job-tag tag-dept">Growth</span>
+            <span class="job-tag tag-type">Full-time</span>
+            <span class="job-tag tag-loc">Abuja, Nigeria</span>
+          </div>
+          <div class="job-desc">Grow Servana's provider and seeker communities. You'll onboard providers, run campaigns, manage social media, and be the face of Servana in markets across Nigeria and beyond.</div>
+        </div>
+        <button class="job-apply" onclick="openApply('Growth & Community Manager')">Apply →</button>
+      </div>
+
+      <div class="job-card" data-dept="operations">
+        <div class="job-info">
+          <div class="job-title">Customer Support Specialist</div>
+          <div class="job-meta">
+            <span class="job-tag tag-dept">Operations</span>
+            <span class="job-tag tag-type">Full-time</span>
+            <span class="job-tag tag-loc">Remote (Nigeria)</span>
+          </div>
+          <div class="job-desc">Be the first point of contact for our users. You'll resolve disputes, answer questions, gather feedback, and work closely with product to fix recurring pain points.</div>
+        </div>
+        <button class="job-apply" onclick="openApply('Customer Support Specialist')">Apply →</button>
+      </div>
+
+      <div class="job-card" data-dept="growth">
+        <div class="job-info">
+          <div class="job-title">Content & SEO Writer</div>
+          <div class="job-meta">
+            <span class="job-tag tag-dept">Growth</span>
+            <span class="job-tag tag-type">Contract</span>
+            <span class="job-tag tag-loc">Remote</span>
+          </div>
+          <div class="job-desc">Create blog posts, help centre articles, and social content that builds Servana's authority and drives organic growth across our 7 markets.</div>
+        </div>
+        <button class="job-apply" onclick="openApply('Content & SEO Writer')">Apply →</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Application CTA -->
+  <div class="apply-cta">
+    <h2>Don't See Your Role?</h2>
+    <p>We're always looking for exceptional people. If you believe you'd make Servana better, we want to hear from you.</p>
+    <button class="btn-gold" onclick="openApply('Open Application')">Send an Open Application →</button>
+  </div>
+
 </div>
 
-      </main>
-      <footer class="doc-footer">
-        <p>© 2026 Servana. All rights reserved. &nbsp;·&nbsp;
-        <a href="./terms.html">Terms of Service</a> &nbsp;·&nbsp;
-        <a href="./privacy.html">Privacy Policy</a> &nbsp;·&nbsp;
-        <a href="./support.html">Support</a></p>
-      </footer>
-    </body>
-    </html>
+<footer class="doc-footer">
+  <p>© 2025 Servana. All rights reserved. &nbsp;·&nbsp;
+    <a href="./about-us.html">About</a> &nbsp;·&nbsp;
+    <a href="./support.html">Support</a> &nbsp;·&nbsp;
+    <a href="./terms.html">Terms</a> &nbsp;·&nbsp;
+    <a href="./privacy.html">Privacy</a>
+  </p>
+</footer>
+
+<script>
+  // Department filter
+  document.querySelectorAll(".dept-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".dept-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const dept = btn.dataset.dept;
+      document.querySelectorAll(".job-card").forEach(card => {
+        card.style.display = (dept === "all" || card.dataset.dept === dept) ? "" : "none";
+      });
+    });
+  });
+
+  // Modal
+  let currentRole = "";
+  function openApply(role) {
+    currentRole = role;
+    document.getElementById("modalJobTitle").textContent = `Apply: ${role}`;
+    document.getElementById("applyModal").classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+  function closeModal() {
+    document.getElementById("applyModal").classList.remove("open");
+    document.body.style.overflow = "";
+  }
+  document.getElementById("applyModal").addEventListener("click", e => {
+    if (e.target === document.getElementById("applyModal")) closeModal();
+  });
+  document.addEventListener("keydown", e => { if(e.key==="Escape") closeModal(); });
+
+  document.getElementById("submitApplication").addEventListener("click", () => {
+    const name  = document.getElementById("applyName").value.trim();
+    const email = document.getElementById("applyEmail").value.trim();
+    const msg   = document.getElementById("applyMessage").value.trim();
+    if (!name || !email || !msg) {
+      alert("Please fill in your name, email, and a message.");
+      return;
+    }
+    const subject = encodeURIComponent(`Job Application: ${currentRole}`);
+    const body    = encodeURIComponent(
+      `Name: ${name}\nEmail: ${email}\nLinkedIn/Portfolio: ${document.getElementById("applyLink").value}\n\n${msg}`
+    );
+    window.location.href = `mailto:careers@servana.app?subject=${subject}&body=${body}`;
+    closeModal();
+  });
+</script>
+</body>
+</html>
