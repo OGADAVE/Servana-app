@@ -273,12 +273,14 @@ async function saveSettings() {
 $("visibilitySelect").addEventListener("change", saveSettings);
 $("langSelect").addEventListener("change", saveSettings);
 
-// Dark mode toggle
-$("darkModeToggle").addEventListener("change", () => {
-  const on = $("darkModeToggle").checked;
-  localStorage.setItem("servana-dark", on);
-  document.documentElement.style.colorScheme = on ? "dark" : "light";
-  toast(`Dark mode ${on?"enabled":"disabled"}.`, "info");
+// Dark mode toggle — uses CSS variable override (not colorScheme)
+import("./assets/darkmode.js").then(({ applyTheme, isDarkMode }) => {
+  $("darkModeToggle").checked = isDarkMode();
+  $("darkModeToggle").addEventListener("change", () => {
+    const on = $("darkModeToggle").checked;
+    applyTheme(on);
+    toast(`Dark mode ${on ? "enabled ☀️" : "disabled 🌙"}.`, "info");
+  });
 });
 
 // Sign out

@@ -191,9 +191,12 @@
       <p style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px">Price Summary</p>
       <div class="price-sum mb-3">
         <div class="ps-row"><span class="ps-lbl">Service fee</span><span class="ps-val" id="psService">—</span></div>
-        <div class="ps-row"><span class="ps-lbl">Platform fee (5%)</span><span class="ps-val" id="psPlatform">—</span></div>
+        <div class="ps-row"><span class="ps-lbl" style="color:var(--success)">Platform fee</span><span class="ps-val" style="color:var(--success)">₦0 — Free for seekers</span></div>
         <div class="ps-divider"></div>
-        <div class="ps-row ps-total"><span class="ps-lbl">Total</span><span class="ps-val" id="psTotal">—</span></div>
+        <div class="ps-row ps-total"><span class="ps-lbl">You Pay</span><span class="ps-val" id="psTotal">—</span></div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:8px;line-height:1.5">
+          💡 Payment is made directly to the provider after the job is completed. No upfront payment required.
+        </div>
       </div>
 
       <button class="btn btn-primary btn-block btn-lg" id="confirmBtn">
@@ -276,7 +279,14 @@ function applyFilters() {
   const loc = $("locationSelect").value.toLowerCase();
   let list  = [...allProviders];
 
-  if (activeCat) list = list.filter(p => (p.category||"").toLowerCase() === activeCat.toLowerCase());
+  // Strict category match — normalize both sides to avoid spacing/case mismatches
+  if (activeCat) {
+    const normCat = activeCat.trim().toLowerCase();
+    list = list.filter(p => {
+      const pc = (p.category||p.role||"").trim().toLowerCase();
+      return pc === normCat || pc.includes(normCat) || normCat.includes(pc);
+    });
+  }
   if (loc) list = list.filter(p => (p.location||"").toLowerCase().includes(loc));
   if (kw)  list = list.filter(p => [p.name,p.role,p.description,p.category,p.location].some(f => f?.toLowerCase().includes(kw)));
 
@@ -413,10 +423,10 @@ function openBookingModal(p) {
 }
 
 function updatePricing(price) {
-  const plat = price * 0.05;
-  $("psService").textContent  = formatNGN(price);
-  $("psPlatform").textContent = formatNGN(plat);
-  $("psTotal").textContent    = formatNGN(price + plat);
+  // Seeker pays ONLY the service fee — no platform fee added
+  // Servana earns 5% commission FROM the provider after job completion
+  $("psService").textContent = formatNGN(price);
+  $("psTotal").textContent   = formatNGN(price);
 }
 
 function closeModal() {
@@ -443,18 +453,38 @@ $("confirmBtn").addEventListener("click", async () => {
   btn.disabled = true; btn.classList.add("loading");
   const ref = genRef();
   try {
+    // Store provider payment account snapshot at booking time
+    // so seeker can pay after job completion
+    const providerPaymentAccount = {
+      bankName:      selectedProvider.bankName      || "",
+      accountNumber: selectedProvider.accountNumber || "",
+      accountName:   selectedProvider.accountName   || ""
+    };
+    const commissionAmount = Math.round((selectedService?.price||0) * 0.05);
+
     await addDoc(collection(db, "bookings"), {
-      bookingRef: ref, seekerId: currentUser.uid, seekerName: currentUser.displayName||"",
-      seekerEmail: currentUser.email||"", providerId: selectedProvider.id,
-      providerName: selectedProvider.name||"", service: selectedService?.name||"",
-      serviceFee: selectedService?.price||0, platformFee: (selectedService?.price||0)*0.05,
-      total: (selectedService?.price||0)*1.05, date, time, address: addr, notes,
-      status: "pending", createdAt: serverTimestamp()
+      bookingRef: ref,
+      seekerId:   currentUser.uid,
+      seekerName: currentUser.displayName || "",
+      seekerEmail:currentUser.email       || "",
+      providerId: selectedProvider.id,
+      providerName:selectedProvider.name  || "",
+      service:    selectedService?.name   || "",
+      serviceFee: selectedService?.price  || 0,
+      platformFee:0,                        // Seeker pays NO platform fee
+      total:      selectedService?.price  || 0,  // Seeker pays exact service price
+      commissionAmount,                     // Provider owes this to Servana after completion
+      commissionStatus: "pending",
+      providerPaymentAccount,               // Snapshot of provider bank details
+      paymentStatus: "awaiting_completion", // Payment happens after job done
+      date, time, address: addr, notes,
+      status: "pending",
+      createdAt: serverTimestamp()
     });
     $("bookForm").classList.add("hidden");
     $("bookingRef").innerHTML = `<strong>Ref:</strong> ${ref}<br><strong>Provider:</strong> ${esc(selectedProvider.name)}<br><strong>Service:</strong> ${esc(selectedService?.name||"")}<br><strong>Date & Time:</strong> ${date} at ${time}<br><strong>Address:</strong> ${esc(addr)}`;
     $("bookSuccess").classList.remove("hidden");
-    toast("Booking submitted! 🎉", "success");
+    toast("Booking submitted! 🎉 The provider will confirm shortly.", "success");
   } catch(err) {
     console.error(err); toast("Failed to submit booking. Try again.", "error");
     btn.disabled = false; btn.classList.remove("loading");

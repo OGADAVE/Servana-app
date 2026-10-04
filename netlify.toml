@@ -75,7 +75,7 @@
       img-src 'self' data: blob:
                 https://res.cloudinary.com
                 https://firebasestorage.googleapis.com
-                https://lh3.googleusercontent.com;
+                  https://lh3.googleusercontent.com;
 
       connect-src 'self'
                   https://*.firebaseio.com

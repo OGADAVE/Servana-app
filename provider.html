@@ -101,6 +101,13 @@
     <span class="notif-dot" id="notifDot" style="display:none"></span>
   </button>
 </header>
+<div class="notif-panel" id="notifPanel">
+  <div class="notif-head">
+    <span class="notif-head-title">🔔 Notifications</span>
+    <button class="notif-mark-read" id="markAllRead">Mark all read</button>
+  </div>
+  <div class="notif-list" id="notifList"><div class="notif-empty">Loading…</div></div>
+</div>
 
 <!-- Provider Hero -->
 <div class="prov-hero" role="banner">
@@ -227,6 +234,8 @@
 
   <!-- ─── EARNINGS ─── -->
   <div class="tab-panel" id="tab-earnings">
+      <!-- Commission status — shown when tab is active -->
+      <div id="commissionAlertWrap" style="margin-bottom:16px"></div>
     <div class="card">
       <div class="card-head"><span class="card-head-title">Monthly Earnings</span><span style="font-size:12px;color:var(--text-3)">Last 6 months</span></div>
       <div class="card-body">
@@ -375,7 +384,7 @@ import { auth, db, storage, toast, showSpinner, hideSpinner, esc, starsHtml, ini
 import { wireCascade } from "./assets/locations.js";
 import { uploadToCloudinary } from "./assets/cloudinary.js";
 import { onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { doc, getDoc, setDoc, getDocs, updateDoc, addDoc, collection, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { doc, getDoc, setDoc, getDocs, updateDoc, addDoc, collection, query, where, serverTimestamp, onSnapshot, writeBatch, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 // Cloudinary handles file uploads — see assets/cloudinary.js
 
 const $ = id => document.getElementById(id);
@@ -505,8 +514,14 @@ function bookingCardHtml(b) {
       </div>
       ${b.notes?`<div style="font-size:11px;color:var(--text-3);margin-top:5px;font-style:italic">"${esc(b.notes)}"</div>`:""}
       <div class="bi-actions">
-        ${b.status==="pending" ?`<button class="btn btn-success btn-sm" onclick="updateStatus('${b.id}','accepted')">Accept</button><button class="btn btn-danger btn-sm" onclick="updateStatus('${b.id}','cancelled')">Decline</button>`:""}
+        ${b.status==="pending" ? (
+          (provData.outstandingCommission||0) > 0
+            ? `<span style="font-size:11px;color:var(--danger);font-weight:600;background:rgba(220,38,38,.08);padding:5px 10px;border-radius:8px">⚠️ Clear commission to accept</span>`
+            : `<button class="btn btn-success btn-sm" onclick="updateStatus('${b.id}','accepted')">Accept</button><button class="btn btn-danger btn-sm" onclick="updateStatus('${b.id}','cancelled')">Decline</button>`
+          ) : ""}
         ${b.status==="accepted"?`<button class="btn btn-primary btn-sm" onclick="updateStatus('${b.id}','completed')">Mark Complete</button>`:""}
+        ${b.status==="completed" && b.paymentStatus==="payment_submitted" ? `<button class="confirm-receipt-btn" onclick="confirmReceipt('${b.id}','${b.serviceFee||0}')">✅ I Received Payment</button>` : ""}
+        ${b.paymentStatus==="payment_confirmed" ? `<span style="font-size:11px;color:var(--success);font-weight:600">✅ Payment Confirmed</span>` : ""}
         <button class="btn btn-ghost btn-sm" onclick="location.href='./chat.html?uid=${esc(b.seekerId||"")}'">💬 Chat</button>
       </div>
     </div>
@@ -689,6 +704,140 @@ $("portfolioInput").addEventListener("change", async()=>{
     }
   } finally{hideSpinner();$("portfolioInput").value="";}
 });
+
+// ── Notification bell ────────────────────────────────────
+function initNotifPanel() {
+  const q = query(
+    collection(db,"notifications"),
+    where("userId","==",currentUser.uid),
+    limit(20)
+  );
+  onSnapshot(q, snap => {
+    const notifs = snap.docs
+      .map(d=>({id:d.id,...d.data()}))
+      .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+    const unread = notifs.filter(n=>!n.read).length;
+    // Badge
+    let badge = document.getElementById("notifBadge");
+    if (!badge) {
+      badge = document.createElement("span");
+      badge.id = "notifBadge";
+      badge.style.cssText = "position:absolute;top:-3px;right:-3px;width:16px;height:16px;background:var(--danger);border-radius:50%;font-size:9px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--bg-surface)";
+      $("notifBtn").style.position="relative";
+      $("notifBtn").appendChild(badge);
+    }
+    badge.textContent   = unread > 9 ? "9+" : unread;
+    badge.style.display = unread > 0 ? "flex" : "none";
+    // List
+    const list = $("notifList");
+    if (!list) return;
+    if (!notifs.length) { list.innerHTML=`<div class="notif-empty">🔔 No notifications yet</div>`; return; }
+    list.innerHTML = notifs.map(n=>`
+      <div class="notif-item ${n.read?"":"unread"}" data-id="${n.id}">
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          ${!n.read?'<div class="notif-dot"></div>':'<div style="width:7px;flex-shrink:0"></div>'}
+          <div style="flex:1;min-width:0">
+            <div class="notif-title">${esc(n.title||"Notification")}</div>
+            <div class="notif-body">${esc(n.body||"")}</div>
+            <div class="notif-time">${n.createdAt?.toDate?.()?.toLocaleString("en-NG",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})||""}</div>
+          </div>
+        </div>
+      </div>`).join("");
+    list.querySelectorAll(".notif-item").forEach(item=>{
+      item.addEventListener("click",async()=>{
+        item.classList.remove("unread");
+        await updateDoc(doc(db,"notifications",item.dataset.id),{read:true,readAt:serverTimestamp()}).catch(()=>{});
+      });
+    });
+  });
+}
+
+$("notifBtn").addEventListener("click", e => {
+  e.stopPropagation();
+  if(!$("notifPanel")) return;
+  $("notifPanel").classList.toggle("open");
+});
+document.addEventListener("click", e => {
+  const panel = $("notifPanel");
+  if(panel && !panel.contains(e.target) && e.target !== $("notifBtn")) panel.classList.remove("open");
+});
+$("markAllRead")?.addEventListener("click", async()=>{
+  try {
+    const snap = await getDocs(query(collection(db,"notifications"),where("userId","==",currentUser.uid),where("read","==",false)));
+    const batch = writeBatch(db);
+    snap.docs.forEach(d=>batch.update(d.ref,{read:true}));
+    await batch.commit();
+  } catch(e){console.warn("Mark read:",e);}
+});
+
+// ── Commission status ─────────────────────────────────
+async function loadCommissionStatus() {
+  if (!currentUser || !$("commissionAlertWrap")) return;
+  const outstanding = provData.outstandingCommission || 0;
+  const wrap = $("commissionAlertWrap");
+  if (outstanding > 0) {
+    wrap.innerHTML = `
+      <div class="commission-alert">
+        <div class="commission-alert-title">⚠️ Commission Due</div>
+        <div class="commission-alert-amount">₦${outstanding.toLocaleString("en-NG")}</div>
+        <div class="commission-alert-body">
+          This commission was generated from your completed booking.
+          Clear your commission to continue receiving new booking requests.
+        </div>
+        <button class="btn btn-danger" onclick="payCommission(${outstanding})">
+          Pay ₦${outstanding.toLocaleString("en-NG")} Commission →
+        </button>
+      </div>`;
+  } else {
+    wrap.innerHTML = `
+      <div class="commission-clear">
+        <div class="commission-clear-icon">✅</div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--success)">All Commissions Cleared</div>
+          <div style="font-size:12px;color:var(--text-2);margin-top:2px">Outstanding: ₦0 — You can accept new bookings.</div>
+        </div>
+      </div>`;
+  }
+}
+
+window.payCommission = async function(amount) {
+  import("./assets/paystack.js").then(({initPaystackPayment})=>{
+    initPaystackPayment({
+      email: currentUser.email,
+      amount: Math.round(amount*100),
+      metadata: {type:"commission",providerId:currentUser.uid},
+      onSuccess: async()=>{
+        await setDoc(doc(db,"providers",currentUser.uid),{outstandingCommission:0,lastCommissionPaidAt:serverTimestamp()},{merge:true});
+        provData.outstandingCommission=0;
+        toast("Commission paid! 🎉 You can now accept new bookings.","success");
+        loadCommissionStatus();
+      },
+      onClose:()=>toast("Payment cancelled.","info")
+    });
+  });
+};
+
+window.confirmReceipt = async function(bookingId, fee) {
+  const commission = Math.round(parseFloat(fee)*0.05);
+  try {
+    await updateDoc(doc(db,"bookings",bookingId),{
+      paymentStatus:"payment_confirmed",
+      providerPaymentConfirmed:true,
+      paymentConfirmedAt:serverTimestamp(),
+      commissionStatus:"pending",
+      commissionAmount:commission,
+      updatedAt:serverTimestamp()
+    });
+    await setDoc(doc(db,"providers",currentUser.uid),{
+      outstandingCommission:(provData.outstandingCommission||0)+commission,
+      updatedAt:serverTimestamp()
+    },{merge:true});
+    provData.outstandingCommission=(provData.outstandingCommission||0)+commission;
+    toast(`Payment confirmed! Commission due: ₦${commission.toLocaleString("en-NG")}. Go to Earnings to pay.`,"success");
+    loadCommissionStatus();
+    loadBookings();
+  } catch(e){toast("Failed to confirm. Try again.","error");}
+};
 
 // ── Earnings chart ────────────────────────────────────────
 function renderEarningsChart() {

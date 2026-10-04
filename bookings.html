@@ -218,6 +218,14 @@ function renderList() {
   }));
 
   // Review buttons
+  // Pay button — open receipt upload
+  el.querySelectorAll(".pay-btn").forEach(btn => btn.addEventListener("click", () => {
+    const bookingId = btn.dataset.id;
+    const fee       = parseFloat(btn.dataset.fee) || 0;
+    const ref       = btn.dataset.ref || bookingId;
+    openReceiptModal(bookingId, fee, ref);
+  }));
+
   el.querySelectorAll(".review-btn").forEach(btn => btn.addEventListener("click", () => {
     reviewBookingId  = btn.dataset.id;
     reviewProviderId = btn.dataset.pid;
@@ -285,6 +293,105 @@ $("submitReview").addEventListener("click", async () => {
 $("closeReview").addEventListener("click", () => $("reviewOverlay").classList.remove("active"));
 document.addEventListener("keydown", e => {
   if (e.key==="Escape") { $("reviewOverlay").classList.remove("active"); $("cancelOverlay").classList.remove("active"); }
+});
+</script>
+
+<!-- ── Receipt Upload Modal ── -->
+<div class="modal-overlay hidden" id="receiptModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Submit Payment Receipt</div>
+    <div style="font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.6">
+      Upload a screenshot or photo of your payment receipt. This becomes part of the booking record.
+    </div>
+    <div style="background:var(--bg-subtle);border:.5px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:16px">
+      <div style="font-size:12px;color:var(--text-3);margin-bottom:4px">Amount to confirm</div>
+      <div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:700;color:var(--text-1)" id="receiptAmount">—</div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:4px" id="receiptRef"></div>
+    </div>
+    <input type="file" id="receiptFile" class="file-hidden" accept="image/*,application/pdf">
+    <label for="receiptFile" class="btn btn-secondary" style="display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:10px;cursor:pointer">
+      <svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Choose Receipt (Image or PDF)
+    </label>
+    <div id="receiptPreviewWrap" style="display:none;margin-bottom:14px;text-align:center">
+      <img id="receiptPreview" class="receipt-preview" src="" alt="Receipt preview">
+      <div style="font-size:11px;color:var(--success);margin-top:6px;font-weight:600">✓ Receipt selected</div>
+    </div>
+    <button class="btn btn-primary" id="submitReceiptBtn" style="width:100%" disabled>
+      <span class="btn-text">Submit Payment ↗</span>
+      <span class="btn-spin-wrap"><div class="btn-spin"></div></span>
+    </button>
+    <button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="closeModal('receiptModal')">Cancel</button>
+  </div>
+</div>
+
+<script type="module">
+// ── Receipt modal logic ──────────────────────────────
+import { auth, db, toast, showSpinner, hideSpinner, setLoading } from "./assets/firebase.js";
+import { doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { uploadToCloudinary } from "./assets/cloudinary.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const $ = id => document.getElementById(id);
+let receiptBookingId = null, receiptFile = null;
+let me = null;
+onAuthStateChanged(auth, u => { me = u; });
+
+window.openReceiptModal = function(bookingId, fee, ref) {
+  receiptBookingId = bookingId;
+  receiptFile      = null;
+  $("receiptAmount").textContent = `₦${fee.toLocaleString("en-NG")}`;
+  $("receiptRef").textContent    = `Booking: ${ref}`;
+  $("receiptPreviewWrap").style.display = "none";
+  $("submitReceiptBtn").disabled = true;
+  $("receiptFile").value = "";
+  document.getElementById("receiptModal").classList.remove("hidden");
+};
+
+$("receiptFile").addEventListener("change", () => {
+  const file = $("receiptFile").files?.[0];
+  if (!file) return;
+  receiptFile = file;
+  if (file.type.startsWith("image/")) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      $("receiptPreview").src = e.target.result;
+      $("receiptPreviewWrap").style.display = "block";
+    };
+    reader.readAsDataURL(file);
+  } else {
+    $("receiptPreviewWrap").style.display = "block";
+    $("receiptPreview").style.display = "none";
+    $("receiptPreviewWrap").querySelector("div").textContent = `✓ ${file.name} selected`;
+  }
+  $("submitReceiptBtn").disabled = false;
+});
+
+$("submitReceiptBtn").addEventListener("click", async () => {
+  if (!receiptFile || !receiptBookingId || !me) return;
+  setLoading($("submitReceiptBtn"), true);
+  try {
+    // Upload receipt to Cloudinary
+    const receiptUrl = await uploadToCloudinary(receiptFile, {
+      folder: `servana/receipts/${me.uid}`
+    });
+    // Update booking
+    await updateDoc(doc(db, "bookings", receiptBookingId), {
+      paymentStatus:       "payment_submitted",
+      receiptUrl,
+      receiptUploadedAt:   serverTimestamp(),
+      receiptUploadedBy:   me.uid,
+      updatedAt:           serverTimestamp()
+    });
+    toast("Receipt submitted! ✅ Waiting for provider to confirm.", "success");
+    closeModal("receiptModal");
+  } catch(e) {
+    console.error("[Receipt] Upload error:", e.message);
+    toast("Failed to upload receipt: " + (e.message || "Try again."), "error");
+  } finally {
+    setLoading($("submitReceiptBtn"), false);
+  }
 });
 </script>
 </body>
