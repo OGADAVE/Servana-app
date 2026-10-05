@@ -226,6 +226,12 @@
         <div class="team-bio">Product visionary, developer, and the person who had that flooded bathroom. Building Servana from Abuja, Nigeria.</div>
       </div>
       <div class="team-card">
+        <div class="team-av av2">MO</div>
+        <div class="team-name">Maihankali Owalama Obadiah</div>
+        <div class="team-role">General Manager</div>
+        <div class="team-bio">Overseeing the day-to-day operations and ensuring our team delivers exceptional results.</div>
+      </div>
+      <div class="team-card">
         <div class="team-av av2">DE</div>
         <div class="team-name">Design Team</div>
         <div class="team-role">Product & UX</div>
@@ -275,14 +281,28 @@
 
 </div>
 
+<!-- ═══════════════ FOOTER ═══════════════════ -->
 <footer class="doc-footer">
-  <p>© 2025 Servana. All rights reserved. &nbsp;·&nbsp;
-    <a href="./terms.html">Terms</a> &nbsp;·&nbsp;
-    <a href="./privacy.html">Privacy</a> &nbsp;·&nbsp;
-    <a href="./support.html">Support</a> &nbsp;·&nbsp;
+  <p>
+    © <span class="current-year"></span> Servana. All rights reserved.
+    &nbsp;·&nbsp;
+    <a href="./terms.html">Terms</a>
+    &nbsp;·&nbsp;
+    <a href="./privacy.html">Privacy</a>
+    &nbsp;·&nbsp;
+    <a href="./support.html">Support</a>
+    &nbsp;·&nbsp;
     <a href="./careers.html">Careers</a>
   </p>
 </footer>
 
+<script>
+  // Automatically update the copyright year
+  const currentYear = document.querySelector('.current-year');
+
+  if (currentYear) {
+    currentYear.textContent = new Date().getFullYear();
+  }
+</script>
 </body>
 </html>

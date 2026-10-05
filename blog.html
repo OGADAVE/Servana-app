@@ -87,7 +87,7 @@
     .cat-guides{background:rgba(13,21,96,.08);color:var(--brand)}
     .blog-body{padding:18px 18px 16px;flex:1;display:flex;flex-direction:column}
     .blog-title{font-size:15px;font-weight:700;color:var(--text-1);line-height:1.4;margin-bottom:8px}
-    .blog-excerpt{font-size:12.5px;color:var(--text-2);line-height:1.65;flex:1;margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+    .blog-excerpt{font-size:12.5px;color:var(--text-2);line-height:1.65;flex:1;margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;line-clamp:3}
     .blog-foot{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:.5px solid var(--border)}
     .blog-author{display:flex;align-items:center;gap:8px}
     .author-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
@@ -432,19 +432,30 @@
   </div>
 
 </div>
-
+<!-- ═══════════════ FOOTER ═══════════════════ -->
 <footer class="doc-footer">
-  <p>© 2025 Servana. All rights reserved. &nbsp;·&nbsp;
-    <a href="./about-us.html">About</a> &nbsp;·&nbsp;
-    <a href="./careers.html">Careers</a> &nbsp;·&nbsp;
-    <a href="./support.html">Support</a> &nbsp;·&nbsp;
-    <a href="./terms.html">Terms</a> &nbsp;·&nbsp;
+  <p>
+    © <span class="current-year"></span> Servana. All rights reserved.
+    &nbsp;·&nbsp;
+    <a href="./terms.html">Terms</a>
+    &nbsp;·&nbsp;
     <a href="./privacy.html">Privacy</a>
+    &nbsp;·&nbsp;
+    <a href="./support.html">Support</a>
+    &nbsp;·&nbsp;
+    <a href="./careers.html">Careers</a>
   </p>
 </footer>
 
 <script>
-  const cards = Array.from(document.querySelectorAll(".blog-card"));
+  // Automatically update the copyright year
+  const currentYear = document.querySelector('.current-year');
+
+  if (currentYear) {
+    currentYear.textContent = new Date().getFullYear();
+  }
+
+const cards = Array.from(document.querySelectorAll(".blog-card"));
 
   // Category filter
   document.querySelectorAll(".cat-btn").forEach(btn => {

@@ -371,6 +371,11 @@
 </footer>
 
 <script>
+  // Automatically set the current year in the footer
+  const footerCopy = document.querySelector('.footer-copy');
+  const currentYear = new Date().getFullYear();
+  footerCopy.textContent = `© ${currentYear} Servana · All rights reserved.`;
+  
   // Navbar scroll effect
   const navbar = document.getElementById("navbar");
   window.addEventListener("scroll", () => {
