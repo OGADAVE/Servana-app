@@ -300,14 +300,7 @@
             <div class="field"><label>Primary Service / Role</label><input type="text" id="pfRole" placeholder="e.g. Electrician"></div>
             <div class="field">
               <label>Category</label>
-              <select id="pfCat">
-                <option value="">Select category</option>
-                <option>Home Services</option><option>Beauty & Personal Care</option>
-                <option>Education & Tutoring</option><option>Transport & Logistics</option>
-                <option>Technology</option><option>Health & Wellness</option>
-                <option>Events & Entertainment</option><option>Automotive</option>
-                <option>Construction & Renovation</option><option>Other</option>
-              </select>
+              <select id="pfCat"><option value="">Loading categories…</option></select>
             </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
@@ -432,7 +425,24 @@ async function loadProviderData() {
     $("pfName").value  = provData.name       || currentUser.displayName || "";
     $("pfPhone").value = provData.phone       || "";
     $("pfRole").value  = provData.role        || "";
-    $("pfCat").value   = provData.category    || "";
+    // Populate category select from Firestore (same list as seeker filter)
+    try {
+      const catSnap = await getDocs(collection(db,"category"));
+      const pfCatEl = $("pfCat");
+      pfCatEl.innerHTML = '<option value="">Select your category</option>';
+      catSnap.docs
+        .map(d => d.data())
+        .sort((a,b) => (a.name||"").localeCompare(b.name||""))
+        .forEach(c => {
+          const opt = document.createElement("option");
+          opt.value = c.name || "";
+          opt.textContent = `${c.icon||""} ${c.name||""}`.trim();
+          pfCatEl.appendChild(opt);
+        });
+      pfCatEl.value = provData.category || "";
+    } catch(e) {
+      console.warn("[Provider] Failed to load categories:", e.message);
+    }
     // Wire cascading location dropdowns
     wireCascade($("pfCountry"), $("pfState"), $("pfCity"), {
       country: provData.country || "",
@@ -570,8 +580,21 @@ window.updateStatus = async (bookingId, newStatus) => {
     allBookings.forEach(b=>{if(counts[b.status]!==undefined)counts[b.status]++;});
     Object.entries(counts).forEach(([k,v])=>{const e=$(`bcnt-${k}`);if(e)e.textContent=v;});
     renderBookingList(activeBookTab); renderRecentList();
-    toast(`Booking ${newStatus}!`,"success");
-  } catch(e) { toast("Failed to update booking.","error"); }
+
+    // ── Notify seeker of status change ──────────────
+    const booking = allBookings.find(x => x.id === bookingId) || {};
+    import("./assets/notifications.js").then(({ notifyBookingAccepted, notifyJobCompleted, notifyBookingDeclined }) => {
+      if (newStatus === "accepted"  && booking.seekerId) notifyBookingAccepted(booking.seekerId, { ...booking, id: bookingId });
+      if (newStatus === "completed" && booking.seekerId) notifyJobCompleted(booking.seekerId,    { ...booking, id: bookingId });
+      if (newStatus === "cancelled" && booking.seekerId) notifyBookingDeclined(booking.seekerId, { ...booking, id: bookingId });
+    }).catch(() => {});
+
+    const msgs = { accepted:"Booking accepted! Seeker notified. ✅", completed:"Job complete! Seeker notified to pay. 🏆", cancelled:"Booking declined." };
+    toast(msgs[newStatus] || `Booking ${newStatus}!`, "success");
+  } catch(e) {
+    console.error("[Provider] updateStatus error:", e);
+    toast("Failed to update booking.", "error");
+  }
   finally { hideSpinner(); }
 };
 
@@ -752,6 +775,94 @@ function initNotifPanel() {
   });
 }
 
+function initNotifPanel() {
+  if (!currentUser) return;
+
+  // Query notifications for this user — no orderBy needed (sort client-side)
+  const q = query(
+    collection(db, "notifications"),
+    where("userId", "==", currentUser.uid),
+    limit(25)
+  );
+
+  // Live listener — updates badge + list in real time
+  onSnapshot(q,
+    snap => {
+      const notifs = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      const unread = notifs.filter(n => !n.read).length;
+
+      // ── Badge ──────────────────────────────────
+      let badge = document.getElementById("notifBadge");
+      if (!badge) {
+        badge = document.createElement("span");
+        badge.id = "notifBadge";
+        badge.style.cssText = [
+          "position:absolute","top:-4px","right:-4px",
+          "min-width:16px","height:16px","background:var(--danger)",
+          "border-radius:50%","font-size:9px","font-weight:700",
+          "color:#fff","display:none","align-items:center",
+          "justify-content:center","border:1.5px solid var(--bg-surface)",
+          "padding:0 3px"
+        ].join(";");
+        $("notifBtn").style.position = "relative";
+        $("notifBtn").appendChild(badge);
+      }
+      badge.textContent   = unread > 9 ? "9+" : String(unread);
+      badge.style.display = unread > 0 ? "flex" : "none";
+
+      // ── List ───────────────────────────────────
+      const list = $("notifList");
+      if (!list) return;
+
+      if (!notifs.length) {
+        list.innerHTML = `<div class="notif-empty">🔔 No notifications yet</div>`;
+        return;
+      }
+
+      list.innerHTML = notifs.map(n => {
+        const time = n.createdAt?.toDate?.()?.toLocaleString("en-NG", {
+          month:"short", day:"numeric", hour:"2-digit", minute:"2-digit"
+        }) || "";
+        return `
+        <div class="notif-item ${n.read ? "" : "unread"}" data-id="${n.id}" data-url="${esc(n.url||"")}">
+          <div style="display:flex;gap:8px;align-items:flex-start">
+            ${!n.read
+              ? '<div class="notif-dot" style="margin-top:5px"></div>'
+              : '<div style="width:7px;flex-shrink:0"></div>'
+            }
+            <div style="flex:1;min-width:0">
+              <div class="notif-title">${esc(n.title || "Notification")}</div>
+              <div class="notif-body">${esc(n.body || "")}</div>
+              <div class="notif-time">${time}</div>
+            </div>
+          </div>
+        </div>`;
+      }).join("");
+
+      // Click: mark read + optionally navigate
+      list.querySelectorAll(".notif-item").forEach(item => {
+        item.addEventListener("click", async () => {
+          if (item.classList.contains("unread")) {
+            item.classList.remove("unread");
+            item.querySelector(".notif-dot")?.remove();
+            updateDoc(doc(db, "notifications", item.dataset.id), {
+              read: true, readAt: serverTimestamp()
+            }).catch(() => {});
+          }
+          if (item.dataset.url) location.href = item.dataset.url;
+        });
+      });
+    },
+    err => {
+      console.error("[Notifications] Listener error:", err.code, err.message);
+      const list = $("notifList");
+      if (list) list.innerHTML = `<div class="notif-empty">Could not load notifications.</div>`;
+    }
+  );
+}
+
 $("notifBtn").addEventListener("click", e => {
   e.stopPropagation();
   if(!$("notifPanel")) return;
@@ -761,13 +872,19 @@ document.addEventListener("click", e => {
   const panel = $("notifPanel");
   if(panel && !panel.contains(e.target) && e.target !== $("notifBtn")) panel.classList.remove("open");
 });
-$("markAllRead")?.addEventListener("click", async()=>{
+$("markAllRead")?.addEventListener("click", async () => {
   try {
-    const snap = await getDocs(query(collection(db,"notifications"),where("userId","==",currentUser.uid),where("read","==",false)));
+    const unreadSnap = await getDocs(query(
+      collection(db, "notifications"),
+      where("userId", "==", currentUser.uid),
+      where("read", "==", false)
+    ));
+    if (unreadSnap.empty) { toast("No unread notifications.", "info"); return; }
     const batch = writeBatch(db);
-    snap.docs.forEach(d=>batch.update(d.ref,{read:true}));
+    unreadSnap.docs.forEach(d => batch.update(d.ref, { read: true, readAt: serverTimestamp() }));
     await batch.commit();
-  } catch(e){console.warn("Mark read:",e);}
+    toast("All notifications marked as read.", "success");
+  } catch(e) { console.warn("[Notify] Mark all read error:", e); }
 });
 
 // ── Commission status ─────────────────────────────────
