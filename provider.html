@@ -38,35 +38,16 @@
     .booking-list{display:flex;flex-direction:column;gap:10px}
     .bi-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
     
-    /* Notifications panel */
-    .notif-wrap{
-  position:relative;
-}
-
-.notif-panel{
-  position:absolute;
-  top:calc(100% + 8px);
-  right:0;
-  width:min(360px, calc(100vw - 24px));
-  background:var(--bg-card);
-  border:1px solid var(--border);
-  border-radius:var(--r-md);
-  box-shadow:var(--shadow-lg);
-  z-index:9999;
-  display:none;
-  flex-direction:column;
-  max-height:420px;
-  overflow:hidden;
-}
-
-.notif-panel.open{
-  display:flex;
-}
-    .notif-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)}
-    .notif-head-title{font-size:14px;font-weight:700;color:var(--text-1)}
-    .notif-mark-read{font-size:12px;color:var(--accent);background:transparent;border:none;cursor:pointer;font-weight: 600;}
-    .notif-list{overflow-y:auto;max-height:300px}
-    .ntif-empty{padding: 24px 16px;text-align:center;font-size:13px;color:var(--text-3)}
+    /* ── Notifications ───────────────────────────────────── */
+.header {position: relative;z-index: 1000;overflow: visible !important;}
+.notif-wrap {position: relative;flex-shrink: 0;z-index: 1100;}
+.notif-panel {position: absolute;top: calc(100% + 8px);right: 0;width: min(360px, calc(100vw - 24px));background: var(--bg-card);border: 1px solid var(--border);border-radius: var(--r-md);box-shadow: var(--shadow-lg);z-index: 2000;display: none;flex-direction: column;max-height: 420px;overflow: hidden;}
+.notif-panel.open {display: flex;}
+.notif-head {display: flex;align-items: center;justify-content: space-between;gap: 12px;padding: 12px 16px;border-bottom: 1px solid var(--border);}
+.notif-head-title {font-size: 14px;font-weight: 700;color: var(--text-1);}
+.notif-mark-read {font-size: 12px;color: var(--accent);background: transparent;border: none;cursor: pointer;font-weight: 600;white-space: nowrap;}
+.notif-list {overflow-y: auto;max-height: 300px;}
+.notif-empty {padding: 24px 16px;text-align: center;font-size: 13px;color: var(--text-3);}
     /* Services */
     .services-list{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
     .svc-item{background:var(--bg-subtle);border:.5px solid var(--border);border-radius:var(--r-md);padding:14px 16px;display:flex;align-items:center;gap:12px}
@@ -124,20 +105,44 @@
 
 <!-- Header -->
 <header class="header">
-  <a href="./dashboard.html" class="header-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></a>
-  <div class="header-title">PROVIDER MODE<span>Manage your business</span></div>
-  <button class="hdr-btn" id="notifBtn" aria-label="Notifications">
-    <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-    <span class="notif-dot" id="notifDot" style="display:none"></span>
-  </button>
-</header>
-<div class="notif-panel" id="notifPanel">
-  <div class="notif-head">
-    <span class="notif-head-title">🔔 Notifications</span>
-    <button class="notif-mark-read" id="markAllRead">Mark all read</button>
+  <a href="./dashboard.html" class="header-back">
+    <svg viewBox="0 0 24 24">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+  </a>
+
+  <div class="header-title">
+    PROVIDER MODE
+    <span>Manage your business</span>
   </div>
-  <div class="notif-list" id="notifList"><div class="notif-empty">Loading…</div></div>
-</div>
+
+  <!-- Notification -->
+  <div class="notif-wrap">
+    <button class="hdr-btn" id="notifBtn" aria-label="Notifications" aria-expanded="false">
+      <svg viewBox="0 0 24 24">
+        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 01-3.46 0"/>
+      </svg>
+      <span class="notif-dot" id="notifDot" style="display:none"></span>
+    </button>
+
+    <!-- Notification panel belongs to the bell -->
+    <div class="notif-panel" id="notifPanel">
+
+      <div class="notif-head">
+        <span class="notif-head-title">🔔 Notifications</span>
+
+        <button class="notif-mark-read" id="markAllRead">
+          Mark all read
+        </button>
+      </div>
+
+      <div class="notif-list" id="notifList">
+        <div class="notif-empty">Loading…</div>
+      </div>
+    </div>
+  </div>
+</header>
 
 <!-- Provider Hero -->
 <div class="prov-hero" role="banner">
