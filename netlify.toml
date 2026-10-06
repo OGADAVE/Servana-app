@@ -89,6 +89,7 @@
 
       frame-src 'self'
                 https://*.firebaseapp.com
+                https://auth.servana.top
                 https://*.firebase.com
                 https://accounts.google.com
                 https://js.paystack.co;
