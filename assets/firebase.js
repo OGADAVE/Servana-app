@@ -10,7 +10,7 @@ import { getStorage }     from "https://www.gstatic.com/firebasejs/10.12.2/fireb
 // ── Firebase init ────────────────────────────────────────
 const firebaseConfig = {
   apiKey:            "AIzaSyBo0wT2U4eEbD8uciW9ZBhKN2gDH_846j8",
-  authDomain:        "servana-59172.firebaseapp.com",
+  authDomain:        "auth.servana.top",
   projectId:         "servana-59172",
   storageBucket:     "servana-59172.appspot.com",
   messagingSenderId: "371435102114",
