@@ -415,7 +415,7 @@ export function adminNotifyDispute(booking) {
     label_3: "Provider",       value_3: booking.providerName  || "—",
     label_4: "Service",        value_4: booking.service       || "—",
     label_5: "Amount at Stake",value_5: _ngn(booking.total),
-    action_url:   `${CONFIG.siteUrl}/admin.html`,
+    action_url:   `${CONFIG.siteUrl}/servana-admin.html`,
     action_text:  "Resolve Dispute Now →"
   });
 }
@@ -437,7 +437,7 @@ export function adminNotifyPayment(booking, paymentRef) {
     label_3: "Amount",         value_3: _ngn(booking.total),
     label_4: "Platform Fee",   value_4: _ngn(booking.platformFee),
     label_5: "Date & Time",    value_5: `${_date()} ${_time()}`,
-    action_url:   `${CONFIG.siteUrl}/admin.html`,
+    action_url:   `${CONFIG.siteUrl}/servana-admin.html`,
     action_text:  "View in Admin Panel →"
   });
 }
@@ -458,7 +458,7 @@ export function adminNotifySuspension(provider) {
     label_3: "Role",           value_3: _cap(provider.role    || "provider"),
     label_4: "Action",         value_4: "Suspended",
     label_5: "Date",           value_5: _date(),
-    action_url:   `${CONFIG.siteUrl}/admin.html`,
+    action_url:   `${CONFIG.siteUrl}/servana-admin.html`,
     action_text:  "Manage Providers →"
   });
 }

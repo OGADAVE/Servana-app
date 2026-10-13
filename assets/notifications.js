@@ -1,28 +1,11 @@
-// ═══════════════════════════════════════════════════════
-// SERVANA — Notification System v3.0
-// Dual-layer: Firestore (in-app panel) + OneSignal (push)
-//
-// HOW IT WORKS:
-//   Every notify() call does TWO things:
-//   1. Writes a document to Firestore /notifications/{id}
-//      → This powers the in-app notification bell panel
-//   2. Sends a push via OneSignal through Netlify function
-//      → This wakes the device when app is not open
-//
-// USAGE (import from any page):
-//   import { notify, notifyNewBooking } from "./assets/notifications.js";
-//   notifyNewBooking(providerUid, booking);
-// ═══════════════════════════════════════════════════════
-
-import { db } from "./firebase.js";
+import { auth, db } from "./firebase.js";
 import {
   collection, addDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ── Config ────────────────────────────────────────────
-const ONESIGNAL_APP_ID = "YOUR_ONESIGNAL_APP_ID";    // ← Set this
-const NOTIFY_SECRET    = "YOUR_NOTIFY_SECRET_HERE";   // ← Match Netlify env var
-const NOTIFY_URL       = "/.netlify/functions/notify";
+const ONESIGNAL_APP_ID = "YOUR_ONESIGNAL_APP_ID";
+const NOTIFY_URL = "/.netlify/functions/notify";
 
 let oneSignalInitialised = false;
 
@@ -152,25 +135,46 @@ export const notifyCommissionCleared = (providerUid) =>
 // ONESIGNAL — push layer (non-critical, fire-and-forget)
 // ═══════════════════════════════════════════════════════
 
+
 async function _sendPush(targetUserId, notification) {
-  if (!NOTIFY_URL || ONESIGNAL_APP_ID === "YOUR_ONESIGNAL_APP_ID") return;
+  if (!NOTIFY_URL || !targetUserId) return;
+
   try {
-    await fetch(NOTIFY_URL, {
-      method:  "POST",
+    const user = auth.currentUser;
+
+    if (!user) {
+      console.warn("[Notify] Push skipped: no signed-in user.");
+      return;
+    }
+
+    // Obtain a Firebase ID token for the signed-in user.
+    const idToken = await user.getIdToken();
+
+    const response = await fetch(NOTIFY_URL, {
+      method: "POST",
       headers: {
-        "Content-Type":    "application/json",
-        "x-notify-secret": NOTIFY_SECRET
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${idToken}`
       },
       body: JSON.stringify({
         targetUserId,
-        title:   notification.title,
+        title: notification.title,
         message: notification.body || notification.message || "",
-        url:     notification.url  || "",
-        data:    notification.data || {}
+        url: notification.url || "",
+        data: notification.data || {}
       })
     });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      console.warn(
+        "[Notify] Push request rejected:",
+        response.status,
+        error.error || "Unknown error"
+      );
+    }
   } catch (err) {
-    // Push is always non-critical
+    // Push notifications must not interrupt booking operations.
     console.warn("[Notify] Push failed (non-critical):", err.message);
   }
 }

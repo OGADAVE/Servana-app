@@ -21,7 +21,7 @@ const PRECACHE_ASSETS = [
   "./profile.html",
   "./settings.html",
   "./category.html",
-  "./admin.html",
+  "./servana-admin.html",
   "./offline.html",
   "./manifest.json",
   "./assets/styles.css",
