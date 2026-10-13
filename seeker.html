@@ -270,6 +270,8 @@
         color: var(--text-2);
         line-height: 1.55;
         display: -webkit-box;
+        /* Standard property for compatibility */
+        line-clamp: 2;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
@@ -307,7 +309,7 @@
       .pc-price {
         font-size: 16px;
         font-weight: 700;
-        color: var(--brand);
+        color: var(#ffffff);
       }
       .pc-price span {
         font-size: 10px;
@@ -365,7 +367,7 @@
       }
       .ps-total .ps-val {
         font-size: 16px;
-        color: var(--brand);
+        color: var(#bca4ff);
       }
       .booking-success {
         text-align: center;
@@ -398,6 +400,18 @@
       :focus-visible {
         outline: 2px solid var(--accent);
         outline-offset: 2px;
+
+        .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
       }
       @media (max-width: 480px) {
         .providers-grid {
