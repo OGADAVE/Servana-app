@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Servana — Page Not Found</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand:      #1A237E;
+      --brand-deep: #0D1560;
+      --accent:     #6C3CE1;
+      --gold:       #FFD60A;
+      --text-1:     #0D1B4B;
+      --text-2:     #4A5880;
+      --text-3:     #8C9BBF;
+      --border:     #E2E8F8;
+      --bg:         #EEF2FF;
+      --bg-card:    #FFFFFF;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --text-1: #E4EAFF; --text-2: #7D8FC4; --text-3: #3D4E7A;
+        --border: #1C2860; --bg: #080E30; --bg-card: #0F1848;
+      }
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text-1);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      text-align: center;
+    }
+
+    /* ── Animated background orbs ── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+      animation: drift 8s ease-in-out infinite alternate;
+    }
+    .orb-1 {
+      width: 340px; height: 340px;
+      background: rgba(108,60,225,.18);
+      top: -80px; right: -80px;
+    }
+    .orb-2 {
+      width: 260px; height: 260px;
+      background: rgba(26,35,126,.14);
+      bottom: -60px; left: -60px;
+      animation-delay: -3s;
+    }
+    @keyframes drift {
+      from { transform: translate(0,0) scale(1); }
+      to   { transform: translate(20px,20px) scale(1.08); }
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--bg-card);
+      border: .5px solid var(--border);
+      border-radius: 24px;
+      padding: 48px 36px 40px;
+      max-width: 460px;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 24px 64px rgba(13,21,96,.12);
+    }
+
+    /* ── Logo ── */
+    .logo-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+    .logo-img {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+    .logo-text {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--brand);
+      letter-spacing: 2px;
+    }
+
+    /* ── 404 number ── */
+    .error-num {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(72px, 18vw, 108px);
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 6px;
+      background: linear-gradient(135deg, var(--brand), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      position: relative;
+    }
+
+    /* Floating emoji inside the number */
+    .error-emoji {
+      font-size: 38px;
+      display: block;
+      margin-bottom: 16px;
+      animation: bounce 2.4s ease-in-out infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-10px); }
+    }
+
+    .error-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-1);
+      margin-bottom: 10px;
+    }
+
+    .error-body {
+      font-size: 14px;
+      color: var(--text-2);
+      line-height: 1.75;
+      margin-bottom: 32px;
+      max-width: 340px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ── Buttons ── */
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+    }
+
+    .btn-primary {
+      padding: 12px 28px;
+      background: linear-gradient(135deg, var(--brand), var(--accent));
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity .2s, transform .15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .btn-primary:hover { opacity: .88; transform: translateY(-1px); }
+
+    .btn-secondary {
+      padding: 12px 28px;
+      background: transparent;
+      color: var(--accent);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      border: 1.5px solid var(--accent);
+      border-radius: 10px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .18s, transform .15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .btn-secondary:hover { background: rgba(108,60,225,.06); transform: translateY(-1px); }
+
+    /* ── Quick links ── */
+    .quick-links {
+      border-top: .5px solid var(--border);
+      padding-top: 24px;
+    }
+    .quick-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-3);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .links-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .quick-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: var(--bg);
+      border: .5px solid var(--border);
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--text-2);
+      font-size: 13px;
+      font-weight: 500;
+      transition: all .18s;
+    }
+    .quick-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(108,60,225,.04);
+    }
+    .quick-link-icon {
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    /* ── Footer tagline ── */
+    .tagline {
+      margin-top: 28px;
+      font-size: 12px;
+      color: var(--text-3);
+      position: relative;
+      z-index: 1;
+    }
+    .tagline span {
+      color: var(--accent);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <div class="card">
+
+    <!-- Logo -->
+    <div class="logo-row">
+      <img class="logo-img" src="./assets/images/logo.png" alt="Servana"
+           onerror="this.style.display='none'">
+      <span class="logo-text">SERVANA</span>
+    </div>
+
+    <!-- Error -->
+    <div class="error-num">404</div>
+    <span class="error-emoji">🔍</span>
+    <div class="error-title">This page doesn't exist</div>
+    <p class="error-body">
+      The page you're looking for may have moved, been deleted, or never existed.
+      Don't worry — your genie is still here to help.
+    </p>
+
+    <!-- CTA buttons -->
+    <div class="btn-group">
+      <a class="btn-primary" href="./dashboard.html">
+        <svg style="width:15px;height:15px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round" viewBox="0 0 24 24">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        Go to Dashboard
+      </a>
+      <a class="btn-secondary" href="javascript:history.back()">
+        <svg style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round" viewBox="0 0 24 24">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Go Back
+      </a>
+    </div>
+
+    <!-- Quick links -->
+    <div class="quick-links">
+      <div class="quick-title">Where would you like to go?</div>
+      <div class="links-grid">
+        <a class="quick-link" href="./seeker.html">
+          <span class="quick-link-icon">🔍</span> Find Services
+        </a>
+        <a class="quick-link" href="./bookings.html">
+          <span class="quick-link-icon">📅</span> My Bookings
+        </a>
+        <a class="quick-link" href="./chat.html">
+          <span class="quick-link-icon">💬</span> Messages
+        </a>
+        <a class="quick-link" href="./support.html">
+          <span class="quick-link-icon">🛟</span> Get Help
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="tagline">
+    <span>Servana</span> — Your Personal Service Genie. Fast help. No stress.
+  </div>
+
+  <script>
+    // If the user is authenticated, show dashboard link
+    // If not, redirect the primary button to login
+    try {
+      import("./assets/firebase.js").then(({ auth }) => {
+        import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js").then(({ onAuthStateChanged }) => {
+          onAuthStateChanged(auth, user => {
+            if (!user) {
+              const dashBtn = document.querySelector(".btn-primary");
+              if (dashBtn) { dashBtn.href = "./login.html"; dashBtn.querySelector("span") || (dashBtn.innerHTML = dashBtn.innerHTML.replace("Go to Dashboard","Sign In")); }
+            }
+          });
+        });
+      }).catch(() => {});
+    } catch(e) {}
+  </script>
+
+</body>
+</html>

@@ -1,6 +1,5 @@
 # ═══════════════════════════════════════════════════════
 # SERVANA — Netlify Configuration
-# Production Configuration
 # ═══════════════════════════════════════════════════════
 
 [build]
@@ -37,6 +36,10 @@
 
     # Prevent MIME-type sniffing
     X-Content-Type-Options = "nosniff"
+
+    
+    # Enforce HTTPS in browsers
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
 
     # Control referrer information
     Referrer-Policy = "strict-origin-when-cross-origin"
