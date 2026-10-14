@@ -1055,19 +1055,47 @@ $("profilePhotoInput").addEventListener("change", async()=>{
     const rawUrl = await uploadToCloudinary(file, {
       folder: `servana/providers/${currentUser.uid}`
     });
-    const url = avatarUrl(rawUrl);
-    await updateProfile(currentUser,{photoURL:rawUrl});
-    await setDoc(doc(db,"providers",currentUser.uid),{photoURL:rawUrl},{merge:true});
-    $("heroAv").src=url; $("heroAv").style.display="block"; $("heroAvFb").style.display="none"; $("photoPreview").src=url;
-    provData.photoURL=url; renderStrength(); toast("Profile photo updated!","success");
-  } catch(e){
-    console.error("[Upload] Profile photo error:", e.message);
-    if(e.message.includes("CLOUDINARY_NOT_CONFIGURED")){
-      toast("Photo upload not ready — Cloudinary needs to be configured.","warning",6000);
+
+    // Update Firebase Auth profile and Firestore provider document
+     // Save the uploaded image URL to Firebase Auth and Firestore.
+    await updateProfile(currentUser, { photoURL });
+
+    await setDoc(
+      doc(db, "providers", currentUser.uid),
+      { photoURL },
+      { merge: true }
+    );
+
+    $("heroAv").src = photoURL;
+    $("heroAv").style.display = "block";
+    $("heroAvFb").style.display = "none";
+    $("photoPreview").src = photoURL;
+
+    provData.photoURL = photoURL;
+    renderStrength();
+
+    toast("Profile photo updated!", "success");
+  } catch (e) {
+    console.error("[Upload] Profile photo error:", {
+      code: e.code,
+      message: e.message
+    });
+
+    if (e.message?.includes("CLOUDINARY_NOT_CONFIGURED")) {
+      toast(
+        "Photo upload is not ready. Cloudinary needs to be configured.",
+        "warning",
+        6000
+      );
+    } else if (e.code === "permission-denied") {
+      toast("You don't have permission to update this profile photo.", "error");
     } else {
-      toast("Upload failed: "+(e.message||"Try again."),"error");
+      toast("Upload failed: " + (e.message || "Try again."), "error");
     }
-  } finally{hideSpinner();$("profilePhotoInput").value="";}
+  } finally {
+    hideSpinner();
+    $("profilePhotoInput").value = "";
+  }
 });
 
 // ── Verify ────────────────────────────────────────────────
