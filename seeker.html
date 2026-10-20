@@ -1,1411 +1,616 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="theme-color" content="#35206f" />
-    <meta
-      name="description"
-      content="Find and book trusted service providers with Servana."
-    />
-    <title>Servana — Find a Service</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="./assets/styles.css" />
-    <style>
-      .hero-search {
-        background: linear-gradient(
-          130deg,
-          var(--brand-deep),
-          var(--brand) 55%,
-          var(--accent)
-        );
-        padding: 28px 20px 32px;
-        position: relative;
-      }
-      .hs-text {
-        text-align: center;
-        color: #fff;
-        margin-bottom: 20px;
-      }
-      .hs-badge {
-        display: inline-block;
-        font-size: 11px;
-        color: var(--gold);
-        background: #ffd60a1f;
-        border: 1px solid #ffd60a38;
-        padding: 4px 12px;
-        border-radius: 20px;
-        margin-bottom: 10px;
-      }
-      .hs-heading {
-        font-size: clamp(20px, 4vw, 28px);
-        font-weight: 700;
-        line-height: 1.25;
-      }
-      .hs-sub {
-        font-size: 13px;
-        color: #fffd;
-        margin-top: 5px;
-      }
-      .hs-bar {
-        background: var(--bg-surface);
-        border-radius: var(--r-lg);
-        padding: 6px;
-        display: flex;
-        gap: 6px;
-        align-items: center;
-        box-shadow: var(--shadow-lg);
-        max-width: 680px;
-        margin: auto;
-        flex-wrap: wrap;
-      }
-      .hsb-field {
-        flex: 1;
-        min-width: 160px;
-        display: flex;
-        align-items: center;
-        border: 1px solid var(--border);
-        border-radius: var(--r-sm);
-        background: var(--bg-subtle);
-        overflow: hidden;
-      }
-      .hsb-icon {
-        padding: 0 10px;
-      }
-      .hsb-icon svg {
-        width: 16px;
-        height: 16px;
-        stroke: var(--text-3);
-        fill: none;
-        stroke-width: 2;
-      }
-      .hsb-input {
-        flex: 1;
-        min-width: 0;
-        border: 0;
-        background: transparent;
-        font:
-          14px "DM Sans",
-          sans-serif;
-        color: var(--text-1);
-        outline: none;
-        padding: 10px 8px 10px 0;
-      }
-      .hsb-loc {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        padding: 0 10px;
-      }
-      .hsb-loc svg {
-        width: 14px;
-        height: 14px;
-        stroke: var(--accent);
-        fill: none;
-        stroke-width: 2;
-      }
-      .hsb-loc select {
-        max-width: 130px;
-        border: 0;
-        background: transparent;
-        font:
-          13px "DM Sans",
-          sans-serif;
-        color: var(--text-2);
-      }
-      .stats-strip {
-        display: flex;
-        background: var(--bg-surface);
-        border-bottom: 1px solid var(--border);
-        overflow-x: auto;
-      }
-      .ss-item {
-        flex: 1;
-        min-width: 85px;
-        padding: 12px;
-        text-align: center;
-        border-right: 1px solid var(--border);
-      }
-      .ss-num {
-        font-size: 17px;
-        font-weight: 700;
-        color: var(--brand);
-      }
-      .ss-lbl {
-        font-size: 10px;
-        color: var(--text-3);
-        margin-top: 2px;
-      }
-      .filter-row {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        margin-bottom: 18px;
-        flex-wrap: wrap;
-      }
-      .filter-lbl {
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--text-3);
-      }
-      .fchip {
-        padding: 6px 14px;
-        border-radius: 20px;
-        border: 1px solid var(--border);
-        background: var(--bg-card);
-        font-size: 12px;
-        color: var(--text-2);
-        cursor: pointer;
-      }
-      .fchip.active {
-        background: var(--accent);
-        color: #fff;
-        border-color: var(--accent);
-      }
-      .sort-sel {
-        margin-left: auto;
-        padding: 6px 12px;
-        border: 1px solid var(--border);
-        border-radius: var(--r-sm);
-        background: var(--bg-card);
-        color: var(--text-2);
-        font:
-          12px "DM Sans",
-          sans-serif;
-      }
-      .providers-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-        gap: 16px;
-      }
-      .pc-top {
-        padding: 16px 16px 0;
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-      }
-      .pc-av-wrap {
-        position: relative;
-        flex-shrink: 0;
-      }
-      .pc-av {
-        width: 52px;
-        height: 52px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid var(--border);
-        background: linear-gradient(135deg, var(--brand), var(--accent));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 16px;
-        font-weight: 700;
-      }
-      .pc-online {
-        position: absolute;
-        bottom: 2px;
-        right: 2px;
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background: var(--success);
-        border: 2px solid var(--bg-card);
-      }
-      .pc-verified {
-        position: absolute;
-        top: -2px;
-        right: -2px;
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        background: var(--info);
-        border: 2px solid var(--bg-card);
-        display: grid;
-        place-items: center;
-        font-size: 9px;
-        color: white;
-      }
-      .pc-info {
-        flex: 1;
-        min-width: 0;
-      }
-      .pc-name {
-        font-size: 15px;
-        font-weight: 700;
-        color: var(--text-1);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .pc-role {
-        font-size: 12px;
-        color: var(--text-2);
-      }
-      .pc-stars {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        margin-top: 5px;
-      }
-      .pc-rnum {
-        font-size: 12px;
-        font-weight: 600;
-      }
-      .pc-rv {
-        font-size: 11px;
-        color: var(--text-3);
-      }
-      .pc-body {
-        padding: 12px 16px;
-        flex: 1;
-      }
-      .pc-desc {
-        font-size: 12.5px;
-        color: var(--text-2);
-        line-height: 1.55;
-        display: -webkit-box;
-        /* Standard property for compatibility */
-        line-clamp: 2;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-      }
-      .pc-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
-        margin-bottom: 10px;
-      }
-      .pc-tag {
-        font-size: 10px;
-        color: var(--accent);
-        background: #6c3ce212;
-        border: 1px solid #6c3ce224;
-        padding: 2px 8px;
-        border-radius: 10px;
-      }
-      .pc-meta {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-        font-size: 11px;
-        color: var(--text-3);
-        flex-wrap: wrap;
-      }
-      .pc-foot {
-        padding: 12px 16px;
-        border-top: 1px solid var(--border);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-      }
-      .pc-price {
-        font-size: 16px;
-        font-weight: 700;
-        color: var(#ffffff);
-      }
-      .pc-price span {
-        font-size: 10px;
-        font-weight: 400;
-        color: var(--text-3);
-        display: block;
-        margin-top: 3px;
-      }
-      .svc-opt {
-        padding: 8px 14px;
-        border-radius: var(--r-sm);
-        border: 1.5px solid var(--border);
-        background: var(--bg-subtle);
-        font-size: 13px;
-        color: var(--text-2);
-        cursor: pointer;
-      }
-      .svc-opt.sel {
-        border-color: var(--accent);
-        color: var(--accent);
-      }
-      .dt-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-      }
-      .price-sum {
-        background: var(--bg-subtle);
-        border: 1px solid var(--border);
-        border-radius: var(--r-md);
-        padding: 14px 16px;
-      }
-      .ps-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        font-size: 13px;
-        margin-bottom: 8px;
-      }
-      .ps-lbl {
-        color: var(--text-2);
-      }
-      .ps-val {
-        font-weight: 600;
-        color: var(--text-1);
-      }
-      .ps-divider {
-        height: 1px;
-        background: var(--border);
-        margin: 8px 0;
-      }
-      .ps-total .ps-lbl {
-        font-weight: 700;
-        font-size: 14px;
-      }
-      .ps-total .ps-val {
-        font-size: 16px;
-        color: var(#bca4ff);
-      }
-      .booking-success {
-        text-align: center;
-        padding: 20px 10px;
-      }
-      .booking-ref {
-        background: var(--bg-subtle);
-        border: 1px solid var(--border);
-        border-radius: var(--r-md);
-        padding: 14px;
-        margin-bottom: 24px;
-        font-size: 13px;
-        line-height: 1.7;
-        overflow-wrap: anywhere;
-      }
-      .inline-message {
-        grid-column: 1/-1;
-        padding: 24px;
-        text-align: center;
-        color: var(--text-2);
-      }
-      .form-section-label {
-        font-size: 11px;
-        font-weight: 700;
-        color: var(--text-3);
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        margin-bottom: 10px;
-      }
-      :focus-visible {
-        outline: 2px solid var(--accent);
-        outline-offset: 2px;
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="theme-color" content="#35206f"/>
+  <meta name="description" content="Find and book trusted service providers with Servana."/>
+  <title>Servana — Find a Service</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="./assets/styles.css"/>
+  <style>
+    .hero-search{background:linear-gradient(130deg,var(--brand-deep),var(--brand) 55%,var(--accent));padding:28px 20px 32px;position:relative}
+    .hs-text{text-align:center;color:#fff;margin-bottom:20px}
+    .hs-badge{display:inline-block;font-size:11px;color:var(--gold);background:#ffd60a1f;border:1px solid #ffd60a38;padding:4px 12px;border-radius:20px;margin-bottom:10px}
+    .hs-heading{font-size:clamp(20px,4vw,28px);font-weight:700;line-height:1.25}
+    .hs-sub{font-size:13px;color:#fffd;margin-top:5px}
+    .hs-bar{background:var(--bg-surface);border-radius:var(--r-lg);padding:6px;display:flex;gap:6px;align-items:center;box-shadow:var(--shadow-lg);max-width:680px;margin:auto;flex-wrap:wrap}
+    .hsb-field{flex:1;min-width:160px;display:flex;align-items:center;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);overflow:hidden}
+    .hsb-icon{padding:0 10px}.hsb-icon svg{width:16px;height:16px;stroke:var(--text-3);fill:none;stroke-width:2}
+    .hsb-input{flex:1;min-width:0;border:0;background:transparent;font:14px "DM Sans",sans-serif;color:var(--text-1);outline:none;padding:10px 8px 10px 0}
+    .hsb-loc{display:flex;align-items:center;gap:6px;padding:0 10px}
+    .hsb-loc svg{width:14px;height:14px;stroke:var(--accent);fill:none;stroke-width:2}
+    .hsb-loc select{max-width:130px;border:0;background:transparent;font:13px "DM Sans",sans-serif;color:var(--text-2)}
+    .stats-strip{display:flex;background:var(--bg-surface);border-bottom:1px solid var(--border);overflow-x:auto}
+    .ss-item{flex:1;min-width:85px;padding:12px;text-align:center;border-right:1px solid var(--border)}
+    .ss-num{font-size:17px;font-weight:700;color:var(--brand)}
+    .ss-lbl{font-size:10px;color:var(--text-3);margin-top:2px}
+    .filter-row{display:flex;gap:8px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+    .filter-lbl{font-size:12px;font-weight:600;color:var(--text-3)}
+    .fchip{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg-card);font-size:12px;color:var(--text-2);cursor:pointer}
+    .fchip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .sort-sel{margin-left:auto;padding:6px 12px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-card);color:var(--text-2);font:12px "DM Sans",sans-serif}
+    .providers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px}
+    .pc-top{padding:16px 16px 0;display:flex;align-items:flex-start;gap:12px}
+    .pc-av-wrap{position:relative;flex-shrink:0}
+    .pc-av{width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--border);background:linear-gradient(135deg,var(--brand),var(--accent));display:flex;align-items:center;justify-content:center;color:white;font-size:16px;font-weight:700}
+    .pc-online{position:absolute;bottom:2px;right:2px;width:12px;height:12px;border-radius:50%;background:var(--success);border:2px solid var(--bg-card)}
+    .pc-verified{position:absolute;top:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:var(--info);border:2px solid var(--bg-card);display:grid;place-items:center;font-size:9px;color:white}
+    .pc-info{flex:1;min-width:0}
+    .pc-name{font-size:15px;font-weight:700;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .pc-role{font-size:12px;color:var(--text-2)}
+    .pc-stars{display:flex;align-items:center;gap:4px;margin-top:5px}
+    .pc-rnum{font-size:12px;font-weight:600}
+    .pc-rv{font-size:11px;color:var(--text-3)}
+    .pc-body{padding:12px 16px;flex:1}
+    .pc-desc{font-size:12.5px;color:var(--text-2);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .pc-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+    .pc-tag{font-size:10px;color:var(--accent);background:#6c3ce212;border:1px solid #6c3ce224;padding:2px 8px;border-radius:10px}
+    .pc-meta{display:flex;gap:12px;align-items:center;font-size:11px;color:var(--text-3);flex-wrap:wrap}
+    .pc-foot{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .pc-price{font-size:16px;font-weight:700;color:var(--brand)}
+    .pc-price span{font-size:10px;font-weight:400;color:var(--text-3);display:block;margin-top:3px}
+    .svc-opt{padding:8px 14px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:var(--bg-subtle);font-size:13px;color:var(--text-2);cursor:pointer}
+    .svc-opt.sel{border-color:var(--accent);color:var(--accent)}
+    .dt-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .price-sum{background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px}
+    .ps-row{display:flex;justify-content:space-between;gap:12px;font-size:13px;margin-bottom:8px}
+    .ps-lbl{color:var(--text-2)}.ps-val{font-weight:600;color:var(--text-1)}
+    .ps-divider{height:1px;background:var(--border);margin:8px 0}
+    .ps-total .ps-lbl{font-weight:700;font-size:14px}
+    .ps-total .ps-val{font-size:16px;color:var(--accent)}
+    .booking-success{text-align:center;padding:20px 10px}
+    .booking-ref{background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:24px;font-size:13px;line-height:1.7;overflow-wrap:anywhere}
+    .inline-message{grid-column:1/-1;padding:24px;text-align:center;color:var(--text-2)}
+    .form-section-label{font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+    @media(max-width:480px){.providers-grid{grid-template-columns:1fr}.hs-bar{align-items:stretch}.hsb-field{flex-basis:100%}.sort-sel{margin-left:0}}
+    @media(min-width:481px) and (max-width:767px){.providers-grid{grid-template-columns:1fr 1fr}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+  </style>
+</head>
+<body>
+<div id="toast-container" aria-live="polite"></div>
+<div id="spinner-overlay" aria-hidden="true"><div class="spinner-ring"></div></div>
 
-        .sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+<header class="header">
+  <a href="./dashboard.html" class="header-back" aria-label="Back to dashboard">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+  </a>
+  <div class="header-title">SEEKER MODE<span>Find trusted service providers</span></div>
+  <button class="hdr-btn" id="filterBtn" type="button" aria-label="Show filters">
+    <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+  </button>
+</header>
+
+<section class="hero-search">
+  <div class="hs-text">
+    <span class="hs-badge">⚡ Fast Help. No Stress.</span>
+    <h1 class="hs-heading">Find Your Service Provider</h1>
+    <p class="hs-sub">Trusted professionals, ready when you are.</p>
+  </div>
+  <div class="hs-bar" role="search">
+    <div class="hsb-field">
+      <div class="hsb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+      <input class="hsb-input" id="searchInput" type="search" placeholder="e.g. Plumber, Barber, Electrician…" aria-label="Search providers"/>
+    </div>
+    <div class="hsb-loc">
+      <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      <label class="sr-only" for="locationSelect">Location</label>
+      <select id="locationSelect"><option value="">All Locations</option></select>
+    </div>
+    <button class="btn btn-accent btn-sm" id="searchBtn" type="button">Search</button>
+  </div>
+</section>
+
+<div class="stats-strip" aria-label="Marketplace statistics">
+  <div class="ss-item"><div class="ss-num" id="statProv">—</div><div class="ss-lbl">Providers</div></div>
+  <div class="ss-item"><div class="ss-num" id="statCats">—</div><div class="ss-lbl">Categories</div></div>
+  <div class="ss-item"><div class="ss-num" id="statCities">—</div><div class="ss-lbl">Cities</div></div>
+  <div class="ss-item"><div class="ss-num" id="statRating">—</div><div class="ss-lbl">Avg Rating</div></div>
+</div>
+
+<main class="page-lg" role="main">
+  <div class="cat-strip mb-3" id="catStrip" role="tablist" aria-label="Service categories">
+    <button class="cat-pill active" type="button" data-cat="" role="tab" aria-selected="true">🌐 All Services</button>
+  </div>
+  <div class="filter-row" id="filterRow">
+    <span class="filter-lbl">Filter:</span>
+    <button class="fchip active" type="button" data-f="all"       aria-pressed="true">All</button>
+    <button class="fchip"       type="button" data-f="available"  aria-pressed="false">Available Now</button>
+    <button class="fchip"       type="button" data-f="verified"   aria-pressed="false">Verified Only</button>
+    <button class="fchip"       type="button" data-f="top"        aria-pressed="false">Top Rated</button>
+    <label class="sr-only" for="sortSel">Sort providers</label>
+    <select class="sort-sel" id="sortSel">
+      <option value="rating">Sort: Top Rated</option>
+      <option value="price_asc">Price: Low to High</option>
+      <option value="price_desc">Price: High to Low</option>
+      <option value="newest">Newest</option>
+    </select>
+  </div>
+  <div class="sec-head">
+    <div>
+      <h2 class="sec-title" id="resTitle">All Providers</h2>
+      <p class="sec-sub" id="resSub">Loading providers…</p>
+    </div>
+  </div>
+  <div class="providers-grid" id="providersGrid" aria-live="polite" aria-busy="true">
+    <div class="inline-message">Loading providers…</div>
+  </div>
+</main>
+
+<!-- Booking modal -->
+<div class="modal-overlay" id="bookingOverlay" role="dialog" aria-modal="true" aria-labelledby="mName" aria-hidden="true">
+  <div class="modal-box">
+    <div id="bookForm">
+      <div class="modal-handle"></div>
+      <div class="modal-head">
+        <div style="display:flex;align-items:center;gap:12px;min-width:0">
+          <div id="mAvatar" style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--accent));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0"></div>
+          <div>
+            <div id="mName" style="font-size:16px;font-weight:700;color:var(--text-1)">Provider</div>
+            <div id="mRole" style="font-size:12px;color:var(--text-2)">Service provider</div>
+            <div id="mStars" style="margin-top:4px;font-size:12px"></div>
+          </div>
+        </div>
+        <button class="modal-close" id="closeBooking" type="button" aria-label="Close dialog">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <p class="form-section-label">Select service</p>
+      <div id="svcOptions" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px"></div>
+      <p class="form-section-label">Schedule</p>
+      <div class="dt-row mb-3">
+        <div class="field"><label for="bookDate">Date</label><input type="date" id="bookDate" required/></div>
+        <div class="field"><label for="bookTime">Time</label><input type="time" id="bookTime" required/></div>
+      </div>
+      <div class="field mb-3">
+        <label for="bookAddr">Service address</label>
+        <input type="text" id="bookAddr" maxlength="300" autocomplete="street-address" placeholder="e.g. 15 Wuse Zone 4, Abuja" required/>
+      </div>
+      <div class="field mb-3">
+        <label for="bookNotes">Additional notes (optional)</label>
+        <textarea id="bookNotes" maxlength="1500" style="min-height:72px" placeholder="Tell the provider more about the job…"></textarea>
+      </div>
+      <p class="form-section-label">Price summary</p>
+      <div class="price-sum mb-3">
+        <div class="ps-row"><span class="ps-lbl">Service fee</span><span class="ps-val" id="psService">—</span></div>
+        <div class="ps-row"><span class="ps-lbl" style="color:var(--success)">Platform fee</span><span class="ps-val" style="color:var(--success)">₦0 — Free for seekers</span></div>
+        <div class="ps-divider"></div>
+        <div class="ps-row ps-total"><span class="ps-lbl">You Pay</span><span class="ps-val" id="psTotal">—</span></div>
+        <p style="font-size:11px;color:var(--text-3);margin-top:8px">
+          💡 Payment is made directly to the provider after the job is completed. No upfront payment required.
+        </p>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" id="confirmBtn" type="button">
+        <span class="btn-text">Confirm Booking</span>
+        <span class="btn-spin-wrap"><span class="btn-spin"></span></span>
+      </button>
+      <p id="bookingError" role="alert" hidden></p>
+    </div>
+    <div id="bookSuccess" class="booking-success hidden">
+      <div style="font-size:56px" aria-hidden="true">🎉</div>
+      <h2>Booking Submitted!</h2>
+      <p class="sec-sub">Your request has been saved. The provider will confirm shortly.</p>
+      <div class="booking-ref" id="bookingRef"></div>
+      <button class="btn btn-primary btn-block" id="doneBtn" type="button">View My Bookings</button>
+    </div>
+  </div>
+</div>
+
+<nav class="bottom-nav" aria-label="Main navigation">
+  <button class="nav-btn" type="button" onclick="location.href='./dashboard.html'"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></button>
+  <button class="nav-btn active" type="button" aria-current="page"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Find</span></button>
+  <button class="nav-btn" type="button" onclick="location.href='./bookings.html'"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Bookings</span></button>
+  <button class="nav-btn" type="button" onclick="location.href='./chat.html'"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span>Chat</span></button>
+  <button class="nav-btn" type="button" onclick="location.href='./profile.html'"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg><span>Profile</span></button>
+</nav>
+
+<script type="module">
+import { auth, db, toast, starsHtml, initials, formatNGN, genRef, debounce } from "./assets/firebase.js";
+import { buildSearchSelectHtml } from "./assets/locations.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  collection, getDocs, addDoc, getDoc, doc,
+  serverTimestamp, query, limit, where
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const $ = id => document.getElementById(id);
+
+// ── State ─────────────────────────────────────────────
+const S = {
+  user: null, providers: [], services: [], categories: [],
+  cat: "", filter: "all", sort: "rating",
+  provider: null, service: null, sending: false
+};
+
+const str         = v => (typeof v === "string" ? v.trim() : "");
+const norm        = v => str(v).toLocaleLowerCase();
+const validPrice  = v => Number.isFinite(Number(v)) && Number(v) > 0;
+const money       = v => formatNGN(Number(v));
+const todayLocal  = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+};
+
+function setError(m = "") {
+  const el = $("bookingError"); el.hidden = !m; el.textContent = m;
 }
-      }
-      @media (max-width: 480px) {
-        .providers-grid {
-          grid-template-columns: 1fr;
-        }
-        .hs-bar {
-          align-items: stretch;
-        }
-        .hsb-field {
-          flex-basis: 100%;
-        }
-        .sort-sel {
-          margin-left: 0;
-        }
-      }
-      @media (min-width: 481px) and (max-width: 767px) {
-        .providers-grid {
-          grid-template-columns: 1fr 1fr;
-        }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        *,
-        *:before,
-        *:after {
-          animation: none !important;
-          transition: none !important;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div id="toast-container" aria-live="polite"></div>
-    <div id="spinner-overlay" aria-hidden="true">
-      <div class="spinner-ring"></div>
-    </div>
-    <header class="header">
-      <a
-        href="./dashboard.html"
-        class="header-back"
-        aria-label="Back to dashboard"
-        ><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6" /></svg
-      ></a>
-      <div class="header-title">
-        SEEKER MODE<span>Find trusted service providers</span>
-      </div>
-      <button
-        class="hdr-btn"
-        id="filterBtn"
-        type="button"
-        aria-label="Show filters"
-      >
-        <svg viewBox="0 0 24 24">
-          <line x1="4" y1="6" x2="20" y2="6" />
-          <line x1="8" y1="12" x2="16" y2="12" />
-          <line x1="11" y1="18" x2="13" y2="18" />
-        </svg>
-      </button>
-    </header>
-    <section class="hero-search">
-      <div class="hs-text">
-        <span class="hs-badge">⚡ Fast Help. No Stress.</span>
-        <h1 class="hs-heading">Find Your Service Provider</h1>
-        <p class="hs-sub">Trusted professionals, ready when you are.</p>
-      </div>
-      <div class="hs-bar" role="search">
-        <div class="hsb-field">
-          <div class="hsb-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-          </div>
-          <input
-            class="hsb-input"
-            id="searchInput"
-            type="search"
-            placeholder="e.g. Plumber, Barber, Electrician…"
-            aria-label="Search providers"
-          />
-        </div>
-        <div class="hsb-loc">
-          <svg viewBox="0 0 24 24">
-            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z" />
-            <circle cx="12" cy="10" r="3" /></svg
-          ><label class="sr-only" for="locationSelect">Location</label
-          ><select id="locationSelect">
-            <option value="">All Locations</option>
-          </select>
-        </div>
-        <button class="btn btn-accent btn-sm" id="searchBtn" type="button">
-          Search
-        </button>
-      </div>
-    </section>
-    <div class="stats-strip" aria-label="Marketplace statistics">
-      <div class="ss-item">
-        <div class="ss-num" id="statProv">—</div>
-        <div class="ss-lbl">Providers</div>
-      </div>
-      <div class="ss-item">
-        <div class="ss-num" id="statCats">—</div>
-        <div class="ss-lbl">Categories</div>
-      </div>
-      <div class="ss-item">
-        <div class="ss-num" id="statCities">—</div>
-        <div class="ss-lbl">Cities</div>
-      </div>
-      <div class="ss-item">
-        <div class="ss-num" id="statRating">—</div>
-        <div class="ss-lbl">Average rating</div>
-      </div>
-    </div>
-    <main class="page-lg" role="main">
-      <div
-        class="cat-strip mb-3"
-        id="catStrip"
-        role="tablist"
-        aria-label="Service categories"
-      >
-        <button
-          class="cat-pill active"
-          type="button"
-          data-cat=""
-          role="tab"
-          aria-selected="true"
-        >
-          🌐 All Services
-        </button>
-      </div>
-      <div class="filter-row" id="filterRow">
-        <span class="filter-lbl">Filter:</span
-        ><button
-          class="fchip active"
-          type="button"
-          data-f="all"
-          aria-pressed="true"
-        >
-          All</button
-        ><button
-          class="fchip"
-          type="button"
-          data-f="available"
-          aria-pressed="false"
-        >
-          Available Now</button
-        ><button
-          class="fchip"
-          type="button"
-          data-f="verified"
-          aria-pressed="false"
-        >
-          Verified Only</button
-        ><button class="fchip" type="button" data-f="top" aria-pressed="false">
-          Top Rated</button
-        ><label class="sr-only" for="sortSel">Sort providers</label
-        ><select class="sort-sel" id="sortSel">
-          <option value="rating">Sort: Top Rated</option>
-          <option value="price_asc">Price: Low to High</option>
-          <option value="price_desc">Price: High to Low</option>
-          <option value="newest">Newest</option>
-        </select>
-      </div>
-      <div class="sec-head">
-        <div>
-          <h2 class="sec-title" id="resTitle">All Providers</h2>
-          <p class="sec-sub" id="resSub">Loading providers…</p>
-        </div>
-      </div>
-      <div
-        class="providers-grid"
-        id="providersGrid"
-        aria-live="polite"
-        aria-busy="true"
-      >
-        <div class="inline-message">Loading providers…</div>
-      </div>
-    </main>
-    <div
-      class="modal-overlay"
-      id="bookingOverlay"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="mName"
-      aria-hidden="true"
-    >
-      <div class="modal-box">
-        <div id="bookForm">
-          <div class="modal-handle"></div>
-          <div class="modal-head">
-            <div
-              style="
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                min-width: 0;
-              "
-            >
-              <div
-                id="mAvatar"
-                style="
-                  width: 48px;
-                  height: 48px;
-                  border-radius: 50%;
-                  background: linear-gradient(
-                    135deg,
-                    var(--brand),
-                    var(--accent)
-                  );
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  color: #fff;
-                  font-weight: 700;
-                  flex-shrink: 0;
-                "
-              ></div>
-              <div>
-                <div
-                  id="mName"
-                  style="
-                    font-size: 16px;
-                    font-weight: 700;
-                    color: var(--text-1);
-                  "
-                >
-                  Provider
-                </div>
-                <div id="mRole" style="font-size: 12px; color: var(--text-2)">
-                  Service provider
-                </div>
-                <div id="mStars" style="margin-top: 4px; font-size: 12px"></div>
-              </div>
-            </div>
-            <button
-              class="modal-close"
-              id="closeBooking"
-              type="button"
-              aria-label="Close dialog"
-            >
-              <svg viewBox="0 0 24 24">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          </div>
-          <p class="form-section-label">Select service</p>
-          <div
-            id="svcOptions"
-            style="
-              display: flex;
-              flex-wrap: wrap;
-              gap: 8px;
-              margin-bottom: 20px;
-            "
-          ></div>
-          <p class="form-section-label">Schedule</p>
-          <div class="dt-row mb-3">
-            <div class="field">
-              <label for="bookDate">Date</label
-              ><input type="date" id="bookDate" required />
-            </div>
-            <div class="field">
-              <label for="bookTime">Time</label
-              ><input type="time" id="bookTime" required />
-            </div>
-          </div>
-          <div class="field mb-3">
-            <label for="bookAddr">Service address</label
-            ><input
-              type="text"
-              id="bookAddr"
-              maxlength="300"
-              autocomplete="street-address"
-              placeholder="e.g. 15 Wuse Zone 4, Abuja"
-              required
-            />
-          </div>
-          <div class="field mb-3">
-            <label for="bookNotes">Additional notes (optional)</label
-            ><textarea
-              id="bookNotes"
-              maxlength="1500"
-              style="min-height: 72px"
-              placeholder="Tell the provider more about the job…"
-            ></textarea>
-          </div>
-          <p class="form-section-label">Price summary</p>
-          <div class="price-sum mb-3">
-            <div class="ps-row">
-              <span class="ps-lbl">Service fee</span
-              ><span class="ps-val" id="psService">—</span>
-            </div>
-            <div class="ps-row">
-              <span class="ps-lbl">Platform fee</span
-              ><span class="ps-val">₦0 — Free for seekers</span>
-            </div>
-            <div class="ps-divider"></div>
-            <div class="ps-row ps-total">
-              <span class="ps-lbl">Estimated total</span
-              ><span class="ps-val" id="psTotal">—</span>
-            </div>
-            <p style="font-size: 11px; color: var(--text-3); margin-top: 8px">
-              This is a booking request, not proof of payment. Payment is
-              arranged with the provider after service completion.
-            </p>
-          </div>
-          <button
-            class="btn btn-primary btn-block btn-lg"
-            id="confirmBtn"
-            type="button"
-          >
-            <span class="btn-text">Confirm Booking</span
-            ><span class="btn-spin-wrap"><span class="btn-spin"></span></span>
-          </button>
-          <p id="bookingError" role="alert" hidden></p>
-        </div>
-        <div id="bookSuccess" class="booking-success hidden">
-          <div style="font-size: 56px" aria-hidden="true">🎉</div>
-          <h2>Booking Submitted</h2>
-          <p class="sec-sub">
-            Your request has been saved. The provider will confirm shortly.
-          </p>
-          <div class="booking-ref" id="bookingRef"></div>
-          <button class="btn btn-primary btn-block" id="doneBtn" type="button">
-            View My Bookings
-          </button>
-        </div>
-      </div>
-    </div>
-    <nav class="bottom-nav" aria-label="Main navigation">
-      <button
-        class="nav-btn"
-        type="button"
-        onclick="location.href = './dashboard.html'"
-      >
-        <svg viewBox="0 0 24 24">
-          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-          <polyline points="9 22 9 12 15 12 15 22" /></svg
-        ><span>Home</span></button
-      ><button class="nav-btn active" type="button" aria-current="page">
-        <svg viewBox="0 0 24 24">
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" /></svg
-        ><span>Find</span></button
-      ><button
-        class="nav-btn"
-        type="button"
-        onclick="location.href = './bookings.html'"
-      >
-        <svg viewBox="0 0 24 24">
-          <rect x="3" y="4" width="18" height="18" rx="2" />
-          <line x1="16" y1="2" x2="16" y2="6" />
-          <line x1="8" y1="2" x2="8" y2="6" />
-          <line x1="3" y1="10" x2="21" y2="10" /></svg
-        ><span>Bookings</span></button
-      ><button
-        class="nav-btn"
-        type="button"
-        onclick="location.href = './chat.html'"
-      >
-        <svg viewBox="0 0 24 24">
-          <path
-            d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
-          /></svg
-        ><span>Chat</span></button
-      ><button
-        class="nav-btn"
-        type="button"
-        onclick="location.href = './profile.html'"
-      >
-        <svg viewBox="0 0 24 24">
-          <circle cx="12" cy="8" r="4" />
-          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /></svg
-        ><span>Profile</span>
-      </button>
-    </nav>
-    <script type="module">
-      import {
-        auth,
-        db,
-        toast,
-        starsHtml,
-        initials,
-        formatNGN,
-        genRef,
-        debounce,
-      } from "./assets/firebase.js";
-      import { buildSearchSelectHtml } from "./assets/locations.js";
-      import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-      import {
-        collection,
-        getDocs,
-        addDoc,
-        serverTimestamp,
-        query,
-        limit,
-      } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-      const $ = (id) => document.getElementById(id),
-        S = {
-          user: null,
-          providers: [],
-          services: [],
-          categories: [],
-          cat: "",
-          filter: "all",
-          sort: "rating",
-          provider: null,
-          service: null,
-          sending: false,
+
+// ── Auth ──────────────────────────────────────────────
+onAuthStateChanged(auth, async user => {
+  if (!user) { location.replace("./login.html"); return; }
+  S.user = user;
+  try { $("locationSelect").innerHTML = buildSearchSelectHtml(); } catch(e) { console.warn("Location options:", e); }
+  await Promise.allSettled([loadCategories(), loadServices(), loadProviders()]);
+});
+
+// ── Load categories ───────────────────────────────────
+async function loadCategories() {
+  try {
+    const snap = await getDocs(query(collection(db,"category"), limit(100)));
+    S.categories = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(c => str(c.name));
+    $("statCats").textContent = S.categories.length;
+    const strip = $("catStrip");
+    strip.querySelectorAll("[data-dynamic]").forEach(n => n.remove());
+    S.categories.forEach(c => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "cat-pill";
+      b.dataset.cat = str(c.name); b.dataset.dynamic = "1";
+      b.setAttribute("role","tab"); b.setAttribute("aria-selected","false");
+      b.textContent = `${str(c.icon)||"📂"} ${str(c.name)}`;
+      strip.appendChild(b);
+    });
+  } catch(e) { console.error("Category load:", e); $("statCats").textContent = "—"; }
+}
+
+// ── Load services (top-level collection — authoritative) ──
+async function loadServices() {
+  try {
+    const snap = await getDocs(query(collection(db,"services"), limit(2000)));
+    S.services = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(s => str(s.providerId) && str(s.name) && validPrice(s.price) && s.active !== false);
+  } catch(e) { console.error("Service load:", e); S.services = []; }
+}
+
+// ── Load providers ────────────────────────────────────
+async function loadProviders() {
+  const grid = $("providersGrid");
+  grid.setAttribute("aria-busy","true");
+  try {
+    const snap = await getDocs(query(collection(db,"providers"), limit(500)));
+    S.providers = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(p => p.isPublic !== false && p.status !== "suspended");
+    $("statProv").textContent = S.providers.length;
+    const cities = new Set(S.providers.map(p => str(p.city || p.location)).filter(Boolean));
+    $("statCities").textContent = cities.size;
+    const ratings = S.providers.map(p => Number(p.rating)).filter(n => Number.isFinite(n) && n > 0);
+    $("statRating").textContent = ratings.length
+      ? (ratings.reduce((a,b)=>a+b,0)/ratings.length).toFixed(1)+"★" : "—";
+    applyFilters();
+  } catch(e) {
+    console.error("Provider load:", e);
+    grid.innerHTML = '<div class="inline-message"><strong>Could not load providers.</strong><p>Check your connection and try again.</p><button class="btn btn-secondary" id="retryBtn" type="button">Retry</button></div>';
+    $("resSub").textContent = "Unable to load results";
+    $("retryBtn").addEventListener("click", loadProviders, { once: true });
+  } finally { grid.setAttribute("aria-busy","false"); }
+}
+
+// ── Service helpers ───────────────────────────────────
+function servicesFor(providerId) {
+  return S.services.filter(s => s.providerId === providerId);
+}
+function priceFor(p) {
+  const prices = servicesFor(p.id).map(s => Number(s.price)).filter(validPrice);
+  if (prices.length) return Math.min(...prices);
+  return validPrice(p.startingPrice) ? Number(p.startingPrice) : null;
+}
+function isAvailable(p) { return p.available === true || p.availabilityStatus === "available"; }
+function isVerified(p)  { return p.verified === true; }
+
+// ── Filter + sort ─────────────────────────────────────
+function applyFilters() {
+  const kw  = norm($("searchInput").value);
+  const loc = norm($("locationSelect").value);
+  let list  = [...S.providers];
+
+  // Category — exact match (normalised) against stored category/role fields
+  if (S.cat) {
+    const c = norm(S.cat);
+    list = list.filter(p =>
+      [p.category, p.role, ...(Array.isArray(p.categories) ? p.categories : [])]
+        .some(v => norm(v) === c || norm(v).includes(c))
+    );
+  }
+  if (loc) list = list.filter(p => norm(p.location).includes(loc) || norm(p.city).includes(loc));
+  if (kw)  list = list.filter(p =>
+    [p.name, p.role, p.description, p.category, p.location, p.city, ...(Array.isArray(p.tags)?p.tags:[])]
+      .some(v => norm(v).includes(kw))
+  );
+  if (S.filter === "available") list = list.filter(isAvailable);
+  if (S.filter === "verified")  list = list.filter(isVerified);
+  if (S.filter === "top")       list = list.filter(p => Number(p.rating||0) >= 4);
+
+  list.sort((a,b) =>
+    S.sort === "rating"      ? (Number(b.rating)||0)   - (Number(a.rating)||0) :
+    S.sort === "price_asc"   ? (priceFor(a)??Infinity) - (priceFor(b)??Infinity) :
+    S.sort === "price_desc"  ? (priceFor(b)??-Infinity)- (priceFor(a)??-Infinity) :
+    S.sort === "newest"      ? (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0) : 0
+  );
+
+  $("resTitle").textContent = S.cat ? `${S.cat} Providers` : "All Providers";
+  $("resSub").textContent   = `${list.length} provider${list.length===1?"":"s"} found`;
+  renderProviders(list);
+}
+
+// ── Render provider cards ─────────────────────────────
+function renderProviders(list) {
+  const grid = $("providersGrid");
+  grid.replaceChildren();
+  if (!list.length) {
+    grid.innerHTML = '<div class="inline-message"><div style="font-size:32px">🔍</div><strong>No providers found</strong><p>Try adjusting your filters.</p><button class="btn btn-secondary" id="clearFiltersBtn" type="button">Clear filters</button></div>';
+    $("clearFiltersBtn").addEventListener("click", clearFilters);
+    return;
+  }
+  list.forEach(p => {
+    const card = document.createElement("article");
+    card.className = "provider-card"; card.tabIndex = 0;
+    card.setAttribute("role","button");
+    card.setAttribute("aria-label",`Book ${str(p.name)||"provider"}`);
+
+    const top = document.createElement("div"); top.className = "pc-top";
+    const aw  = document.createElement("div"); aw.className  = "pc-av-wrap";
+    let avatar;
+    if (str(p.photoURL)) {
+      avatar = document.createElement("img");
+      avatar.src = str(p.photoURL); avatar.alt = `${str(p.name)||"Provider"} profile`;
+      avatar.loading = "lazy"; avatar.referrerPolicy = "no-referrer";
+      avatar.addEventListener("error", () => {
+        const f = document.createElement("div"); f.className="pc-av"; f.textContent=initials(p.name||""); avatar.replaceWith(f);
+      }, { once:true });
+    } else {
+      avatar = document.createElement("div"); avatar.className = "pc-av"; avatar.textContent = initials(p.name||"");
+    }
+    avatar.classList.add("pc-av"); aw.appendChild(avatar);
+    if (isAvailable(p)) { const d=document.createElement("span"); d.className="pc-online"; d.title="Available"; aw.appendChild(d); }
+    if (isVerified(p))  { const v=document.createElement("span"); v.className="pc-verified"; v.textContent="✓"; v.title="Verified"; aw.appendChild(v); }
+
+    const info = document.createElement("div"); info.className = "pc-info";
+    const nm   = document.createElement("div"); nm.className="pc-name";   nm.textContent=str(p.name)||"Service Provider";
+    const role = document.createElement("div"); role.className="pc-role"; role.textContent=str(p.role||p.category)||"Service Provider";
+    const stars= document.createElement("div"); stars.className="pc-stars";
+    const r    = Number(p.rating);
+    stars.innerHTML = `${starsHtml(Number.isFinite(r)?r:0)}<span class="pc-rnum">${Number.isFinite(r)?r.toFixed(1):"0.0"}</span><span class="pc-rv">(${Number(p.reviewCount)||0})</span>`;
+    info.append(nm, role, stars);
+    top.append(aw, info);
+
+    const badge = document.createElement("span");
+    badge.className = `badge ${isAvailable(p)?"badge-success":"badge-danger"}`;
+    badge.textContent = isAvailable(p) ? "Available" : "Offline";
+    top.appendChild(badge);
+
+    const body = document.createElement("div"); body.className = "pc-body";
+    if (str(p.description)) { const d=document.createElement("p"); d.className="pc-desc"; d.textContent=str(p.description); body.appendChild(d); }
+    if (Array.isArray(p.tags)&&p.tags.length) {
+      const tags=document.createElement("div"); tags.className="pc-tags";
+      p.tags.filter(t=>typeof t==="string").slice(0,3).forEach(t=>{const tag=document.createElement("span");tag.className="pc-tag";tag.textContent=t;tags.appendChild(tag);});
+      body.appendChild(tags);
+    }
+    const meta=document.createElement("div"); meta.className="pc-meta";
+    if (str(p.city||p.location)) { const l=document.createElement("span"); l.textContent=`📍 ${str(p.city||p.location)}`; meta.appendChild(l); }
+    if (Number(p.completedJobs)>0) { const j=document.createElement("span"); j.textContent=`✓ ${Number(p.completedJobs)} jobs`; meta.appendChild(j); }
+    body.appendChild(meta);
+
+    const foot  = document.createElement("div"); foot.className="pc-foot";
+    const price = document.createElement("div"); price.className="pc-price";
+    price.textContent = priceFor(p)===null ? "Contact for price" : money(priceFor(p));
+    const sm=document.createElement("span"); sm.textContent="starting price"; price.appendChild(sm);
+    const book=document.createElement("button"); book.type="button"; book.className="btn btn-primary btn-sm"; book.textContent="Book Now";
+    book.addEventListener("click", e=>{e.stopPropagation(); openModal(p);});
+    foot.append(price, book);
+
+    card.append(top, body, foot);
+    card.addEventListener("click", ()=>openModal(p));
+    card.addEventListener("keydown", e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openModal(p);}});
+    grid.appendChild(card);
+  });
+}
+
+function clearFilters() {
+  $("searchInput").value=""; $("locationSelect").value="";
+  S.cat=""; S.filter="all"; S.sort="rating"; $("sortSel").value="rating";
+  $("catStrip").querySelectorAll("[data-cat]").forEach((e,i)=>{e.classList.toggle("active",i===0);e.setAttribute("aria-selected",String(i===0));});
+  document.querySelectorAll(".fchip").forEach((e,i)=>{e.classList.toggle("active",i===0);e.setAttribute("aria-pressed",String(i===0));});
+  applyFilters();
+}
+
+// ── Event listeners ───────────────────────────────────
+$("catStrip").addEventListener("click", e=>{
+  const b=e.target.closest("[data-cat]"); if(!b) return;
+  S.cat=b.dataset.cat||"";
+  $("catStrip").querySelectorAll("[data-cat]").forEach(el=>{const on=el===b;el.classList.toggle("active",on);el.setAttribute("aria-selected",String(on));});
+  applyFilters();
+});
+document.querySelectorAll(".fchip").forEach(b=>b.addEventListener("click",()=>{
+  S.filter=b.dataset.f||"all";
+  document.querySelectorAll(".fchip").forEach(el=>{const on=el===b;el.classList.toggle("active",on);el.setAttribute("aria-pressed",String(on));});
+  applyFilters();
+}));
+$("sortSel").addEventListener("change", ()=>{S.sort=$("sortSel").value;applyFilters();});
+$("searchBtn").addEventListener("click", applyFilters);
+$("searchInput").addEventListener("keydown", e=>{if(e.key==="Enter")applyFilters();});
+$("searchInput").addEventListener("input", debounce(applyFilters,200));
+$("locationSelect").addEventListener("change", applyFilters);
+$("filterBtn").addEventListener("click", ()=>$("filterRow").scrollIntoView({behavior:"smooth",block:"center"}));
+
+// ── Booking modal ─────────────────────────────────────
+function openModal(p) {
+  S.provider=p; S.service=null; S.sending=false;
+  setError();
+  $("bookForm").classList.remove("hidden");
+  $("bookSuccess").classList.add("hidden");
+  $("confirmBtn").disabled=false; $("confirmBtn").classList.remove("loading");
+  $("mAvatar").textContent = initials(p.name||"");
+  $("mName").textContent   = str(p.name)||"Service Provider";
+  $("mRole").textContent   = str(p.role||p.category)||"Service Provider";
+  const r=Number(p.rating);
+  $("mStars").textContent  = `${Number.isFinite(r)?r.toFixed(1)+"★":"No rating"} · ${Number(p.reviewCount)||0} reviews`;
+  $("bookDate").min = todayLocal(); $("bookDate").value = todayLocal();
+  $("bookTime").value = ""; $("bookAddr").value = ""; $("bookNotes").value = "";
+
+  const opts     = $("svcOptions"); opts.replaceChildren();
+  const services = servicesFor(p.id)
+    .map(s=>({id:s.id,name:str(s.name),price:Number(s.price)}))
+    .filter(s=>s.id&&s.name&&validPrice(s.price));
+
+  if (!services.length) {
+    const note=document.createElement("p"); note.className="empty-sub";
+    note.textContent="This provider has no active, priced services yet.";
+    opts.appendChild(note);
+    $("psService").textContent="—"; $("psTotal").textContent="—";
+    $("confirmBtn").disabled=true;
+  } else {
+    services.forEach((s,i)=>{
+      const b=document.createElement("button"); b.type="button";
+      b.className=`svc-opt${i===0?" sel":""}`;
+      b.textContent=`${s.name} — ${money(s.price)}`;
+      b.setAttribute("aria-pressed",String(i===0));
+      b.addEventListener("click",()=>{
+        S.service=s;
+        opts.querySelectorAll("button").forEach(x=>{const on=x===b;x.classList.toggle("sel",on);x.setAttribute("aria-pressed",String(on));});
+        updatePrice(s.price);
+      });
+      opts.appendChild(b);
+      if(i===0){S.service=s;updatePrice(s.price);}
+    });
+  }
+  $("bookingOverlay").classList.add("active");
+  $("bookingOverlay").setAttribute("aria-hidden","false");
+  document.body.style.overflow="hidden";
+  $("closeBooking").focus();
+}
+
+function updatePrice(n) {
+  $("psService").textContent = money(n);
+  $("psTotal").textContent   = money(n);
+}
+
+function closeModal() {
+  $("bookingOverlay").classList.remove("active");
+  $("bookingOverlay").setAttribute("aria-hidden","true");
+  document.body.style.overflow="";
+  S.provider=null; S.service=null;
+}
+
+$("closeBooking").addEventListener("click", closeModal);
+$("bookingOverlay").addEventListener("click", e=>{if(e.target===$("bookingOverlay"))closeModal();});
+document.addEventListener("keydown", e=>{if(e.key==="Escape"&&$("bookingOverlay").classList.contains("active"))closeModal();});
+$("doneBtn").addEventListener("click", ()=>{closeModal();location.href="./bookings.html";});
+
+// ── Confirm booking ───────────────────────────────────
+$("confirmBtn").addEventListener("click", async () => {
+  const p=S.provider, s=S.service, u=S.user;
+  if (S.sending) return;
+  if (!p||!s||!u||!s.id||!validPrice(s.price)) { toast("Choose a valid priced service.","warning"); return; }
+
+  const date    = $("bookDate").value;
+  const time    = $("bookTime").value;
+  const address = str($("bookAddr").value);
+  const notes   = str($("bookNotes").value);
+  const today   = todayLocal();
+
+  if (!date||date<today)             { toast("Choose today or a future date.","warning"); return; }
+  if (!time)                          { toast("Choose a time.","warning"); return; }
+  if (date===today) {
+    const [h,m]=time.split(":").map(Number), d=new Date(); d.setHours(h,m,0,0);
+    if (d.getTime()<=Date.now())       { toast("Choose a future time.","warning"); return; }
+  }
+  if (address.length<5||address.length>300) { toast("Enter a valid address (5–300 chars).","warning"); return; }
+  if (notes.length>1500)              { toast("Notes must be ≤1,500 characters.","warning"); return; }
+  if (p.id===u.uid)                   { toast("You cannot book your own profile.","warning"); return; }
+
+  S.sending=true;
+  const btn=$("confirmBtn"); btn.disabled=true; btn.classList.add("loading");
+  setError();
+
+  try {
+    // Fetch provider's payment details — stored with the booking so seeker
+    // can pay after job completion even if provider later changes bank details
+    let providerPaymentAccount = { bankName:"", accountNumber:"", accountName:"" };
+    try {
+      const provSnap = await getDoc(doc(db,"providers",p.id));
+      if (provSnap.exists()) {
+        const d = provSnap.data();
+        providerPaymentAccount = {
+          bankName:      d.bankName      || "",
+          accountNumber: d.accountNumber || "",
+          accountName:   d.accountName   || ""
         };
-      const str = (v) => (typeof v === "string" ? v.trim() : ""),
-        norm = (v) => str(v).toLocaleLowerCase(),
-        validPrice = (v) => Number.isFinite(Number(v)) && Number(v) > 0;
-      const todayLocal = () => {
-        const d = new Date();
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-      };
-      const money = (v) => formatNGN(Number(v));
-      function say(m, t = "info") {
-        if (typeof toast === "function") toast(m, t);
-        else window.alert(m);
       }
-      function setError(m = "") {
-        const el = $("bookingError");
-        el.hidden = !m;
-        el.textContent = m;
-      }
-      onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-          location.replace("./login.html");
-          return;
-        }
-        S.user = user;
-        try {
-          $("locationSelect").innerHTML = buildSearchSelectHtml();
-        } catch (e) {
-          console.warn("Location options failed", e);
-        }
-        await Promise.allSettled([
-          loadCategories(),
-          loadServices(),
-          loadProviders(),
-        ]);
-      });
-      async function loadCategories() {
-        try {
-          const snap = await getDocs(
-            query(collection(db, "category"), limit(100)),
-          );
-          S.categories = snap.docs
-            .map((d) => ({ id: d.id, ...d.data() }))
-            .filter((c) => str(c.name));
-          $("statCats").textContent = S.categories.length;
-          const strip = $("catStrip");
-          strip.querySelectorAll("[data-dynamic]").forEach((n) => n.remove());
-          S.categories.forEach((c) => {
-            const b = document.createElement("button");
-            b.type = "button";
-            b.className = "cat-pill";
-            b.dataset.cat = str(c.name);
-            b.dataset.dynamic = "1";
-            b.setAttribute("role", "tab");
-            b.setAttribute("aria-selected", "false");
-            b.textContent = `${str(c.icon) || "📂"} ${str(c.name)}`;
-            strip.appendChild(b);
-          });
-        } catch (e) {
-          console.error("Category load failed", e);
-          $("statCats").textContent = "—";
-        }
-      }
-      async function loadServices() {
-        try {
-          const snap = await getDocs(
-            query(collection(db, "services"), limit(1000)),
-          );
-          S.services = snap.docs
-            .map((d) => ({ id: d.id, ...d.data() }))
-            .filter(
-              (s) =>
-                str(s.providerId) &&
-                str(s.name) &&
-                validPrice(s.price) &&
-                s.active !== false,
-            );
-        } catch (e) {
-          console.error("Service load failed", e);
-          S.services = [];
-        }
-      }
-      async function loadProviders() {
-        const grid = $("providersGrid");
-        grid.setAttribute("aria-busy", "true");
-        try {
-          const snap = await getDocs(
-            query(collection(db, "providers"), limit(500)),
-          );
-          S.providers = snap.docs
-            .map((d) => ({ id: d.id, ...d.data() }))
-            .filter((p) => p.isPublic !== false && p.status !== "suspended");
-          $("statProv").textContent = S.providers.length;
-          const cities = new Set(
-            S.providers.map((p) => str(p.city || p.location)).filter(Boolean),
-          );
-          $("statCities").textContent = cities.size;
-          const ratings = S.providers
-            .map((p) => Number(p.rating))
-            .filter((n) => Number.isFinite(n) && n > 0);
-          $("statRating").textContent = ratings.length
-            ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) +
-              "★"
-            : "—";
-          applyFilters();
-        } catch (e) {
-          console.error("Provider load failed", e);
-          grid.innerHTML =
-            '<div class="inline-message"><strong>Could not load providers.</strong><p>Check your connection and try again.</p><button class="btn btn-secondary" id="retryProviders" type="button">Retry</button></div>';
-          $("resSub").textContent = "Unable to load results";
-          $("retryProviders").addEventListener("click", loadProviders, {
-            once: true,
-          });
-        } finally {
-          grid.setAttribute("aria-busy", "false");
-        }
-      }
-      function servicesFor(id) {
-        return S.services.filter((s) => s.providerId === id);
-      }
-      function priceFor(p) {
-        const a = servicesFor(p.id)
-          .map((s) => Number(s.price))
-          .filter(validPrice);
-        if (a.length) return Math.min(...a);
-        return validPrice(p.startingPrice) ? Number(p.startingPrice) : null;
-      }
-      function available(p) {
-        return p.available === true || p.availabilityStatus === "available";
-      }
-      function verified(p) {
-        return p.verified === true;
-      }
-      function applyFilters() {
-        const kw = norm($("searchInput").value),
-          loc = norm($("locationSelect").value);
-        let list = [...S.providers];
-        if (S.cat) {
-          const c = norm(S.cat);
-          list = list.filter((p) =>
-            [
-              p.category,
-              p.role,
-              ...(Array.isArray(p.categories) ? p.categories : []),
-            ].some((v) => norm(v) === c || norm(v).includes(c)),
-          );
-        }
-        if (loc)
-          list = list.filter(
-            (p) => norm(p.location).includes(loc) || norm(p.city).includes(loc),
-          );
-        if (kw)
-          list = list.filter((p) =>
-            [
-              p.name,
-              p.role,
-              p.description,
-              p.category,
-              p.location,
-              p.city,
-              ...(Array.isArray(p.tags) ? p.tags : []),
-            ].some((v) => norm(v).includes(kw)),
-          );
-        if (S.filter === "available") list = list.filter(available);
-        if (S.filter === "verified") list = list.filter(verified);
-        if (S.filter === "top")
-          list = list.filter((p) => Number(p.rating || 0) >= 4);
-        list.sort((a, b) =>
-          S.sort === "rating"
-            ? (Number(b.rating) || 0) - (Number(a.rating) || 0)
-            : S.sort === "price_asc"
-              ? (priceFor(a) ?? Infinity) - (priceFor(b) ?? Infinity)
-              : S.sort === "price_desc"
-                ? (priceFor(b) ?? -Infinity) - (priceFor(a) ?? -Infinity)
-                : S.sort === "newest"
-                  ? (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
-                  : 0,
-        );
-        $("resTitle").textContent = S.cat
-          ? `${S.cat} Providers`
-          : "All Providers";
-        $("resSub").textContent =
-          `${list.length} provider${list.length === 1 ? "" : "s"} found`;
-        renderProviders(list);
-      }
-      function renderProviders(list) {
-        const grid = $("providersGrid");
-        grid.replaceChildren();
-        if (!list.length) {
-          grid.innerHTML =
-            '<div class="inline-message"><div style="font-size:32px">🔍</div><strong>No providers found</strong><p>Try adjusting your filters.</p><button class="btn btn-secondary" id="clearFiltersBtn" type="button">Clear filters</button></div>';
-          $("clearFiltersBtn").addEventListener("click", clearFilters);
-          return;
-        }
-        list.forEach((p) => {
-          const card = document.createElement("article");
-          card.className = "provider-card";
-          card.tabIndex = 0;
-          card.setAttribute("role", "button");
-          card.setAttribute("aria-label", `Book ${str(p.name) || "provider"}`);
-          const top = document.createElement("div");
-          top.className = "pc-top";
-          const aw = document.createElement("div");
-          aw.className = "pc-av-wrap";
-          let avatar;
-          if (str(p.photoURL)) {
-            avatar = document.createElement("img");
-            avatar.src = str(p.photoURL);
-            avatar.alt = `${str(p.name) || "Provider"} profile`;
-            avatar.loading = "lazy";
-            avatar.referrerPolicy = "no-referrer";
-            avatar.addEventListener(
-              "error",
-              () => {
-                const f = document.createElement("div");
-                f.className = "pc-av";
-                f.textContent = initials(p.name || "");
-                avatar.replaceWith(f);
-              },
-              { once: true },
-            );
-          } else {
-            avatar = document.createElement("div");
-            avatar.className = "pc-av";
-            avatar.textContent = initials(p.name || "");
-          }
-          avatar.classList.add("pc-av");
-          aw.appendChild(avatar);
-          if (available(p)) {
-            const dot = document.createElement("span");
-            dot.className = "pc-online";
-            dot.title = "Available";
-            aw.appendChild(dot);
-          }
-          if (verified(p)) {
-            const v = document.createElement("span");
-            v.className = "pc-verified";
-            v.textContent = "✓";
-            v.title = "Verified";
-            aw.appendChild(v);
-          }
-          const info = document.createElement("div");
-          info.className = "pc-info";
-          const nm = document.createElement("div");
-          nm.className = "pc-name";
-          nm.textContent = str(p.name) || "Service Provider";
-          const role = document.createElement("div");
-          role.className = "pc-role";
-          role.textContent = str(p.role || p.category) || "Service Provider";
-          const stars = document.createElement("div");
-          stars.className = "pc-stars";
-          const rating = Number(p.rating);
-          stars.innerHTML = `${starsHtml(Number.isFinite(rating) ? rating : 0)}<span class="pc-rnum">${Number.isFinite(rating) ? rating.toFixed(1) : "0.0"}</span><span class="pc-rv">(${Number(p.reviewCount) || 0})</span>`;
-          info.append(nm, role, stars);
-          top.append(aw, info);
-          const badge = document.createElement("span");
-          badge.className = `badge ${available(p) ? "badge-success" : "badge-danger"}`;
-          badge.textContent = available(p) ? "Available" : "Not confirmed";
-          top.appendChild(badge);
-          const body = document.createElement("div");
-          body.className = "pc-body";
-          if (str(p.description)) {
-            const d = document.createElement("p");
-            d.className = "pc-desc";
-            d.textContent = str(p.description);
-            body.appendChild(d);
-          }
-          if (Array.isArray(p.tags) && p.tags.length) {
-            const tags = document.createElement("div");
-            tags.className = "pc-tags";
-            p.tags
-              .filter((t) => typeof t === "string")
-              .slice(0, 3)
-              .forEach((t) => {
-                const tag = document.createElement("span");
-                tag.className = "pc-tag";
-                tag.textContent = t;
-                tags.appendChild(tag);
-              });
-            body.appendChild(tags);
-          }
-          const meta = document.createElement("div");
-          meta.className = "pc-meta";
-          if (str(p.city || p.location)) {
-            const loc = document.createElement("span");
-            loc.textContent = `📍 ${str(p.city || p.location)}`;
-            meta.appendChild(loc);
-          }
-          if (Number(p.completedJobs) > 0) {
-            const jobs = document.createElement("span");
-            jobs.textContent = `✓ ${Number(p.completedJobs)} jobs`;
-            meta.appendChild(jobs);
-          }
-          body.appendChild(meta);
-          const foot = document.createElement("div");
-          foot.className = "pc-foot";
-          const price = document.createElement("div");
-          price.className = "pc-price";
-          price.textContent =
-            priceFor(p) === null ? "Price unavailable" : money(priceFor(p));
-          const small = document.createElement("span");
-          small.textContent = "starting price";
-          price.appendChild(small);
-          const book = document.createElement("button");
-          book.type = "button";
-          book.className = "btn btn-primary btn-sm";
-          book.textContent = "Book Now";
-          book.addEventListener("click", (e) => {
-            e.stopPropagation();
-            openModal(p);
-          });
-          foot.append(price, book);
-          card.append(top, body, foot);
-          card.addEventListener("click", () => openModal(p));
-          card.addEventListener("keydown", (e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              openModal(p);
-            }
-          });
-          grid.appendChild(card);
-        });
-      }
-      function clearFilters() {
-        $("searchInput").value = "";
-        $("locationSelect").value = "";
-        S.cat = "";
-        S.filter = "all";
-        S.sort = "rating";
-        $("sortSel").value = "rating";
-        $("catStrip")
-          .querySelectorAll("[data-cat]")
-          .forEach((e, i) => {
-            e.classList.toggle("active", i === 0);
-            e.setAttribute("aria-selected", String(i === 0));
-          });
-        document.querySelectorAll(".fchip").forEach((e, i) => {
-          e.classList.toggle("active", i === 0);
-          e.setAttribute("aria-pressed", String(i === 0));
-        });
-        applyFilters();
-      }
-      $("catStrip").addEventListener("click", (e) => {
-        const b = e.target.closest("[data-cat]");
-        if (!b) return;
-        S.cat = b.dataset.cat || "";
-        $("catStrip")
-          .querySelectorAll("[data-cat]")
-          .forEach((el) => {
-            const on = el === b;
-            el.classList.toggle("active", on);
-            el.setAttribute("aria-selected", String(on));
-          });
-        applyFilters();
-      });
-      document.querySelectorAll(".fchip").forEach((b) =>
-        b.addEventListener("click", () => {
-          S.filter = b.dataset.f || "all";
-          document.querySelectorAll(".fchip").forEach((el) => {
-            const on = el === b;
-            el.classList.toggle("active", on);
-            el.setAttribute("aria-pressed", String(on));
-          });
-          applyFilters();
-        }),
-      );
-      $("sortSel").addEventListener("change", () => {
-        S.sort = $("sortSel").value;
-        applyFilters();
-      });
-      $("searchBtn").addEventListener("click", applyFilters);
-      $("searchInput").addEventListener("keydown", (e) => {
-        if (e.key === "Enter") applyFilters();
-      });
-      $("searchInput").addEventListener("input", debounce(applyFilters, 200));
-      $("locationSelect").addEventListener("change", applyFilters);
-      $("filterBtn").addEventListener("click", () =>
-        $("filterRow").scrollIntoView({ behavior: "smooth", block: "center" }),
-      );
-      function openModal(p) {
-        S.provider = p;
-        S.service = null;
-        S.sending = false;
-        setError();
-        $("bookForm").classList.remove("hidden");
-        $("bookSuccess").classList.add("hidden");
-        $("confirmBtn").disabled = false;
-        $("confirmBtn").classList.remove("loading");
-        $("mAvatar").textContent = initials(p.name || "");
-        $("mName").textContent = str(p.name) || "Service Provider";
-        $("mRole").textContent =
-          str(p.role || p.category) || "Service Provider";
-        const r = Number(p.rating);
-        $("mStars").textContent =
-          `${Number.isFinite(r) ? r.toFixed(1) + "★" : "No rating"} · ${Number(p.reviewCount) || 0} reviews`;
-        $("bookDate").min = todayLocal();
-        $("bookDate").value = todayLocal();
-        $("bookTime").value = "";
-        $("bookAddr").value = "";
-        $("bookNotes").value = "";
-        const opts = $("svcOptions");
-        opts.replaceChildren();
-        const services = servicesFor(p.id)
-          .map((s) => ({ id: s.id, name: str(s.name), price: Number(s.price) }))
-          .filter((s) => s.id && s.name && validPrice(s.price));
-        if (!services.length) {
-          const note = document.createElement("p");
-          note.className = "empty-sub";
-          note.textContent =
-            "This provider has no active, priced service available for booking yet.";
-          opts.appendChild(note);
-          $("psService").textContent = "Unavailable";
-          $("psTotal").textContent = "Unavailable";
-          $("confirmBtn").disabled = true;
-        } else
-          services.forEach((s, i) => {
-            const b = document.createElement("button");
-            b.type = "button";
-            b.className = `svc-opt${i === 0 ? " sel" : ""}`;
-            b.textContent = `${s.name} — ${money(s.price)}`;
-            b.setAttribute("aria-pressed", String(i === 0));
-            b.addEventListener("click", () => {
-              S.service = s;
-              opts.querySelectorAll("button").forEach((x) => {
-                const on = x === b;
-                x.classList.toggle("sel", on);
-                x.setAttribute("aria-pressed", String(on));
-              });
-              updatePrice(s.price);
-            });
-            opts.appendChild(b);
-            if (i === 0) {
-              S.service = s;
-              updatePrice(s.price);
-            }
-          });
-        $("bookingOverlay").classList.add("active");
-        $("bookingOverlay").setAttribute("aria-hidden", "false");
-        document.body.style.overflow = "hidden";
-        $("closeBooking").focus();
-      }
-      function updatePrice(n) {
-        $("psService").textContent = money(n);
-        $("psTotal").textContent = money(n);
-      }
-      function closeModal() {
-        $("bookingOverlay").classList.remove("active");
-        $("bookingOverlay").setAttribute("aria-hidden", "true");
-        document.body.style.overflow = "";
-        S.provider = null;
-        S.service = null;
-      }
-      $("closeBooking").addEventListener("click", closeModal);
-      $("bookingOverlay").addEventListener("click", (e) => {
-        if (e.target === $("bookingOverlay")) closeModal();
-      });
-      document.addEventListener("keydown", (e) => {
-        if (
-          e.key === "Escape" &&
-          $("bookingOverlay").classList.contains("active")
-        )
-          closeModal();
-      });
-      $("doneBtn").addEventListener("click", () => {
-        closeModal();
-        location.href = "./bookings.html";
-      });
-      $("confirmBtn").addEventListener("click", async () => {
-        const p = S.provider,
-          s = S.service,
-          u = S.user;
-        if (S.sending) return;
-        if (!p || !s || !u || !s.id || !validPrice(s.price)) {
-          say("Choose a provider and a valid priced service.", "warning");
-          return;
-        }
-        const date = $("bookDate").value,
-          time = $("bookTime").value,
-          address = str($("bookAddr").value),
-          notes = str($("bookNotes").value),
-          today = todayLocal();
-        if (!date || date < today) {
-          say("Choose today or a future date.", "warning");
-          return;
-        }
-        if (!time) {
-          say("Choose a time.", "warning");
-          return;
-        }
-        if (date === today) {
-          const [h, m] = time.split(":").map(Number),
-            d = new Date();
-          d.setHours(h, m, 0, 0);
-          if (d.getTime() <= Date.now()) {
-            say("Choose a future time.", "warning");
-            return;
-          }
-        }
-        if (address.length < 5 || address.length > 300) {
-          say("Enter a valid service address (5–300 characters).", "warning");
-          return;
-        }
-        if (notes.length > 1500) {
-          say("Notes must be 1,500 characters or fewer.", "warning");
-          return;
-        }
-        if (p.id === u.uid) {
-          say("You cannot book your own provider profile.", "warning");
-          return;
-        }
-        S.sending = true;
-        const btn = $("confirmBtn");
-        btn.disabled = true;
-        btn.classList.add("loading");
-        setError();
-        const bookingRef = genRef();
-        try {
-          /* SECURITY NOTE: Firestore Rules must enforce request.auth.uid == seekerId, validate providerId/serviceId and allowed fields, and prevent clients from modifying payment/commission/status fields. For strongest production protection, move creation to a trusted backend that re-reads service price and calculates all money values server-side. */
-          const data = {
-            bookingRef,
-            seekerId: u.uid,
-            seekerName: str(u.displayName).slice(0, 120),
-            seekerEmail: str(u.email).slice(0, 254),
-            providerId: p.id,
-            providerName: str(p.name).slice(0, 120),
-            service: s.name.slice(0, 160),
-            serviceId: s.id,
-            serviceFee: Number(s.price),
-            platformFee: 0,
-            total: Number(s.price),
-            date,
-            time,
-            address,
-            notes,
-            status: "pending",
-            paymentStatus: "awaiting_completion",
-            createdAt: serverTimestamp(),
-          };
-          const doc = await addDoc(collection(db, "bookings"), data);
-          $("bookForm").classList.add("hidden");
-          const box = $("bookingRef");
-          box.replaceChildren();
-          [
-            ["Reference", bookingRef],
-            ["Provider", str(p.name) || "Provider"],
-            ["Service", s.name],
-            ["Date & time", `${date} at ${time}`],
-            ["Address", address],
-            ["Booking ID", doc.id],
-          ].forEach(([label, value]) => {
-            const row = document.createElement("div"),
-              strong = document.createElement("strong");
-            strong.textContent = label + ": ";
-            row.append(strong, document.createTextNode(value));
-            box.appendChild(row);
-          });
-          $("bookSuccess").classList.remove("hidden");
-          btn.classList.remove("loading");
-          btn.disabled = false;
-          S.sending = false;
-          import("./assets/notifications.js")
-            .then(({ notifyNewBooking }) =>
-              notifyNewBooking(p.id, {
-                id: doc.id,
-                seekerName: str(u.displayName) || "A customer",
-                service: s.name,
-                date,
-                bookingRef,
-              }),
-            )
-            .catch((e) =>
-              console.warn("Booking saved but notification failed", e),
-            );
-          say(
-            "Booking submitted. The provider will confirm shortly.",
-            "success",
-          );
-        } catch (e) {
-          console.error("Booking failed", e);
-          setError("We couldn't submit the booking. Please try again.");
-          say("Failed to submit booking. Please try again.", "error");
-          btn.disabled = false;
-          btn.classList.remove("loading");
-          S.sending = false;
-        }
-      });
-    </script>
-  </body>
+    } catch(e) { console.warn("Could not fetch provider payment details:", e.message); }
+
+    const bookingRef = genRef();
+    const data = {
+      bookingRef,
+      seekerId:             u.uid,
+      seekerName:           str(u.displayName).slice(0,120),
+      seekerEmail:          str(u.email).slice(0,254),
+      providerId:           p.id,
+      providerName:         str(p.name).slice(0,120),
+      service:              s.name.slice(0,160),
+      serviceId:            s.id,
+      serviceFee:           Number(s.price),
+      platformFee:          0,            // Seekers pay NO platform fee
+      total:                Number(s.price),
+      date, time, address, notes,
+      status:               "pending",
+      paymentStatus:        "awaiting_completion",
+      providerPaymentAccount,             // Snapshot at booking time
+      commissionAmount:     Math.round(Number(s.price)*0.05),
+      commissionStatus:     "pending",
+      createdAt:            serverTimestamp()
+    };
+
+    const docRef = await addDoc(collection(db,"bookings"), data);
+
+    // Show success
+    $("bookForm").classList.add("hidden");
+    const box = $("bookingRef"); box.replaceChildren();
+    [
+      ["Reference",    bookingRef],
+      ["Provider",     str(p.name)||"Provider"],
+      ["Service",      s.name],
+      ["Date & Time",  `${date} at ${time}`],
+      ["Address",      address],
+      ["Booking ID",   docRef.id]
+    ].forEach(([label,value]) => {
+      const row=document.createElement("div"), strong=document.createElement("strong");
+      strong.textContent=label+": "; row.append(strong, document.createTextNode(value)); box.appendChild(row);
+    });
+    $("bookSuccess").classList.remove("hidden");
+    btn.classList.remove("loading"); btn.disabled=false; S.sending=false;
+
+    // Notify provider (non-blocking)
+    import("./assets/notifications.js")
+      .then(({ notifyNewBooking }) => notifyNewBooking(p.id, {
+        id: docRef.id, seekerName: str(u.displayName)||"A customer",
+        service: s.name, date, bookingRef
+      }))
+      .catch(e => console.warn("Notification failed:", e));
+
+    toast("Booking submitted! The provider will confirm shortly.", "success");
+  } catch(e) {
+    console.error("Booking failed:", e.code, e.message);
+    setError("We couldn't submit the booking. Please try again.");
+    toast("Failed to submit booking. Please try again.", "error");
+    btn.disabled=false; btn.classList.remove("loading"); S.sending=false;
+  }
+});
+</script>
+</body>
 </html>

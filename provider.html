@@ -7,7 +7,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/styles.css">
   <style>
-    /* ── Provider Hero ── */
     .prov-hero{background:linear-gradient(130deg,var(--brand-deep) 0%,var(--brand) 55%,var(--accent) 100%);padding:24px 20px 0;position:relative;overflow:hidden}
     .prov-hero::before{content:'';position:absolute;width:280px;height:280px;border-radius:50%;top:-70px;right:-60px;background:rgba(255,255,255,.04);pointer-events:none}
     .prov-hero::after{content:'';position:absolute;width:150px;height:150px;border-radius:50%;bottom:0;left:30px;background:rgba(255,214,10,.05);pointer-events:none}
@@ -21,33 +20,35 @@
     .hero-prole{font-size:13px;color:rgba(255,255,255,.65);margin-top:2px}
     .hero-prating{display:flex;align-items:center;gap:5px;margin-top:6px;font-size:13px;color:rgba(255,255,255,.85)}
     .hero-stars-gold{color:var(--gold);letter-spacing:1px}
-    /* Availability toggle */
     .avail-row{display:flex;align-items:center;gap:10px;margin-top:10px}
     .avail-lbl{font-size:12px;color:rgba(255,255,255,.7);font-weight:500}
     .avail-status{font-size:11px;font-weight:700}
-    .avail-status.on{color:#86efac} .avail-status.off{color:rgba(255,255,255,.45)}
-    /* Hero tabs */
+    .avail-status.on{color:#86efac}.avail-status.off{color:rgba(255,255,255,.45)}
     .hero-tabs{display:flex;gap:0;border-top:.5px solid rgba(255,255,255,.12);margin-top:18px;position:relative;z-index:1;overflow-x:auto;scrollbar-width:none}
     .hero-tabs::-webkit-scrollbar{display:none}
     .htab{flex:0 0 auto;padding:13px 20px;font-size:13px;font-weight:600;color:rgba(255,255,255,.5);background:none;border:none;cursor:pointer;border-bottom:2.5px solid transparent;transition:color .2s,border-color .2s;white-space:nowrap}
     .htab.active{color:#fff;border-bottom-color:var(--gold)}
     .htab:hover:not(.active){color:rgba(255,255,255,.8)}
-    /* Tab panels */
-    .tab-panel{display:none} .tab-panel.active{display:block}
-    /* Booking items */
+    .tab-panel{display:none}.tab-panel.active{display:block}
     .booking-list{display:flex;flex-direction:column;gap:10px}
     .bi-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-    
-    /* ── Notifications ───────────────────────────────────── */
-.header {position: relative;z-index: 1000;overflow: visible !important;}
-.notif-wrap {position: relative;flex-shrink: 0;z-index: 1100;}
-.notif-panel {position: absolute;top: calc(100% + 8px);right: 0;width: min(360px, calc(100vw - 24px));background: var(--bg-card);border: 1px solid var(--border);border-radius: var(--r-md);box-shadow: var(--shadow-lg);z-index: 2000;display: none;flex-direction: column;max-height: 420px;overflow: hidden;}
-.notif-panel.open {display: flex;}
-.notif-head {display: flex;align-items: center;justify-content: space-between;gap: 12px;padding: 12px 16px;border-bottom: 1px solid var(--border);}
-.notif-head-title {font-size: 14px;font-weight: 700;color: var(--text-1);}
-.notif-mark-read {font-size: 12px;color: var(--accent);background: transparent;border: none;cursor: pointer;font-weight: 600;white-space: nowrap;}
-.notif-list {overflow-y: auto;max-height: 300px;}
-.notif-empty {padding: 24px 16px;text-align: center;font-size: 13px;color: var(--text-3);}
+    /* Notification */
+    .header{position:relative;z-index:1000;overflow:visible!important}
+    .notif-wrap{position:relative;flex-shrink:0;z-index:1100}
+    .notif-panel{position:absolute;top:calc(100% + 8px);right:0;width:min(360px,calc(100vw - 24px));background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--shadow-lg);z-index:2000;display:none;flex-direction:column;max-height:420px;overflow:hidden}
+    .notif-panel.open{display:flex}
+    .notif-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)}
+    .notif-head-title{font-size:14px;font-weight:700;color:var(--text-1)}
+    .notif-mark-read{font-size:12px;color:var(--accent);background:transparent;border:none;cursor:pointer;font-weight:600;white-space:nowrap}
+    .notif-list{overflow-y:auto;max-height:300px}
+    .notif-item{padding:10px 16px;border-bottom:.5px solid var(--border);cursor:pointer;transition:background .15s}
+    .notif-item:hover{background:var(--bg-subtle)}
+    .notif-item.unread{background:rgba(108,60,225,.04)}
+    .notif-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px}
+    .notif-title{font-size:13px;font-weight:600;color:var(--text-1);margin-bottom:2px}
+    .notif-body{font-size:12px;color:var(--text-2);line-height:1.5}
+    .notif-time{font-size:10px;color:var(--text-3);margin-top:3px}
+    .notif-empty{padding:24px 16px;text-align:center;font-size:13px;color:var(--text-3)}
     /* Services */
     .services-list{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
     .svc-item{background:var(--bg-subtle);border:.5px solid var(--border);border-radius:var(--r-md);padding:14px 16px;display:flex;align-items:center;gap:12px}
@@ -65,90 +66,78 @@
     .btn-add-svc:hover{background:rgba(108,60,225,.05);border-color:var(--accent)}
     /* Portfolio */
     .port-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px}
-    /* Each portfolio cell is a fixed square — image cannot overflow */
     .port-cell{position:relative;width:100%;padding-top:100%;border-radius:var(--r-sm);overflow:hidden}
-    .port-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border:.5px solid var(--border);cursor:pointer;transition:transform .2s,box-shadow .2s;border-radius:var(--r-sm)}
-    .port-img:hover{transform:scale(1.05);box-shadow:var(--shadow-md)}
+    .port-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border:.5px solid var(--border);cursor:pointer;transition:transform .2s;border-radius:var(--r-sm)}
+    .port-img:hover{transform:scale(1.05)}
     .port-add{aspect-ratio:1;border-radius:var(--r-sm);border:1.5px dashed var(--border);background:var(--bg-subtle);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;transition:background .2s,border-color .2s;color:var(--text-3);font-size:11px;font-weight:500}
     .port-add:hover{background:rgba(108,60,225,.05);border-color:var(--accent);color:var(--accent)}
     .port-add svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round}
-    /* Earnings chart */
+    /* Earnings */
     .chart-wrap{background:var(--bg-subtle);border:.5px solid var(--border);border-radius:var(--r-md);padding:16px;margin-bottom:14px}
     .chart-bars{display:flex;align-items:flex-end;gap:6px;height:100px;margin-top:10px}
     .chart-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
     .chart-bar-bg{width:100%;background:var(--border);border-radius:4px;flex:1;display:flex;align-items:flex-end}
-    .chart-bar-fill{width:100%;border-radius:4px;background:linear-gradient(to top,var(--brand),var(--accent));transition:height .6s var(--ease);min-height:4px}
+    .chart-bar-fill{width:100%;border-radius:4px;background:linear-gradient(to top,var(--brand),var(--accent));transition:height .6s;min-height:4px}
     .chart-bar-lbl{font-size:9px;color:var(--text-3);font-weight:500}
-    /* Profile strength */
+    /* Profile */
     .strength-bar{height:6px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:10px}
-    .strength-fill{height:100%;border-radius:4px;background:linear-gradient(to right,var(--brand),var(--accent));transition:width .6s var(--ease)}
+    .strength-fill{height:100%;border-radius:4px;background:linear-gradient(to right,var(--brand),var(--accent));transition:width .6s}
     .check-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid var(--border)}
     .check-row:last-child{border-bottom:none}
-    /* Verification banner */
     .verif-banner{display:flex;align-items:center;gap:12px;background:rgba(41,98,255,.06);border:1px solid rgba(41,98,255,.18);border-radius:var(--r-md);padding:14px 16px;margin-bottom:18px}
     .vb-icon{font-size:22px;flex-shrink:0}
     .vb-title{font-size:13px;font-weight:700;color:var(--text-1)}
     .vb-sub{font-size:12px;color:var(--text-2);margin-top:2px}
-    /* Payout form */
     .payout-form{display:flex;flex-direction:column;gap:14px}
-    /* Form inside tabs */
     .tab-form{display:flex;flex-direction:column;gap:14px}
     .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     @media(max-width:480px){.field-row{grid-template-columns:1fr}}
+    /* Commission */
+    .commission-alert{background:rgba(220,38,38,.06);border:1.5px solid rgba(220,38,38,.2);border-radius:var(--r-md);padding:16px;margin-bottom:16px}
+    .commission-alert-title{font-size:13px;font-weight:700;color:var(--danger);margin-bottom:6px}
+    .commission-alert-amount{font-family:'Orbitron',sans-serif;font-size:24px;font-weight:700;color:var(--danger);margin-bottom:8px}
+    .commission-alert-body{font-size:12px;color:var(--text-2);line-height:1.6;margin-bottom:12px}
+    .commission-clear{background:rgba(22,163,74,.06);border:1.5px solid rgba(22,163,74,.2);border-radius:var(--r-md);padding:14px;display:flex;align-items:center;gap:12px}
+    .confirm-receipt-btn{background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.3);color:var(--success);border-radius:var(--r-sm);padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s}
+    .confirm-receipt-btn:hover{background:var(--success);color:#fff}
+    /* Migration banner */
+    .migrate-banner{background:rgba(255,214,10,.08);border:1px solid rgba(255,214,10,.25);border-radius:var(--r-md);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-2)}
+    .migrate-banner strong{color:var(--text-1)}
   </style>
 </head>
 <body>
 <div id="toast-container"></div>
 <div id="spinner-overlay"><div class="spinner-ring"></div></div>
 <input type="file" id="profilePhotoInput" class="file-hidden" accept="image/*">
-<input type="file" id="portfolioInput" class="file-hidden" accept="image/*" multiple>
+<input type="file" id="portfolioInput"    class="file-hidden" accept="image/*" multiple>
 
-<!-- Header -->
 <header class="header">
   <a href="./dashboard.html" class="header-back">
-    <svg viewBox="0 0 24 24">
-      <polyline points="15 18 9 12 15 6"/>
-    </svg>
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
   </a>
-
-  <div class="header-title">
-    PROVIDER MODE
-    <span>Manage your business</span>
-  </div>
-
-  <!-- Notification -->
+  <div class="header-title">PROVIDER MODE<span>Manage your business</span></div>
   <div class="notif-wrap">
     <button class="hdr-btn" id="notifBtn" aria-label="Notifications" aria-expanded="false">
       <svg viewBox="0 0 24 24">
         <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
         <path d="M13.73 21a2 2 0 01-3.46 0"/>
       </svg>
-      <span class="notif-dot" id="notifDot" style="display:none"></span>
     </button>
-
-    <!-- Notification panel belongs to the bell -->
     <div class="notif-panel" id="notifPanel">
-
       <div class="notif-head">
         <span class="notif-head-title">🔔 Notifications</span>
-
-        <button class="notif-mark-read" id="markAllRead">
-          Mark all read
-        </button>
+        <button class="notif-mark-read" id="markAllRead">Mark all read</button>
       </div>
-
-      <div class="notif-list" id="notifList">
-        <div class="notif-empty">Loading…</div>
-      </div>
+      <div class="notif-list" id="notifList"><div class="notif-empty">Loading…</div></div>
     </div>
   </div>
 </header>
 
-<!-- Provider Hero -->
 <div class="prov-hero" role="banner">
   <div class="hero-top">
     <div class="hero-av-wrap">
-      <img id="heroAv" class="hero-av" src="" alt="Provider avatar" style="display:none" onerror="this.style.display='none';document.getElementById('heroAvFb').style.display='flex'">
+      <img id="heroAv" class="hero-av" src="" alt="Provider avatar" style="display:none"
+           onerror="this.style.display='none';document.getElementById('heroAvFb').style.display='flex'">
       <div id="heroAvFb" class="hero-av-fb">?</div>
       <div id="heroVerified" class="hero-av-verified" style="display:none" title="Verified">✓</div>
     </div>
@@ -171,8 +160,6 @@
       </div>
     </div>
   </div>
-
-  <!-- Hero navigation tabs -->
   <nav class="hero-tabs" role="tablist">
     <button class="htab active" data-tab="overview"  role="tab">Overview</button>
     <button class="htab"        data-tab="bookings"  role="tab">Bookings <span id="pendingBadge" style="display:none;background:var(--gold);color:var(--brand-deep);border-radius:8px;padding:1px 6px;font-size:10px;font-weight:800;margin-left:4px"></span></button>
@@ -182,31 +169,20 @@
   </nav>
 </div>
 
-<!-- Main content -->
 <main class="page" role="main">
 
-  <!-- ─── OVERVIEW ─── -->
+  <!-- OVERVIEW -->
   <div class="tab-panel active" id="tab-overview">
     <div class="stats-grid">
       <div class="stat-card"><div class="sc-icon green">💰</div><div class="sc-val" id="stEarnings">₦0</div><div class="sc-label">Total Earnings</div><div class="sc-delta neutral">All time</div></div>
       <div class="stat-card"><div class="sc-icon blue">📅</div><div class="sc-val" id="stThisMonth">₦0</div><div class="sc-label">This Month</div><div class="sc-delta neutral" id="stMonthLabel">—</div></div>
-      <div class="stat-card"><div class="sc-icon gold">⏳</div><div class="sc-val" id="stPending">0</div><div class="sc-label">Pending Requests</div><div class="sc-delta neutral">Need action</div></div>
-      <div class="stat-card"><div class="sc-icon purple">🏆</div><div class="sc-val" id="stCompleted">0</div><div class="sc-label">Completed Jobs</div><div class="sc-delta up" id="stCompletedDelta">All time</div></div>
+      <div class="stat-card"><div class="sc-icon gold">⏳</div><div class="sc-val" id="stPending">0</div><div class="sc-label">Pending</div><div class="sc-delta neutral">Need action</div></div>
+      <div class="stat-card"><div class="sc-icon purple">🏆</div><div class="sc-val" id="stCompleted">0</div><div class="sc-label">Completed</div><div class="sc-delta up">All time</div></div>
     </div>
-
     <div class="card">
-      <div class="card-head">
-        <span class="card-head-title">Recent Requests</span>
-        <button class="btn btn-ghost btn-sm" onclick="switchTab('bookings')">View All</button>
-      </div>
-      <div class="card-body">
-        <div class="booking-list" id="recentList">
-          <div class="skel" style="height:60px;border-radius:8px;margin-bottom:8px"></div>
-          <div class="skel" style="height:60px;border-radius:8px"></div>
-        </div>
-      </div>
+      <div class="card-head"><span class="card-head-title">Recent Requests</span><button class="btn btn-ghost btn-sm" onclick="switchTab('bookings')">View All</button></div>
+      <div class="card-body"><div class="booking-list" id="recentList"><div class="skel" style="height:60px;border-radius:8px;margin-bottom:8px"></div><div class="skel" style="height:60px;border-radius:8px"></div></div></div>
     </div>
-
     <div class="card">
       <div class="card-head"><span class="card-head-title">Profile Strength</span></div>
       <div class="card-body">
@@ -220,7 +196,7 @@
     </div>
   </div>
 
-  <!-- ─── BOOKINGS ─── -->
+  <!-- BOOKINGS -->
   <div class="tab-panel" id="tab-bookings">
     <div class="card">
       <div class="card-head"><span class="card-head-title">Booking Requests</span></div>
@@ -236,13 +212,14 @@
     </div>
   </div>
 
-  <!-- ─── SERVICES ─── -->
+  <!-- SERVICES -->
   <div class="tab-panel" id="tab-services">
     <div class="card">
       <div class="card-head">
         <div><span class="card-head-title">My Services</span><div style="font-size:12px;color:var(--text-3);margin-top:2px">Services you currently offer</div></div>
       </div>
       <div class="card-body">
+        <div id="migrateBanner"></div>
         <div class="services-list" id="servicesList"></div>
         <button class="btn-add-svc" id="addSvcBtn">
           <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -250,12 +227,8 @@
         </button>
       </div>
     </div>
-
     <div class="card">
-      <div class="card-head">
-        <div><span class="card-head-title">Portfolio</span><div style="font-size:12px;color:var(--text-3);margin-top:2px">Showcase your best work</div></div>
-        <label for="portfolioInput" class="btn btn-ghost btn-sm" style="cursor:pointer">Upload</label>
-      </div>
+      <div class="card-head"><div><span class="card-head-title">Portfolio</span><div style="font-size:12px;color:var(--text-3);margin-top:2px">Showcase your best work</div></div><label for="portfolioInput" class="btn btn-ghost btn-sm" style="cursor:pointer">Upload</label></div>
       <div class="card-body">
         <div class="port-grid" id="portGrid">
           <label class="port-add" for="portfolioInput" title="Upload work photo">
@@ -267,10 +240,9 @@
     </div>
   </div>
 
-  <!-- ─── EARNINGS ─── -->
+  <!-- EARNINGS -->
   <div class="tab-panel" id="tab-earnings">
-      <!-- Commission status — shown when tab is active -->
-      <div id="commissionAlertWrap" style="margin-bottom:16px"></div>
+    <div id="commissionAlertWrap" style="margin-bottom:16px"></div>
     <div class="card">
       <div class="card-head"><span class="card-head-title">Monthly Earnings</span><span style="font-size:12px;color:var(--text-3)">Last 6 months</span></div>
       <div class="card-body">
@@ -281,7 +253,6 @@
         <div id="earningsBreakdown" style="display:flex;flex-direction:column;gap:10px"></div>
       </div>
     </div>
-
     <div class="card">
       <div class="card-head"><span class="card-head-title">Payout Details</span></div>
       <div class="card-body">
@@ -298,16 +269,13 @@
     </div>
   </div>
 
-  <!-- ─── PROFILE ─── -->
+  <!-- PROFILE -->
   <div class="tab-panel" id="tab-profile">
-
     <div class="verif-banner" id="verifBanner">
       <div class="vb-icon">🛡️</div>
       <div><div class="vb-title">Get Verified</div><div class="vb-sub">Verified providers get 3× more bookings</div></div>
       <button class="btn btn-sm" style="margin-left:auto;background:var(--info);color:#fff;border:none;border-radius:var(--r-sm);padding:7px 16px;font-weight:700;cursor:pointer;flex-shrink:0" id="verifyBtn">Apply Now</button>
     </div>
-
-    <!-- Photo -->
     <div class="card">
       <div class="card-head"><span class="card-head-title">Profile Photo</span></div>
       <div class="card-body" style="display:flex;align-items:center;gap:16px">
@@ -321,8 +289,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Business info form -->
     <div class="card">
       <div class="card-head"><span class="card-head-title">Business Information</span></div>
       <div class="card-body">
@@ -332,31 +298,13 @@
             <div class="field"><label>Phone</label><input type="tel" id="pfPhone" placeholder="+234 801 234 5678"></div>
           </div>
           <div class="field-row">
-            <div class="field"><label>Primary Service / Role</label><input type="text" id="pfRole" placeholder="e.g. Electrician"></div>
-            <div class="field">
-              <label>Category</label>
-              <select id="pfCat"><option value="">Loading categories…</option></select>
-            </div>
+            <div class="field"><label>Primary Role / Service</label><input type="text" id="pfRole" placeholder="e.g. Electrician"></div>
+            <div class="field"><label>Category</label><select id="pfCat"><option value="">Loading…</option></select></div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-            <div class="field">
-              <label>Country</label>
-              <select id="pfCountry" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-subtle);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;width:100%">
-                <option value="">Select country</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>State / Region</label>
-              <select id="pfState" disabled style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-subtle);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;width:100%">
-                <option value="">Select state/region</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>City / Town</label>
-              <select id="pfCity" disabled style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-subtle);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;width:100%">
-                <option value="">Select city/town</option>
-              </select>
-            </div>
+            <div class="field"><label>Country</label><select id="pfCountry" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-subtle);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;width:100%"><option value="">Select country</option></select></div>
+            <div class="field"><label>State / Region</label><select id="pfState" disabled style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-subtle);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;width:100%"><option value="">Select state</option></select></div>
+            <div class="field"><label>City / Town</label><select id="pfCity" disabled style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-subtle);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;width:100%"><option value="">Select city</option></select></div>
           </div>
           <div class="field"><label>Bio / About You</label><textarea id="pfBio" placeholder="Describe your experience, skills, and what makes you great…"></textarea></div>
           <div class="field"><label>Skills & Tags <span style="font-size:11px;color:var(--text-3)">(comma separated)</span></label><input type="text" id="pfTags" placeholder="e.g. Plumbing, Pipe repair, Bathroom installation"></div>
@@ -384,10 +332,10 @@
       <button class="modal-close" id="closeSvcModal"><svg viewBox="0 0 24 24" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-form">
-      <div class="field"><label>Service Name</label><input type="text" id="svcName" placeholder="e.g. Pipe Repair"></div>
+      <div class="field"><label>Service Name *</label><input type="text" id="svcName" placeholder="e.g. Pipe Repair"></div>
       <div class="field"><label>Description</label><textarea id="svcDesc" placeholder="What does this service include?" style="min-height:80px"></textarea></div>
       <div class="field-row">
-        <div class="field"><label>Price (₦)</label><input type="number" id="svcPrice" placeholder="5000" min="0"></div>
+        <div class="field"><label>Price (₦) *</label><input type="number" id="svcPrice" placeholder="5000" min="0"></div>
         <div class="field"><label>Duration</label><input type="text" id="svcDuration" placeholder="e.g. 1–2 hours"></div>
       </div>
       <button class="btn btn-primary btn-block" id="saveSvcBtn">
@@ -398,7 +346,6 @@
   </div>
 </div>
 
-<!-- Bottom nav -->
 <nav class="bottom-nav">
   <a href="./dashboard.html" class="nav-btn"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></a>
   <button class="nav-btn" onclick="switchTab('bookings')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Bookings</span></button>
@@ -408,50 +355,73 @@
 </nav>
 
 <script type="module">
-import { auth, db, storage, toast, showSpinner, hideSpinner, esc, starsHtml, initials, formatNGN, setLoading } from "./assets/firebase.js";
+import { auth, db, toast, showSpinner, hideSpinner, esc, starsHtml, initials, formatNGN, setLoading } from "./assets/firebase.js";
 import { wireCascade } from "./assets/locations.js";
-import { uploadToCloudinary } from "./assets/cloudinary.js";
+import { uploadToCloudinary, avatarUrl } from "./assets/cloudinary.js";
 import { onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { doc, getDoc, setDoc, getDocs, updateDoc, addDoc, collection, query, where, serverTimestamp, onSnapshot, writeBatch, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-// Cloudinary handles file uploads — see assets/cloudinary.js
+import {
+  doc, getDoc, setDoc, getDocs, updateDoc, addDoc, deleteDoc,
+  collection, query, where, serverTimestamp,
+  onSnapshot, writeBatch, limit, deleteField
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const $ = id => document.getElementById(id);
-let currentUser = null, provData = {}, allBookings = [];
-let activeBookTab = "pending", editingSvcIdx = null;
 
+// ── State ──────────────────────────────────────────────
+let currentUser  = null;
+let provData     = {};           // provider document fields
+let allBookings  = [];
+let providerServices = [];       // loaded from top-level services collection
+let activeBookTab    = "pending";
+let editingSvcId     = null;     // service document ID being edited (null = new)
+
+// ── Tab switcher ───────────────────────────────────────
 window.switchTab = function(tabId) {
-  document.querySelectorAll(".htab").forEach(t => { t.classList.toggle("active", t.dataset.tab===tabId); t.setAttribute("aria-selected", t.dataset.tab===tabId); });
-  document.querySelectorAll(".tab-panel").forEach(p => p.classList.toggle("active", p.id===`tab-${tabId}`));
+  document.querySelectorAll(".htab").forEach(t => {
+    t.classList.toggle("active", t.dataset.tab === tabId);
+    t.setAttribute("aria-selected", t.dataset.tab === tabId);
+  });
+  document.querySelectorAll(".tab-panel").forEach(p =>
+    p.classList.toggle("active", p.id === `tab-${tabId}`)
+  );
+  if (tabId === "earnings") { loadCommissionStatus(); }
 };
-document.querySelectorAll(".htab").forEach(t => t.addEventListener("click", () => switchTab(t.dataset.tab)));
+document.querySelectorAll(".htab").forEach(t =>
+  t.addEventListener("click", () => switchTab(t.dataset.tab))
+);
 
+// ── Auth ───────────────────────────────────────────────
 onAuthStateChanged(auth, async user => {
   if (!user) { location.href = "./login.html"; return; }
   currentUser = user;
   await Promise.all([loadProviderData(), loadBookings()]);
-  renderEarningsChart();
+  initNotifPanel();
 });
 
-// ── Load provider profile ────────────────────────────────
+// ── Load provider profile ──────────────────────────────
 async function loadProviderData() {
   try {
-    const snap = await getDoc(doc(db,"providers",currentUser.uid));
+    const snap = await getDoc(doc(db, "providers", currentUser.uid));
     provData   = snap.exists() ? snap.data() : {};
 
     const name   = provData.name || currentUser.displayName || "Provider";
-    const role   = provData.role || "Service Provider";
-    const avatar = provData.photoURL || currentUser.photoURL || "";
-    const rating = parseFloat(provData.rating||0).toFixed(1);
+    const rating = parseFloat(provData.rating || 0).toFixed(1);
 
-    $("heroName").textContent  = name;
-    $("heroRole").textContent  = role;
-    $("heroStars").innerHTML   = starsHtml(rating);
-    $("heroRating").textContent = `${rating} · ${provData.reviewCount||0} reviews`;
-    $("heroJobs").textContent   = `${provData.completedJobs||0} jobs`;
+    $("heroName").textContent   = name;
+    $("heroRole").textContent   = provData.role || "Service Provider";
+    $("heroStars").innerHTML    = starsHtml(rating);
+    $("heroRating").textContent = `${rating} · ${provData.reviewCount || 0} reviews`;
+    $("heroJobs").textContent   = `${provData.completedJobs || 0} jobs`;
 
-    if (avatar) { $("heroAv").src=$("heroAv").style.display="block",$("heroAv").src=avatar,$("heroAvFb").style.display="none",$("photoPreview").src=avatar; $("heroAv").style.display="block"; $("heroAvFb").style.display="none"; $("photoPreview").src=avatar; }
-    else { $("heroAvFb").textContent=initials(name); $("heroAvFb").style.display="flex"; }
-    if (provData.verified) { $("heroVerified").style.display="flex"; $("verifBanner").style.display="none"; }
+    const av = provData.photoURL || currentUser.photoURL || "";
+    if (av) {
+      $("heroAv").src = av; $("heroAv").style.display = "block";
+      $("heroAvFb").style.display = "none"; $("photoPreview").src = av;
+    } else {
+      $("heroAvFb").textContent = initials(name);
+      $("heroAvFb").style.display = "flex";
+    }
+    if (provData.verified) { $("heroVerified").style.display = "flex"; $("verifBanner").style.display = "none"; }
 
     const avail = provData.available !== false;
     $("availToggle").checked = avail; updateAvailLabel(avail);
@@ -460,163 +430,392 @@ async function loadProviderData() {
     $("pfName").value  = provData.name       || currentUser.displayName || "";
     $("pfPhone").value = provData.phone       || "";
     $("pfRole").value  = provData.role        || "";
-    // Populate category select from Firestore (same list as seeker filter)
-    try {
-      const catSnap = await getDocs(collection(db,"category"));
-      const pfCatEl = $("pfCat");
-      pfCatEl.innerHTML = '<option value="">Select your category</option>';
-      catSnap.docs
-        .map(d => d.data())
-        .sort((a,b) => (a.name||"").localeCompare(b.name||""))
-        .forEach(c => {
-          const opt = document.createElement("option");
-          opt.value = c.name || "";
-          opt.textContent = `${c.icon||""} ${c.name||""}`.trim();
-          pfCatEl.appendChild(opt);
-        });
-      pfCatEl.value = provData.category || "";
-    } catch(e) {
-      console.warn("[Provider] Failed to load categories:", e.message);
-    }
-    // Wire cascading location dropdowns
-    wireCascade($("pfCountry"), $("pfState"), $("pfCity"), {
-      country: provData.country || "",
-      state:   provData.state   || "",
-      city:    provData.city    || ""
-    });
     $("pfBio").value   = provData.bio         || "";
-    $("pfTags").value  = Array.isArray(provData.tags) ? provData.tags.join(", ") : "";
+    $("pfTags").value  = Array.isArray(provData.tags) ? provData.tags.join(", ") : (provData.tags || "");
     $("pfPrice").value = provData.startingPrice || "";
     $("pfExp").value   = provData.experience    || "";
     $("bankName").value    = provData.bankName      || "";
     $("accountNum").value  = provData.accountNumber || "";
     $("accountName").value = provData.accountName   || "";
 
-    renderServices(); renderPortfolio(); renderStrength();
-  } catch(e) { toast("Failed to load your profile.", "error"); }
+    // Category select — load from Firestore (same list seeker uses)
+    try {
+      const catSnap = await getDocs(collection(db, "category"));
+      const el = $("pfCat");
+      el.innerHTML = '<option value="">Select your category</option>';
+      catSnap.docs
+        .map(d => d.data())
+        .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+        .forEach(c => {
+          const o = document.createElement("option");
+          o.value = c.name || "";
+          o.textContent = `${c.icon || ""}  ${c.name || ""}`.trim();
+          el.appendChild(o);
+        });
+      el.value = provData.category || "";
+    } catch(e) { console.warn("[Provider] Category load:", e.message); }
+
+    // Cascading location dropdowns
+    wireCascade($("pfCountry"), $("pfState"), $("pfCity"), {
+      country: provData.country || "",
+      state:   provData.state   || "",
+      city:    provData.city    || ""
+    });
+
+    // Load services from top-level collection + migrate embedded array if needed
+    await loadProviderServices();
+    renderPortfolio();
+    renderStrength();
+  } catch(e) {
+    console.error("[Provider] loadProviderData:", e);
+    toast("Failed to load your profile.", "error");
+  }
 }
 
+// ── SERVICES — top-level collection ───────────────────
+// This is the authoritative source for both provider and seeker
+
+async function loadProviderServices() {
+  try {
+    const q    = query(collection(db, "services"), where("providerId", "==", currentUser.uid));
+    const snap = await getDocs(q);
+    providerServices = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(s => s.active !== false)
+      .sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
+
+    // Migrate embedded services if any exist
+    const embedded = provData.services || [];
+    if (embedded.length) {
+      const migrated = await migrateEmbeddedServices(embedded, providerServices);
+      if (migrated > 0) {
+        // Reload after migration
+        const snap2 = await getDocs(q);
+        providerServices = snap2.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(s => s.active !== false)
+          .sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
+        const banner = $("migrateBanner");
+        if (banner) {
+          banner.innerHTML = `<div class="migrate-banner">✅ <strong>${migrated} service${migrated > 1 ? "s" : ""} migrated</strong> to the new architecture. Seekers can now find your services.</div>`;
+          setTimeout(() => { banner.innerHTML = ""; }, 6000);
+        }
+      }
+    }
+
+    renderServices();
+  } catch(e) {
+    console.error("[Provider] loadProviderServices:", e);
+    toast("Could not load services.", "error");
+  }
+}
+
+async function migrateEmbeddedServices(embedded, existing) {
+  // Avoid duplicates: compare by name (case-insensitive)
+  const existingNames = new Set(existing.map(s => (s.name || "").toLowerCase().trim()));
+  const toMigrate = embedded.filter(s =>
+    s.name && !existingNames.has(s.name.toLowerCase().trim()) && (s.price > 0 || s.price === 0)
+  );
+  if (!toMigrate.length) {
+    // All already migrated — just clean up embedded array
+    await updateDoc(doc(db, "providers", currentUser.uid), { services: deleteField() }).catch(() => {});
+    return 0;
+  }
+  const batch = writeBatch(db);
+  toMigrate.forEach(s => {
+    const ref = doc(collection(db, "services"));
+    batch.set(ref, {
+      providerId:  currentUser.uid,
+      name:        s.name        || "",
+      description: s.description || "",
+      price:       Number(s.price) || 0,
+      duration:    s.duration    || "",
+      active:      true,
+      createdAt:   serverTimestamp(),
+      updatedAt:   serverTimestamp()
+    });
+  });
+  await batch.commit();
+  // Remove embedded array after successful migration
+  await updateDoc(doc(db, "providers", currentUser.uid), { services: deleteField() }).catch(() => {});
+  provData.services = undefined;
+  return toMigrate.length;
+}
+
+function renderServices() {
+  const el = $("servicesList");
+  if (!providerServices.length) {
+    el.innerHTML = `<p style="font-size:13px;color:var(--text-3);text-align:center;padding:20px">No services added yet. Add your first service below.</p>`;
+    return;
+  }
+  el.innerHTML = providerServices.map(s => `
+    <div class="svc-item">
+      <div class="svc-item-icon">🛠️</div>
+      <div class="svc-item-body">
+        <div class="svc-item-name">${esc(s.name)}</div>
+        <div class="svc-item-desc">${esc(s.description || "")}${s.duration ? ` · ${esc(s.duration)}` : ""}</div>
+      </div>
+      <div class="svc-item-price">${formatNGN(s.price)}</div>
+      <div class="svc-item-actions">
+        <button class="btn-icon-sm" data-edit="${s.id}" title="Edit">
+          <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-icon-sm del" data-del="${s.id}" title="Delete">
+          <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+        </button>
+      </div>
+    </div>`).join("");
+
+  // Edit buttons
+  el.querySelectorAll("[data-edit]").forEach(btn =>
+    btn.addEventListener("click", () => openEditSvc(btn.dataset.edit))
+  );
+  // Delete buttons
+  el.querySelectorAll("[data-del]").forEach(btn =>
+    btn.addEventListener("click", () => deleteSvc(btn.dataset.del))
+  );
+}
+
+$("addSvcBtn").addEventListener("click", () => {
+  editingSvcId = null;
+  $("svcModalTitle").textContent = "Add New Service";
+  $("svcName").value = $("svcDesc").value = $("svcPrice").value = $("svcDuration").value = "";
+  $("svcModal").classList.add("active");
+});
+
+function openEditSvc(serviceId) {
+  const s = providerServices.find(x => x.id === serviceId);
+  if (!s) return;
+  editingSvcId = serviceId;
+  $("svcModalTitle").textContent = "Edit Service";
+  $("svcName").value     = s.name        || "";
+  $("svcDesc").value     = s.description || "";
+  $("svcPrice").value    = s.price       || "";
+  $("svcDuration").value = s.duration    || "";
+  $("svcModal").classList.add("active");
+}
+
+async function deleteSvc(serviceId) {
+  if (!confirm("Delete this service? Seekers will no longer see it.")) return;
+  try {
+    showSpinner();
+    await deleteDoc(doc(db, "services", serviceId));
+    providerServices = providerServices.filter(s => s.id !== serviceId);
+    renderServices();
+    toast("Service deleted.", "info");
+  } catch(e) {
+    console.error("[Provider] deleteSvc:", e);
+    toast("Failed to delete service.", "error");
+  } finally { hideSpinner(); }
+}
+
+$("saveSvcBtn").addEventListener("click", async () => {
+  const name = $("svcName").value.trim();
+  if (!name) { toast("Service name is required.", "warning"); return; }
+  const price = parseFloat($("svcPrice").value);
+  if (!price || price <= 0) { toast("Enter a valid price greater than 0.", "warning"); return; }
+  if (!currentUser) { toast("You must be logged in.", "error"); return; }
+
+  const entry = {
+    name,
+    description: $("svcDesc").value.trim(),
+    price,
+    duration:    $("svcDuration").value.trim(),
+    updatedAt:   serverTimestamp()
+  };
+
+  setLoading($("saveSvcBtn"), true);
+  try {
+    if (editingSvcId) {
+      // UPDATE existing service document
+      await updateDoc(doc(db, "services", editingSvcId), entry);
+      const idx = providerServices.findIndex(s => s.id === editingSvcId);
+      if (idx >= 0) Object.assign(providerServices[idx], entry);
+      toast("Service updated! ✅", "success");
+    } else {
+      // CREATE new service document in top-level collection
+      const ref = await addDoc(collection(db, "services"), {
+        ...entry,
+        providerId: currentUser.uid,
+        active:     true,
+        createdAt:  serverTimestamp()
+      });
+      providerServices.push({ id: ref.id, ...entry, providerId: currentUser.uid, active: true });
+      toast("Service added! ✅", "success");
+    }
+    renderServices();
+    renderStrength();
+    $("svcModal").classList.remove("active");
+    editingSvcId = null;
+  } catch(e) {
+    console.error("[Provider] saveSvc:", e.code, e.message);
+    toast(e.code === "permission-denied"
+      ? "Permission denied — please log out and back in."
+      : "Failed to save service. Try again.", "error");
+  } finally { setLoading($("saveSvcBtn"), false); }
+});
+
+// ── Availability toggle ────────────────────────────────
 function updateAvailLabel(on) {
-  const s = $("availStatus"); s.textContent = on?"Available":"Offline"; s.className = `avail-status ${on?"on":"off"}`;
+  const s = $("availStatus");
+  s.textContent = on ? "Available" : "Offline";
+  s.className   = `avail-status ${on ? "on" : "off"}`;
 }
 
 $("availToggle").addEventListener("change", async () => {
-  const on = $("availToggle").checked; updateAvailLabel(on);
+  const on = $("availToggle").checked;
+  updateAvailLabel(on);
   try {
-      const provRef = doc(db,"providers",currentUser.uid);
-      const provSnap = await getDoc(provRef);
-      if (!provSnap.exists()) {
-        await setDoc(provRef,{uid:currentUser.uid,name:currentUser.displayName||"",email:currentUser.email||"",available:on,rating:0,reviewCount:0,services:[],createdAt:serverTimestamp()});
-      } else {
-        await setDoc(provRef,{available:on},{merge:true});
-      }
-      toast(on?"You're now available for bookings.":"You're now offline.", on?"success":"info");
+    const ref  = doc(db, "providers", currentUser.uid);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      await setDoc(ref, { uid: currentUser.uid, name: currentUser.displayName || "", email: currentUser.email || "", available: on, rating: 0, reviewCount: 0, createdAt: serverTimestamp() });
+    } else {
+      await updateDoc(ref, { available: on, updatedAt: serverTimestamp() });
     }
-  catch(e) { toast("Failed to update availability.","error"); $("availToggle").checked=!on; updateAvailLabel(!on); }
+    toast(on ? "You're now available for bookings." : "You're now offline.", on ? "success" : "info");
+  } catch(e) {
+    console.error("[Provider] availToggle:", e);
+    toast("Failed to update availability.", "error");
+    $("availToggle").checked = !on; updateAvailLabel(!on);
+  }
 });
 
-// ── Load bookings ────────────────────────────────────────
+// ── Bookings ───────────────────────────────────────────
 async function loadBookings() {
   try {
-    const q    = query(collection(db,"bookings"), where("providerId","==",currentUser.uid));
+    const q    = query(collection(db, "bookings"), where("providerId", "==", currentUser.uid));
     const snap = await getDocs(q);
-    allBookings = snap.docs.map(d=>({id:d.id,...d.data()}));
-    allBookings.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+    allBookings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    allBookings.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
-    const counts = {pending:0,accepted:0,completed:0,cancelled:0};
-    allBookings.forEach(b=>{if(counts[b.status]!==undefined)counts[b.status]++;});
-    Object.entries(counts).forEach(([k,v])=>{const e=$(`bcnt-${k}`);if(e)e.textContent=v;});
+    const counts = { pending: 0, accepted: 0, completed: 0, cancelled: 0 };
+    allBookings.forEach(b => { if (counts[b.status] !== undefined) counts[b.status]++; });
+    Object.entries(counts).forEach(([k, v]) => { const e = $(`bcnt-${k}`); if (e) e.textContent = v; });
 
-    if (counts.pending>0) { $("pendingBadge").textContent=counts.pending; $("pendingBadge").style.display="inline"; $("notifDot").style.display="block"; }
+    if (counts.pending > 0) { $("pendingBadge").textContent = counts.pending; $("pendingBadge").style.display = "inline"; }
 
-    const completed = allBookings.filter(b=>b.status==="completed");
-    const totalEarn = completed.reduce((s,b)=>s+(b.serviceFee||0),0);
-    const now       = new Date();
-    const thisMonth = completed.filter(b=>b.date&&new Date(b.date).getMonth()===now.getMonth()&&new Date(b.date).getFullYear()===now.getFullYear()).reduce((s,b)=>s+(b.serviceFee||0),0);
+    const completed  = allBookings.filter(b => b.status === "completed");
+    const totalEarn  = completed.reduce((s, b) => s + (b.serviceFee || 0), 0);
+    const now        = new Date();
+    const thisMonth  = completed
+      .filter(b => b.date && new Date(b.date).getMonth() === now.getMonth() && new Date(b.date).getFullYear() === now.getFullYear())
+      .reduce((s, b) => s + (b.serviceFee || 0), 0);
 
     $("stEarnings").textContent  = formatNGN(totalEarn);
     $("stThisMonth").textContent = formatNGN(thisMonth);
     $("stPending").textContent   = counts.pending;
     $("stCompleted").textContent = completed.length;
-    $("stMonthLabel").textContent = now.toLocaleString("default",{month:"long"});
+    $("stMonthLabel").textContent = now.toLocaleString("default", { month: "long" });
 
-    renderBookingList("pending"); renderRecentList();
+    renderBookingList("pending");
+    renderRecentList();
+    renderEarningsChart();
     renderEarningsBreakdown(totalEarn, thisMonth);
-  } catch(e) { toast("Failed to load bookings.","error"); }
+  } catch(e) {
+    console.error("[Provider] loadBookings:", e);
+    toast("Failed to load bookings.", "error");
+  }
 }
 
 function bookingCardHtml(b) {
-  const ini = initials(b.seekerName||"C");
+  const blocked = (provData.outstandingCommission || 0) > 0;
   return `
-  <div class="booking-item ${esc(b.status)}" data-id="${b.id}">
-    <div class="bi-avatar">${ini}</div>
+  <div class="booking-item ${esc(b.status)}">
+    <div class="bi-avatar">${initials(b.seekerName || "C")}</div>
     <div class="bi-body">
-      <div class="bi-name">${esc(b.seekerName||"Customer")}</div>
-      <div class="bi-service">${esc(b.service||"Service")}</div>
+      <div class="bi-name">${esc(b.seekerName || "Customer")}</div>
+      <div class="bi-service">${esc(b.service || "Service")}</div>
       <div class="bi-meta">
-        ${b.date?`<span class="bi-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${esc(b.date)} ${esc(b.time||"")}</span>`:""}
-        ${b.address?`<span class="bi-meta-item"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(b.address)}</span>`:""}
+        ${b.date ? `<span class="bi-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${esc(b.date)} ${esc(b.time || "")}</span>` : ""}
+        ${b.address ? `<span class="bi-meta-item"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(b.address)}</span>` : ""}
       </div>
-      ${b.notes?`<div style="font-size:11px;color:var(--text-3);margin-top:5px;font-style:italic">"${esc(b.notes)}"</div>`:""}
+      ${b.notes ? `<div style="font-size:11px;color:var(--text-3);margin-top:5px;font-style:italic">"${esc(b.notes)}"</div>` : ""}
       <div class="bi-actions">
-        ${b.status==="pending" ? (
-          (provData.outstandingCommission||0) > 0
-            ? `<span style="font-size:11px;color:var(--danger);font-weight:600;background:rgba(220,38,38,.08);padding:5px 10px;border-radius:8px">⚠️ Clear commission to accept</span>`
-            : `<button class="btn btn-success btn-sm" onclick="updateStatus('${b.id}','accepted')">Accept</button><button class="btn btn-danger btn-sm" onclick="updateStatus('${b.id}','cancelled')">Decline</button>`
-          ) : ""}
-        ${b.status==="accepted"?`<button class="btn btn-primary btn-sm" onclick="updateStatus('${b.id}','completed')">Mark Complete</button>`:""}
-        ${b.status==="completed" && b.paymentStatus==="payment_submitted" ? `<button class="confirm-receipt-btn" onclick="confirmReceipt('${b.id}','${b.serviceFee||0}')">✅ I Received Payment</button>` : ""}
-        ${b.paymentStatus==="payment_confirmed" ? `<span style="font-size:11px;color:var(--success);font-weight:600">✅ Payment Confirmed</span>` : ""}
-        <button class="btn btn-ghost btn-sm" onclick="location.href='./chat.html?uid=${esc(b.seekerId||"")}'">💬 Chat</button>
+        ${b.status === "pending"
+          ? (blocked
+              ? `<span style="font-size:11px;color:var(--danger);font-weight:600;background:rgba(220,38,38,.08);padding:5px 10px;border-radius:8px">⚠️ Clear commission to accept</span>`
+              : `<button class="btn btn-success btn-sm" data-action="accept" data-bid="${b.id}">Accept</button>
+                 <button class="btn btn-danger btn-sm"  data-action="decline" data-bid="${b.id}">Decline</button>`)
+          : ""}
+        ${b.status === "accepted"
+          ? `<button class="btn btn-primary btn-sm" data-action="complete" data-bid="${b.id}">Mark Complete</button>`
+          : ""}
+        ${b.status === "completed" && b.paymentStatus === "payment_submitted"
+          ? `<button class="confirm-receipt-btn" data-action="confirm" data-bid="${b.id}" data-fee="${b.serviceFee || 0}">✅ I Received Payment</button>`
+          : ""}
+        ${b.paymentStatus === "payment_confirmed"
+          ? `<span style="font-size:11px;color:var(--success);font-weight:600">✅ Payment Confirmed</span>`
+          : ""}
+        <button class="btn btn-ghost btn-sm" data-action="chat" data-uid="${esc(b.seekerId || "")}">💬 Chat</button>
       </div>
     </div>
     <div class="bi-right">
-      <span class="badge badge-${esc(b.status)}">${esc(b.status.charAt(0).toUpperCase()+b.status.slice(1))}</span>
-      <div class="bi-amount">${formatNGN(b.serviceFee||0)}</div>
+      <span class="badge badge-${esc(b.status)}">${esc(b.status.charAt(0).toUpperCase() + b.status.slice(1))}</span>
+      <div class="bi-amount">${formatNGN(b.serviceFee || 0)}</div>
     </div>
   </div>`;
 }
 
 function renderBookingList(status) {
   activeBookTab = status;
-  const list = allBookings.filter(b=>b.status===status);
+  const list = allBookings.filter(b => b.status === status);
   const el   = $("bookingList");
   if (!list.length) {
-    const ICONS = {pending:"📬",accepted:"🔵",completed:"🏆",cancelled:"🚫"};
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">${ICONS[status]||"📋"}</div><p class="empty-title">No ${status} bookings</p><p class="empty-sub">${status==="pending"?"New requests will appear here.":"They'll appear here once updated."}</p></div>`;
+    const ICONS = { pending:"📬", accepted:"🔵", completed:"🏆", cancelled:"🚫" };
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">${ICONS[status] || "📋"}</div><p class="empty-title">No ${status} bookings</p><p class="empty-sub">${status === "pending" ? "New requests will appear here." : "They'll appear here once updated."}</p></div>`;
     return;
   }
   el.innerHTML = list.map(bookingCardHtml).join("");
+  // Event delegation
+  el.querySelectorAll("[data-action]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const { action, bid, fee, uid } = btn.dataset;
+      if (action === "accept")   updateBookingStatus(bid, "accepted");
+      if (action === "decline")  updateBookingStatus(bid, "cancelled");
+      if (action === "complete") updateBookingStatus(bid, "completed");
+      if (action === "confirm")  confirmPaymentReceived(bid, fee);
+      if (action === "chat" && uid) location.href = `./chat.html?uid=${uid}`;
+    });
+  });
 }
 
 function renderRecentList() {
-  const recent = allBookings.slice(0,3);
+  const recent = allBookings.slice(0, 3);
   const el     = $("recentList");
-  if (!recent.length) { el.innerHTML=`<div class="empty-state" style="padding:24px"><div class="empty-icon">📬</div><p class="empty-title">No bookings yet</p><p class="empty-sub">Requests from customers will appear here.</p></div>`; return; }
-  el.innerHTML = recent.map(b=>`
+  if (!recent.length) {
+    el.innerHTML = `<div class="empty-state" style="padding:24px"><div class="empty-icon">📬</div><p class="empty-title">No bookings yet</p></div>`;
+    return;
+  }
+  el.innerHTML = recent.map(b => `
     <div class="booking-item ${esc(b.status)}" style="margin-bottom:8px">
-      <div class="bi-avatar">${initials(b.seekerName||"C")}</div>
-      <div class="bi-body"><div class="bi-name">${esc(b.seekerName||"Customer")}</div><div class="bi-service">${esc(b.service||"Service")} · ${esc(b.date||"")}</div></div>
-      <div class="bi-right"><span class="badge badge-${esc(b.status)}">${esc(b.status.charAt(0).toUpperCase()+b.status.slice(1))}</span><div class="bi-amount">${formatNGN(b.serviceFee||0)}</div></div>
+      <div class="bi-avatar">${initials(b.seekerName || "C")}</div>
+      <div class="bi-body"><div class="bi-name">${esc(b.seekerName || "Customer")}</div><div class="bi-service">${esc(b.service || "Service")} · ${esc(b.date || "")}</div></div>
+      <div class="bi-right"><span class="badge badge-${esc(b.status)}">${esc(b.status.charAt(0).toUpperCase() + b.status.slice(1))}</span><div class="bi-amount">${formatNGN(b.serviceFee || 0)}</div></div>
     </div>`).join("");
 }
 
-// Sub-tabs for bookings
-document.querySelectorAll(".pill-tab[data-btab]").forEach(t => t.addEventListener("click",()=>{
-  document.querySelectorAll(".pill-tab[data-btab]").forEach(x=>x.classList.remove("active")); t.classList.add("active"); renderBookingList(t.dataset.btab);
-}));
+// Sub-tabs
+document.querySelectorAll(".pill-tab[data-btab]").forEach(t =>
+  t.addEventListener("click", () => {
+    document.querySelectorAll(".pill-tab[data-btab]").forEach(x => x.classList.remove("active"));
+    t.classList.add("active");
+    renderBookingList(t.dataset.btab);
+  })
+);
 
-window.updateStatus = async (bookingId, newStatus) => {
+async function updateBookingStatus(bookingId, newStatus) {
   try {
     showSpinner();
-    await updateDoc(doc(db,"bookings",bookingId),{status:newStatus,updatedAt:serverTimestamp()});
-    const b = allBookings.find(x=>x.id===bookingId); if(b) b.status=newStatus;
-    const counts={pending:0,accepted:0,completed:0,cancelled:0};
-    allBookings.forEach(b=>{if(counts[b.status]!==undefined)counts[b.status]++;});
-    Object.entries(counts).forEach(([k,v])=>{const e=$(`bcnt-${k}`);if(e)e.textContent=v;});
+    await updateDoc(doc(db, "bookings", bookingId), { status: newStatus, updatedAt: serverTimestamp() });
+    const b = allBookings.find(x => x.id === bookingId);
+    if (b) b.status = newStatus;
+    const counts = { pending:0, accepted:0, completed:0, cancelled:0 };
+    allBookings.forEach(b => { if (counts[b.status] !== undefined) counts[b.status]++; });
+    Object.entries(counts).forEach(([k, v]) => { const e = $(`bcnt-${k}`); if (e) e.textContent = v; });
     renderBookingList(activeBookTab); renderRecentList();
 
-    // ── Notify seeker of status change ──────────────
+    // Notify seeker
     const booking = allBookings.find(x => x.id === bookingId) || {};
     import("./assets/notifications.js").then(({ notifyBookingAccepted, notifyJobCompleted, notifyBookingDeclined }) => {
       if (newStatus === "accepted"  && booking.seekerId) notifyBookingAccepted(booking.seekerId, { ...booking, id: bookingId });
@@ -627,201 +826,99 @@ window.updateStatus = async (bookingId, newStatus) => {
     const msgs = { accepted:"Booking accepted! Seeker notified. ✅", completed:"Job complete! Seeker notified to pay. 🏆", cancelled:"Booking declined." };
     toast(msgs[newStatus] || `Booking ${newStatus}!`, "success");
   } catch(e) {
-    console.error("[Provider] updateStatus error:", e);
+    console.error("[Provider] updateBookingStatus:", e);
     toast("Failed to update booking.", "error");
-  }
-  finally { hideSpinner(); }
-};
-
-// ── Services ─────────────────────────────────────────────
-function renderServices() {
-  const list = provData.services || [];
-  const el   = $("servicesList");
-  if (!list.length) { el.innerHTML=`<p style="font-size:13px;color:var(--text-3);text-align:center;padding:20px">No services added yet. Add your first service below.</p>`; return; }
-  el.innerHTML = list.map((s,i)=>`
-    <div class="svc-item">
-      <div class="svc-item-icon">🛠️</div>
-      <div class="svc-item-body"><div class="svc-item-name">${esc(s.name)}</div><div class="svc-item-desc">${esc(s.description||"")}${s.duration?` · ${esc(s.duration)}`:""}</div></div>
-      <div class="svc-item-price">${formatNGN(s.price)}</div>
-      <div class="svc-item-actions">
-        <button class="btn-icon-sm" onclick="openEditSvc(${i})" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-        <button class="btn-icon-sm del" onclick="deleteSvc(${i})" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
-      </div>
-    </div>`).join("");
+  } finally { hideSpinner(); }
 }
 
-$("addSvcBtn").addEventListener("click",()=>{
-  editingSvcIdx=null; $("svcModalTitle").textContent="Add New Service";
-  $("svcName").value=$("svcDesc").value=$("svcPrice").value=$("svcDuration").value="";
-  $("svcModal").classList.add("active");
-});
-
-window.openEditSvc = i => {
-  editingSvcIdx = i; const s=(provData.services||[])[i]; if(!s)return;
-  $("svcModalTitle").textContent="Edit Service";
-  $("svcName").value=s.name||""; $("svcDesc").value=s.description||""; $("svcPrice").value=s.price||""; $("svcDuration").value=s.duration||"";
-  $("svcModal").classList.add("active");
-};
-
-window.deleteSvc = async i => {
-  if(!confirm("Delete this service?"))return;
-  const svcs=[...(provData.services||[])]; svcs.splice(i,1);
-  try { showSpinner(); await setDoc(doc(db,"providers",currentUser.uid),{services:svcs},{merge:true}); provData.services=svcs; renderServices(); toast("Service deleted.","info"); }
-  catch(e){toast("Failed to delete.","error");} finally{hideSpinner();}
-};
-
-$("saveSvcBtn").addEventListener("click", async()=>{
-  const name=$("svcName").value.trim();
-  if(!name){toast("Service name required.","warning");return;}
-  if(!currentUser){toast("You must be logged in.","error");return;}
-
-  const entry={
-    name,
-    description: $("svcDesc").value.trim(),
-    price:       parseFloat($("svcPrice").value)||0,
-    duration:    $("svcDuration").value.trim()
-  };
-  const svcs=[...(provData.services||[])];
-  if(editingSvcIdx!==null) svcs[editingSvcIdx]=entry; else svcs.push(entry);
-  setLoading($("saveSvcBtn"),true);
-
+async function confirmPaymentReceived(bookingId, fee) {
+  const commission = Math.round(parseFloat(fee) * 0.05);
   try {
-    const provRef = doc(db,"providers",currentUser.uid);
-    const provSnap = await getDoc(provRef);
-
-    if (!provSnap.exists()) {
-      // Provider document does not exist yet — create base doc first.
-      await setDoc(provRef, {
-        uid:         currentUser.uid,
-        name:        currentUser.displayName || "",
-        email:       currentUser.email       || "",
-        available:   true,
-        rating:      0,
-        reviewCount: 0,
-        services:    [],
-        createdAt:   serverTimestamp()
-      });
-      console.log("[Provider] Base document created for:", currentUser.uid);
-    }
-
-    // Now safely merge the services array
-    await setDoc(provRef, { services: svcs, updatedAt: serverTimestamp() }, { merge: true });
-
-    // Keep local state in sync
-    provData.services = svcs;
-    renderServices();
-    closeModal("svcModal");
-    toast(editingSvcIdx!==null?"Service updated! ✅":"Service added! ✅","success");
+    showSpinner();
+    await updateDoc(doc(db, "bookings", bookingId), {
+      paymentStatus:            "payment_confirmed",
+      providerPaymentConfirmed: true,
+      paymentConfirmedAt:       serverTimestamp(),
+      commissionStatus:         "pending",
+      commissionAmount:         commission,
+      updatedAt:                serverTimestamp()
+    });
+    await setDoc(doc(db, "providers", currentUser.uid), {
+      outstandingCommission: (provData.outstandingCommission || 0) + commission,
+      updatedAt:             serverTimestamp()
+    }, { merge: true });
+    provData.outstandingCommission = (provData.outstandingCommission || 0) + commission;
+    const b = allBookings.find(x => x.id === bookingId);
+    if (b) { b.paymentStatus = "payment_confirmed"; b.commissionStatus = "pending"; }
+    toast(`Payment confirmed! Commission due: ₦${commission.toLocaleString("en-NG")}. Go to Earnings to pay.`, "success");
+    loadCommissionStatus();
+    renderBookingList(activeBookTab);
   } catch(e) {
-    console.error("[Provider] Save service error:", e.code, e.message);
-    const msg = e.code === "permission-denied"
-      ? "Permission denied. Please log out and log back in."
-      : e.code === "unavailable"
-      ? "No internet connection. Please try again."
-      : "Failed to save service. Try again.";
-    toast(msg, "error");
-  } finally {
-    setLoading($("saveSvcBtn"),false);
-  }
-});
+    console.error("[Provider] confirmPayment:", e);
+    toast("Failed to confirm. Try again.", "error");
+  } finally { hideSpinner(); }
+}
 
-// ── Portfolio ─────────────────────────────────────────────
+// ── Portfolio ──────────────────────────────────────────
 function renderPortfolio() {
   const grid = $("portGrid");
   const add  = grid.querySelector(".port-add");
-  grid.querySelectorAll(".port-img").forEach(i=>i.remove());
-  (provData.portfolio||[]).forEach(url=>{
+  grid.querySelectorAll(".port-cell").forEach(c => c.remove());
+  (provData.portfolio || []).forEach(url => {
     const cell = document.createElement("div"); cell.className = "port-cell";
-    const img  = document.createElement("img"); img.src=url; img.className="port-img"; img.alt="Portfolio";
-    img.addEventListener("click",()=>window.open(url,"_blank"));
-    cell.appendChild(img); grid.insertBefore(cell,add);
+    const img  = document.createElement("img"); img.src = url; img.className = "port-img"; img.alt = "Portfolio";
+    img.addEventListener("click", () => window.open(url, "_blank"));
+    cell.appendChild(img); grid.insertBefore(cell, add);
   });
 }
 
-$("portfolioInput").addEventListener("change", async()=>{
-  const files=Array.from($("portfolioInput").files); if(!files.length)return;
-  if(files.some(f=>f.size>5*1024*1024)){toast("Each image must be under 5MB.","warning");return;}
+$("portfolioInput").addEventListener("change", async () => {
+  const files = Array.from($("portfolioInput").files);
+  if (!files.length) return;
+  if (files.some(f => f.size > 5 * 1024 * 1024)) { toast("Each image must be under 5MB.", "warning"); return; }
   try {
     showSpinner();
-    // No transformation in upload — unsigned preset rejects it
-    const urls = await Promise.all(files.map(f =>
-      uploadToCloudinary(f, {
-        folder: `servana/providers/${currentUser.uid}/portfolio`
-      })
-    ));
-    const portfolio=[...(provData.portfolio||[]),...urls];
-    await setDoc(doc(db,"providers",currentUser.uid),{portfolio},{merge:true});
-    provData.portfolio=portfolio; renderPortfolio();
-    toast(`${urls.length} photo${urls.length>1?"s":""} uploaded!`,"success");
-  } catch(e){
-    console.error("[Upload] Portfolio error:", e.message);
-    if(e.message.includes("CLOUDINARY_NOT_CONFIGURED")){
-      toast("Photo upload not ready — Cloudinary needs to be configured.","warning",6000);
-    } else {
-      toast("Upload failed: "+(e.message||"Try again."),"error");
-    }
-  } finally{hideSpinner();$("portfolioInput").value="";}
+    const urls    = await Promise.all(files.map(f => uploadToCloudinary(f, { folder: `servana/providers/${currentUser.uid}/portfolio` })));
+    const portfolio = [...(provData.portfolio || []), ...urls];
+    await setDoc(doc(db, "providers", currentUser.uid), { portfolio }, { merge: true });
+    provData.portfolio = portfolio;
+    renderPortfolio();
+    toast(`${urls.length} photo${urls.length > 1 ? "s" : ""} uploaded!`, "success");
+  } catch(e) {
+    console.error("[Upload] Portfolio:", e.message);
+    toast(e.message?.includes("CLOUDINARY_NOT_CONFIGURED")
+      ? "Photo upload not ready — Cloudinary needs to be configured."
+      : "Upload failed: " + (e.message || "Try again."), "error");
+  } finally { hideSpinner(); $("portfolioInput").value = ""; }
 });
 
-// ── Notification bell ────────────────────────────────────
-
+// ── Notifications ──────────────────────────────────────
 function initNotifPanel() {
   if (!currentUser) return;
-
-  // Query notifications for this user — no orderBy needed (sort client-side)
-  const q = query(
-    collection(db, "notifications"),
-    where("userId", "==", currentUser.uid),
-    limit(25)
-  );
-
-  // Live listener — updates badge + list in real time
+  const q = query(collection(db, "notifications"), where("userId", "==", currentUser.uid), limit(25));
   onSnapshot(q,
     snap => {
-      const notifs = snap.docs
-        .map(d => ({ id: d.id, ...d.data() }))
+      const notifs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
         .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
       const unread = notifs.filter(n => !n.read).length;
-
-      // ── Badge ──────────────────────────────────
       let badge = document.getElementById("notifBadge");
       if (!badge) {
         badge = document.createElement("span");
         badge.id = "notifBadge";
-        badge.style.cssText = [
-          "position:absolute","top:-4px","right:-4px",
-          "min-width:16px","height:16px","background:var(--danger)",
-          "border-radius:50%","font-size:9px","font-weight:700",
-          "color:#fff","display:none","align-items:center",
-          "justify-content:center","border:1.5px solid var(--bg-surface)",
-          "padding:0 3px"
-        ].join(";");
+        badge.style.cssText = "position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;background:var(--danger);border-radius:50%;font-size:9px;font-weight:700;color:#fff;display:none;align-items:center;justify-content:center;border:1.5px solid var(--bg-surface);padding:0 3px";
         $("notifBtn").style.position = "relative";
         $("notifBtn").appendChild(badge);
       }
       badge.textContent   = unread > 9 ? "9+" : String(unread);
       badge.style.display = unread > 0 ? "flex" : "none";
-
-      // ── List ───────────────────────────────────
       const list = $("notifList");
       if (!list) return;
-
-      if (!notifs.length) {
-        list.innerHTML = `<div class="notif-empty">🔔 No notifications yet</div>`;
-        return;
-      }
-
+      if (!notifs.length) { list.innerHTML = `<div class="notif-empty">🔔 No notifications yet</div>`; return; }
       list.innerHTML = notifs.map(n => {
-        const time = n.createdAt?.toDate?.()?.toLocaleString("en-NG", {
-          month:"short", day:"numeric", hour:"2-digit", minute:"2-digit"
-        }) || "";
-        return `
-        <div class="notif-item ${n.read ? "" : "unread"}" data-id="${n.id}" data-url="${esc(n.url||"")}">
+        const time = n.createdAt?.toDate?.()?.toLocaleString("en-NG", { month:"short", day:"numeric", hour:"2-digit", minute:"2-digit" }) || "";
+        return `<div class="notif-item ${n.read ? "" : "unread"}" data-id="${n.id}" data-url="${esc(n.url || "")}">
           <div style="display:flex;gap:8px;align-items:flex-start">
-            ${!n.read
-              ? '<div class="notif-dot" style="margin-top:5px"></div>'
-              : '<div style="width:7px;flex-shrink:0"></div>'
-            }
+            ${!n.read ? '<div class="notif-dot"></div>' : '<div style="width:7px;flex-shrink:0"></div>'}
             <div style="flex:1;min-width:0">
               <div class="notif-title">${esc(n.title || "Notification")}</div>
               <div class="notif-body">${esc(n.body || "")}</div>
@@ -830,23 +927,18 @@ function initNotifPanel() {
           </div>
         </div>`;
       }).join("");
-
-      // Click: mark read + optionally navigate
       list.querySelectorAll(".notif-item").forEach(item => {
         item.addEventListener("click", async () => {
           if (item.classList.contains("unread")) {
             item.classList.remove("unread");
-            item.querySelector(".notif-dot")?.remove();
-            updateDoc(doc(db, "notifications", item.dataset.id), {
-              read: true, readAt: serverTimestamp()
-            }).catch(() => {});
+            updateDoc(doc(db, "notifications", item.dataset.id), { read: true, readAt: serverTimestamp() }).catch(() => {});
           }
           if (item.dataset.url) location.href = item.dataset.url;
         });
       });
     },
     err => {
-      console.error("[Notifications] Listener error:", err.code, err.message);
+      console.error("[Notifications]", err.code, err.message);
       const list = $("notifList");
       if (list) list.innerHTML = `<div class="notif-empty">Could not load notifications.</div>`;
     }
@@ -855,257 +947,223 @@ function initNotifPanel() {
 
 $("notifBtn").addEventListener("click", e => {
   e.stopPropagation();
-  if(!$("notifPanel")) return;
   $("notifPanel").classList.toggle("open");
+  $("notifBtn").setAttribute("aria-expanded", $("notifPanel").classList.contains("open"));
 });
 document.addEventListener("click", e => {
-  const panel = $("notifPanel");
-  if(panel && !panel.contains(e.target) && e.target !== $("notifBtn")) panel.classList.remove("open");
+  if (!$("notifPanel").contains(e.target) && e.target !== $("notifBtn")) {
+    $("notifPanel").classList.remove("open");
+    $("notifBtn").setAttribute("aria-expanded", "false");
+  }
 });
 $("markAllRead")?.addEventListener("click", async () => {
   try {
-    const unreadSnap = await getDocs(query(
-      collection(db, "notifications"),
-      where("userId", "==", currentUser.uid),
-      where("read", "==", false)
-    ));
-    if (unreadSnap.empty) { toast("No unread notifications.", "info"); return; }
+    const snap = await getDocs(query(collection(db, "notifications"), where("userId","==",currentUser.uid), where("read","==",false)));
+    if (snap.empty) { toast("No unread notifications.", "info"); return; }
     const batch = writeBatch(db);
-    unreadSnap.docs.forEach(d => batch.update(d.ref, { read: true, readAt: serverTimestamp() }));
+    snap.docs.forEach(d => batch.update(d.ref, { read: true, readAt: serverTimestamp() }));
     await batch.commit();
     toast("All notifications marked as read.", "success");
-  } catch(e) { console.warn("[Notify] Mark all read error:", e); }
+  } catch(e) { console.warn("[Notify] markAllRead:", e); }
 });
 
-// ── Commission status ─────────────────────────────────
+// ── Commission ─────────────────────────────────────────
 async function loadCommissionStatus() {
-  if (!currentUser || !$("commissionAlertWrap")) return;
-  const outstanding = provData.outstandingCommission || 0;
   const wrap = $("commissionAlertWrap");
+  if (!wrap || !currentUser) return;
+  const outstanding = provData.outstandingCommission || 0;
   if (outstanding > 0) {
-    wrap.innerHTML = `
-      <div class="commission-alert">
-        <div class="commission-alert-title">⚠️ Commission Due</div>
-        <div class="commission-alert-amount">₦${outstanding.toLocaleString("en-NG")}</div>
-        <div class="commission-alert-body">
-          This commission was generated from your completed booking.
-          Clear your commission to continue receiving new booking requests.
-        </div>
-        <button class="btn btn-danger" onclick="payCommission(${outstanding})">
-          Pay ₦${outstanding.toLocaleString("en-NG")} Commission →
-        </button>
-      </div>`;
+    wrap.innerHTML = `<div class="commission-alert">
+      <div class="commission-alert-title">⚠️ Commission Due</div>
+      <div class="commission-alert-amount">₦${outstanding.toLocaleString("en-NG")}</div>
+      <div class="commission-alert-body">Clear your commission to continue receiving new booking requests.</div>
+      <button class="btn btn-danger" id="payCommBtn">Pay ₦${outstanding.toLocaleString("en-NG")} Commission →</button>
+    </div>`;
+    $("payCommBtn").addEventListener("click", () => payCommission(outstanding));
   } else {
-    wrap.innerHTML = `
-      <div class="commission-clear">
-        <div class="commission-clear-icon">✅</div>
-        <div>
-          <div style="font-size:13px;font-weight:700;color:var(--success)">All Commissions Cleared</div>
-          <div style="font-size:12px;color:var(--text-2);margin-top:2px">Outstanding: ₦0 — You can accept new bookings.</div>
-        </div>
-      </div>`;
+    wrap.innerHTML = `<div class="commission-clear"><div style="font-size:22px">✅</div><div><div style="font-size:13px;font-weight:700;color:var(--success)">All Commissions Cleared</div><div style="font-size:12px;color:var(--text-2);margin-top:2px">Outstanding: ₦0 — You can accept new bookings.</div></div></div>`;
   }
 }
 
-window.payCommission = async function(amount) {
-  import("./assets/paystack.js").then(({initPaystackPayment})=>{
+async function payCommission(amount) {
+  import("./assets/paystack.js").then(({ initPaystackPayment }) => {
     initPaystackPayment({
-      email: currentUser.email,
-      amount: Math.round(amount*100),
-      metadata: {type:"commission",providerId:currentUser.uid},
-      onSuccess: async()=>{
-        await setDoc(doc(db,"providers",currentUser.uid),{outstandingCommission:0,lastCommissionPaidAt:serverTimestamp()},{merge:true});
-        provData.outstandingCommission=0;
-        toast("Commission paid! 🎉 You can now accept new bookings.","success");
+      email:    currentUser.email,
+      amount:   Math.round(amount * 100),
+      metadata: { type: "commission", providerId: currentUser.uid },
+      onSuccess: async () => {
+        await setDoc(doc(db, "providers", currentUser.uid), { outstandingCommission: 0, lastCommissionPaidAt: serverTimestamp() }, { merge: true });
+        provData.outstandingCommission = 0;
+        toast("Commission paid! 🎉 You can now accept new bookings.", "success");
         loadCommissionStatus();
       },
-      onClose:()=>toast("Payment cancelled.","info")
+      onClose: () => toast("Payment cancelled.", "info")
     });
   });
-};
+}
 
-window.confirmReceipt = async function(bookingId, fee) {
-  const commission = Math.round(parseFloat(fee)*0.05);
-  try {
-    await updateDoc(doc(db,"bookings",bookingId),{
-      paymentStatus:"payment_confirmed",
-      providerPaymentConfirmed:true,
-      paymentConfirmedAt:serverTimestamp(),
-      commissionStatus:"pending",
-      commissionAmount:commission,
-      updatedAt:serverTimestamp()
-    });
-    await setDoc(doc(db,"providers",currentUser.uid),{
-      outstandingCommission:(provData.outstandingCommission||0)+commission,
-      updatedAt:serverTimestamp()
-    },{merge:true});
-    provData.outstandingCommission=(provData.outstandingCommission||0)+commission;
-    toast(`Payment confirmed! Commission due: ₦${commission.toLocaleString("en-NG")}. Go to Earnings to pay.`,"success");
-    loadCommissionStatus();
-    loadBookings();
-  } catch(e){toast("Failed to confirm. Try again.","error");}
-};
-
-// ── Earnings chart ────────────────────────────────────────
+// ── Earnings ───────────────────────────────────────────
 function renderEarningsChart() {
-  const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const now=new Date();
-  const last6=Array.from({length:6},(_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-5+i,1);return{label:months[d.getMonth()],month:d.getMonth(),year:d.getFullYear(),total:0};});
-  allBookings.filter(b=>b.status==="completed"&&b.date).forEach(b=>{const d=new Date(b.date);const e=last6.find(x=>x.month===d.getMonth()&&x.year===d.getFullYear());if(e)e.total+=b.serviceFee||0;});
-  const max=Math.max(...last6.map(e=>e.total),1);
-  $("earningsChart").innerHTML=last6.map(e=>`<div class="chart-bar-col"><div class="chart-bar-bg"><div class="chart-bar-fill" style="height:${Math.round((e.total/max)*100)}%"></div></div><div class="chart-bar-lbl">${e.label}</div></div>`).join("");
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const now    = new Date();
+  const last6  = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
+    return { label: months[d.getMonth()], month: d.getMonth(), year: d.getFullYear(), total: 0 };
+  });
+  allBookings.filter(b => b.status === "completed" && b.date).forEach(b => {
+    const d = new Date(b.date);
+    const e = last6.find(x => x.month === d.getMonth() && x.year === d.getFullYear());
+    if (e) e.total += b.serviceFee || 0;
+  });
+  const max = Math.max(...last6.map(e => e.total), 1);
+  $("earningsChart").innerHTML = last6.map(e =>
+    `<div class="chart-bar-col"><div class="chart-bar-bg"><div class="chart-bar-fill" style="height:${Math.round((e.total/max)*100)}%"></div></div><div class="chart-bar-lbl">${e.label}</div></div>`
+  ).join("");
 }
 
 function renderEarningsBreakdown(total, thisMonth) {
-  const platform=total*0.05, net=total-platform;
-  $("earningsBreakdown").innerHTML=[
-    {c:"#16A34A",l:"Total Revenue",v:formatNGN(total)},
-    {c:"#DC2626",l:"Platform Fee (5%)",v:formatNGN(platform)},
-    {c:"#2962FF",l:"Net Earnings",v:formatNGN(net)},
-    {c:"#F59E0B",l:"This Month",v:formatNGN(thisMonth)},
-  ].map(r=>`<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg-subtle);border:.5px solid var(--border);border-radius:var(--r-sm)"><div style="width:10px;height:10px;border-radius:50%;background:${r.c};flex-shrink:0"></div><div style="flex:1;font-size:13px;color:var(--text-2);font-weight:500">${r.l}</div><div style="font-size:14px;font-weight:700;color:var(--text-1)">${r.v}</div></div>`).join("");
+  const platform = total * 0.05, net = total - platform;
+  $("earningsBreakdown").innerHTML = [
+    { c:"#16A34A", l:"Total Revenue",    v: formatNGN(total) },
+    { c:"#DC2626", l:"Platform Fee (5%)", v: formatNGN(platform) },
+    { c:"#2962FF", l:"Net Earnings",     v: formatNGN(net) },
+    { c:"#F59E0B", l:"This Month",       v: formatNGN(thisMonth) },
+  ].map(r => `<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg-subtle);border:.5px solid var(--border);border-radius:var(--r-sm)"><div style="width:10px;height:10px;border-radius:50%;background:${r.c};flex-shrink:0"></div><div style="flex:1;font-size:13px;color:var(--text-2);font-weight:500">${r.l}</div><div style="font-size:14px;font-weight:700;color:var(--text-1)">${r.v}</div></div>`).join("");
 }
 
-// ── Profile strength ──────────────────────────────────────
+// ── Profile strength ───────────────────────────────────
 function renderStrength() {
-  const checks=[
-    {l:"Profile photo added",         d:!!(provData.photoURL||currentUser.photoURL)},
-    {l:"Bio / description written",   d:!!provData.bio},
-    {l:"At least 1 service added",    d:(provData.services||[]).length>0},
-    {l:"Phone number added",          d:!!provData.phone},
-    {l:"Portfolio photo uploaded",    d:(provData.portfolio||[]).length>0},
-    {l:"Verified by Servana",         d:!!provData.verified},
+  const checks = [
+    { l: "Profile photo added",       d: !!(provData.photoURL || currentUser.photoURL) },
+    { l: "Bio / description written", d: !!provData.bio },
+    { l: "At least 1 service added",  d: providerServices.length > 0 },
+    { l: "Phone number added",        d: !!provData.phone },
+    { l: "Portfolio photo uploaded",  d: (provData.portfolio || []).length > 0 },
+    { l: "Verified by Servana",       d: !!provData.verified },
   ];
-  const done=checks.filter(c=>c.d).length, pct=Math.round((done/checks.length)*100);
-  $("strengthPct").textContent=`${pct}%`; $("strengthFill").style.width=`${pct}%`;
-  $("strengthChecks").innerHTML=checks.map(c=>`<div class="check-row"><span style="font-size:14px">${c.d?"✅":"⬜"}</span><span style="font-size:13px;color:${c.d?"var(--text-1)":"var(--text-3)"}">${c.l}</span>${!c.d?`<span style="margin-left:auto;font-size:11px;color:var(--accent);font-weight:600">+${Math.round(100/checks.length)}%</span>`:""}</div>`).join("");
+  const done = checks.filter(c => c.d).length;
+  const pct  = Math.round((done / checks.length) * 100);
+  $("strengthPct").textContent  = `${pct}%`;
+  $("strengthFill").style.width = `${pct}%`;
+  $("strengthChecks").innerHTML = checks.map(c => `
+    <div class="check-row">
+      <span style="font-size:14px">${c.d ? "✅" : "⬜"}</span>
+      <span style="font-size:13px;color:${c.d ? "var(--text-1)" : "var(--text-3)"}">${c.l}</span>
+      ${!c.d ? `<span style="margin-left:auto;font-size:11px;color:var(--accent);font-weight:600">+${Math.round(100/checks.length)}%</span>` : ""}
+    </div>`).join("");
 }
 
-// ── Payout ────────────────────────────────────────────────
-$("savePayoutBtn").addEventListener("click", async()=>{
-  const bankName=$("bankName").value.trim(), accountNumber=$("accountNum").value.trim(), accountName=$("accountName").value.trim();
-  if(!bankName||!accountNumber||!accountName){toast("Please fill all payout fields.","warning");return;}
-  if(accountNumber.length!==10){toast("Account number must be 10 digits.","warning");return;}
-  setLoading($("savePayoutBtn"),true);
+// ── Payout save ────────────────────────────────────────
+$("savePayoutBtn").addEventListener("click", async () => {
+  const bankName      = $("bankName").value.trim();
+  const accountNumber = $("accountNum").value.trim();
+  const accountName   = $("accountName").value.trim();
+  if (!bankName || !accountNumber || !accountName) { toast("Please fill all payout fields.", "warning"); return; }
+  if (accountNumber.length !== 10 || !/^\d+$/.test(accountNumber)) { toast("Account number must be exactly 10 digits.", "warning"); return; }
+  setLoading($("savePayoutBtn"), true);
   try {
-    const provRef = doc(db,"providers",currentUser.uid);
-    const provSnap = await getDoc(provRef);
-    if (!provSnap.exists()) {
-      await setDoc(provRef, {
-        uid: currentUser.uid, name: currentUser.displayName||"",
-        email: currentUser.email||"", available: true,
-        rating: 0, reviewCount: 0, services: [], createdAt: serverTimestamp()
-      });
+    const ref  = doc(db, "providers", currentUser.uid);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      await setDoc(ref, { uid: currentUser.uid, name: currentUser.displayName||"", email: currentUser.email||"", available: true, rating: 0, reviewCount: 0, createdAt: serverTimestamp() });
     }
-    await setDoc(provRef, { bankName, accountNumber, accountName, updatedAt: serverTimestamp() }, { merge: true });
-    Object.assign(provData,{bankName,accountNumber,accountName});
-    toast("Payout details saved! ✅","success");
+    await updateDoc(ref, { bankName, accountNumber, accountName, updatedAt: serverTimestamp() });
+    Object.assign(provData, { bankName, accountNumber, accountName });
+    toast("Payout details saved! ✅", "success");
   } catch(e) {
-    console.error("[Provider] Save payout error:", e.code, e.message);
-    const msg = e.code==="permission-denied"
-      ? "Permission denied. Please log out and log back in."
-      : "Failed to save payout info. Try again.";
-    toast(msg,"error");
-  } finally { setLoading($("savePayoutBtn"),false); }
+    console.error("[Provider] savePayoutBtn:", e.code, e.message);
+    toast(e.code === "permission-denied" ? "Permission denied — please log out and back in." : "Failed to save payout info. Try again.", "error");
+  } finally { setLoading($("savePayoutBtn"), false); }
 });
 
-// ── Save profile ──────────────────────────────────────────
-$("saveProfileBtn").addEventListener("click", async()=>{
-  const name=$("pfName").value.trim(); if(!name){toast("Name is required.","warning");return;}
-  const tags=$("pfTags").value.split(",").map(t=>t.trim()).filter(Boolean);
-  const data={name,role:$("pfRole").value.trim(),category:$("pfCat").value,phone:$("pfPhone").value.trim(),country:$("pfCountry").value,state:$("pfState").value,city:$("pfCity").value,location:$("pfCity").value,bio:$("pfBio").value.trim(),tags,startingPrice:parseFloat($("pfPrice").value)||0,experience:parseInt($("pfExp").value)||0,updatedAt:serverTimestamp()};
-  setLoading($("saveProfileBtn"),true);
-  try {
-    const provRef = doc(db,"providers",currentUser.uid);
-    const provSnap = await getDoc(provRef);
+// ── Profile save ───────────────────────────────────────
+// Uses updateDoc (not setDoc+merge) to avoid touching protected fields
+$("saveProfileBtn").addEventListener("click", async () => {
+  const name = $("pfName").value.trim();
+  if (!name) { toast("Name is required.", "warning"); return; }
+  const tags = $("pfTags").value.split(",").map(t => t.trim()).filter(Boolean);
 
-    if (!provSnap.exists()) {
-      // First time saving profile — create base document
-      await setDoc(provRef, {
-        uid: currentUser.uid, name: currentUser.displayName||"",
-        email: currentUser.email || "", available: true,
-        rating: 0, reviewCount: 0, services: [],
+  // Only profile fields — never send rating, verified, suspended, completedJobs
+  const data = {
+    name,
+    role:          $("pfRole").value.trim()  || "",
+    category:      $("pfCat").value          || "",
+    phone:         $("pfPhone").value.trim() || "",
+    country:       $("pfCountry").value      || "",
+    state:         $("pfState").value        || "",
+    city:          $("pfCity").value         || "",
+    location:      $("pfCity").value         || "",
+    bio:           $("pfBio").value.trim()   || "",
+    tags,
+    startingPrice: parseFloat($("pfPrice").value) || 0,
+    experience:    parseInt($("pfExp").value)      || 0,
+    updatedAt:     serverTimestamp()
+  };
+
+  setLoading($("saveProfileBtn"), true);
+  try {
+    const ref  = doc(db, "providers", currentUser.uid);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      // First-time create — safe base fields only
+      await setDoc(ref, {
+        uid: currentUser.uid, name, email: currentUser.email || "",
+        available: true, rating: 0, reviewCount: 0,
         createdAt: serverTimestamp()
       });
     }
-
-    await setDoc(provRef, data, {merge:true});
-    await updateProfile(currentUser,{displayName:name});
-    Object.assign(provData,data);
-    $("heroName").textContent=name;
-    $("heroRole").textContent=data.role||"Service Provider";
-    renderStrength(); toast("Profile saved! ✅","success");
-  } catch(e){
-    console.error("[Provider] Save profile error:",e.code,e.message);
-    const msg = e.code==="permission-denied"
-      ? "Permission denied. Please log out and log back in."
-      : "Failed to save profile. Try again.";
-    toast(msg,"error");
-  } finally{setLoading($("saveProfileBtn"),false);}
+    // updateDoc only changes the explicit fields — never the protected ones
+    await updateDoc(ref, data);
+    await updateProfile(currentUser, { displayName: name });
+    Object.assign(provData, data);
+    $("heroName").textContent = name;
+    $("heroRole").textContent = data.role || "Service Provider";
+    renderStrength();
+    toast("Profile saved! ✅", "success");
+  } catch(e) {
+    console.error("[Provider] saveProfileBtn:", e.code, e.message);
+    toast(e.code === "permission-denied"
+      ? "Permission denied — please log out and back in."
+      : "Failed to save profile. Try again.", "error");
+  } finally { setLoading($("saveProfileBtn"), false); }
 });
 
-// ── Profile photo upload ──────────────────────────────────
-$("profilePhotoInput").addEventListener("change", async()=>{
-  const file=$("profilePhotoInput").files?.[0]; if(!file)return;
-  if(!file.type.startsWith("image/")){toast("Please select an image.","warning");return;}
-  if(file.size>5*1024*1024){toast("Image must be under 5MB.","warning");return;}
+// ── Profile photo ──────────────────────────────────────
+// FIX: correctly assign photoURL from uploadToCloudinary return value
+$("profilePhotoInput").addEventListener("change", async () => {
+  const file = $("profilePhotoInput").files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) { toast("Please select an image.", "warning"); return; }
+  if (file.size > 5 * 1024 * 1024) { toast("Image must be under 5MB.", "warning"); return; }
   try {
     showSpinner();
-    // No transformation in upload call — unsigned preset rejects it (HTTP 400)
-    const rawUrl = await uploadToCloudinary(file, {
-      folder: `servana/providers/${currentUser.uid}`
-    });
-
-    // Update Firebase Auth profile and Firestore provider document
-     // Save the uploaded image URL to Firebase Auth and Firestore.
+    // uploadToCloudinary returns the URL — assign directly as photoURL
+    const photoURL = await uploadToCloudinary(file, { folder: `servana/providers/${currentUser.uid}` });
     await updateProfile(currentUser, { photoURL });
-
-    await setDoc(
-      doc(db, "providers", currentUser.uid),
-      { photoURL },
-      { merge: true }
-    );
-
-    $("heroAv").src = photoURL;
-    $("heroAv").style.display = "block";
+    await updateDoc(doc(db, "providers", currentUser.uid), { photoURL, updatedAt: serverTimestamp() });
+    $("heroAv").src = photoURL; $("heroAv").style.display = "block";
     $("heroAvFb").style.display = "none";
     $("photoPreview").src = photoURL;
-
     provData.photoURL = photoURL;
     renderStrength();
-
-    toast("Profile photo updated!", "success");
-  } catch (e) {
-    console.error("[Upload] Profile photo error:", {
-      code: e.code,
-      message: e.message
-    });
-
-    if (e.message?.includes("CLOUDINARY_NOT_CONFIGURED")) {
-      toast(
-        "Photo upload is not ready. Cloudinary needs to be configured.",
-        "warning",
-        6000
-      );
-    } else if (e.code === "permission-denied") {
-      toast("You don't have permission to update this profile photo.", "error");
-    } else {
-      toast("Upload failed: " + (e.message || "Try again."), "error");
-    }
-  } finally {
-    hideSpinner();
-    $("profilePhotoInput").value = "";
-  }
+    toast("Photo updated! ✅", "success");
+  } catch(e) {
+    console.error("[Upload] profilePhoto:", e.code, e.message);
+    toast(e.message?.includes("CLOUDINARY_NOT_CONFIGURED")
+      ? "Photo upload not ready — Cloudinary needs to be configured."
+      : "Upload failed: " + (e.message || "Try again."), "error");
+  } finally { hideSpinner(); $("profilePhotoInput").value = ""; }
 });
 
-// ── Verify ────────────────────────────────────────────────
-$("verifyBtn").addEventListener("click",()=>toast("Verification request submitted. Our team will review within 48 hours.","info",6000));
+// ── Verify ────────────────────────────────────────────
+$("verifyBtn").addEventListener("click", () =>
+  toast("Verification request submitted. Our team will review within 48 hours.", "info", 6000)
+);
 
-// ── Modals ────────────────────────────────────────────────
-function closeModal(id){$(id).classList.remove("active");}
-$("closeSvcModal").addEventListener("click",()=>closeModal("svcModal"));
-$("svcModal").addEventListener("click",e=>{if(e.target===$("svcModal"))closeModal("svcModal");});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal("svcModal");}});
+// ── Modals ────────────────────────────────────────────
+$("closeSvcModal").addEventListener("click", () => $("svcModal").classList.remove("active"));
+$("svcModal").addEventListener("click", e => { if (e.target === $("svcModal")) $("svcModal").classList.remove("active"); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") $("svcModal").classList.remove("active"); });
 </script>
 </body>
 </html>
