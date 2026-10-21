@@ -510,37 +510,77 @@ async function loadProviderServices() {
   }
 }
 
+
 async function migrateEmbeddedServices(embedded, existing) {
-  // Avoid duplicates: compare by name (case-insensitive)
-  const existingNames = new Set(existing.map(s => (s.name || "").toLowerCase().trim()));
-  const toMigrate = embedded.filter(s =>
-    s.name && !existingNames.has(s.name.toLowerCase().trim()) && (s.price > 0 || s.price === 0)
-  );
+  // Never delete legacy data automatically.
+  // Migrate only valid services and retain all embedded records
+  // until migration has been independently verified.
+
+  const normalize = value =>
+    String(value ?? "").trim().toLocaleLowerCase();
+
+  const fingerprint = service => JSON.stringify([
+    normalize(service.name),
+    Number(service.price),
+    normalize(service.description),
+    normalize(service.duration)
+  ]);
+
+  // Match the complete service details, not just its name.
+  const existingKeys = new Set(existing.map(fingerprint));
+  const toMigrate = [];
+
+  for (const service of embedded) {
+    const name = String(service.name ?? "").trim();
+    const price = Number(service.price);
+
+    // Invalid legacy records remain untouched for manual review.
+    if (!name || !Number.isFinite(price) || price <= 0) {
+      continue;
+    }
+
+    const key = fingerprint(service);
+
+    // Avoid migrating an identical service more than once.
+    if (existingKeys.has(key)) {
+      continue;
+    }
+
+    existingKeys.add(key);
+    toMigrate.push({ ...service, name, price });
+  }
+
   if (!toMigrate.length) {
-    // All already migrated — just clean up embedded array
-    await updateDoc(doc(db, "providers", currentUser.uid), { services: deleteField() }).catch(() => {});
     return 0;
   }
+
   const batch = writeBatch(db);
-  toMigrate.forEach(s => {
+
+  for (const service of toMigrate) {
     const ref = doc(collection(db, "services"));
+
     batch.set(ref, {
-      providerId:  currentUser.uid,
-      name:        s.name        || "",
-      description: s.description || "",
-      price:       Number(s.price) || 0,
-      duration:    s.duration    || "",
-      active:      true,
-      createdAt:   serverTimestamp(),
-      updatedAt:   serverTimestamp()
+      providerId: currentUser.uid,
+      name: service.name,
+      description: String(service.description ?? ""),
+      price: service.price,
+      duration: String(service.duration ?? ""),
+      active: service.active !== false,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     });
-  });
+  }
+
+  // If this fails, the batch does not partially migrate its writes.
   await batch.commit();
-  // Remove embedded array after successful migration
-  await updateDoc(doc(db, "providers", currentUser.uid), { services: deleteField() }).catch(() => {});
-  provData.services = undefined;
+
+  // IMPORTANT:
+  // Do not delete providers/{uid}.services here.
+  // Cleanup will happen only after a separate verification step.
+
   return toMigrate.length;
 }
+
 
 function renderServices() {
   const el = $("servicesList");
