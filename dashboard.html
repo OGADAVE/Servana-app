@@ -891,6 +891,7 @@
     <select
       class="loc-select"
       id="locationSelect"
+      hidden
     >
 
       <option value="">
@@ -2021,24 +2022,11 @@
 
 
   function openCategory(encodedCategory) {
-
-    if (!encodedCategory) {
-      return;
-    }
-
-
-    /*
-      Dashboard
-          ↓
-      category.html?cat=Fashion
-          ↓
-      category.html strictly queries:
-      providers where category == Fashion
-    */
-
-    location.href =
-      `./category.html?cat=${encodedCategory}`;
-
+    if (!encodedCategory) return;
+    // One matching system: the seeker page matches by category id (the slug of the name).
+    const id = decodeURIComponent(encodedCategory).toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    location.href = `./seeker.html?category=${encodeURIComponent(id)}`;
   }
 
 
@@ -2046,40 +2034,8 @@
      LOAD SERVICES
   ========================================================= */
 
-  async function loadServices() {
-
-    try {
-
-      const snap =
-        await getDocs(
-          collection(
-            db,
-            "services"
-          )
-        );
-
-
-      services =
-        snap.docs.map(
-          docSnap => ({
-            id: docSnap.id,
-            ...docSnap.data()
-          })
-        );
-
-
-    } catch (error) {
-
-      console.error(
-        "Services load error:",
-        error
-      );
-
-      services = [];
-
-    }
-
-  }
+  // Services are no longer loaded here: searching hands off to seeker.html (the single matcher).
+  async function loadServices() { services = []; }
 
 
   /* =========================================================
@@ -2087,89 +2043,11 @@
   ========================================================= */
 
   function runSearch() {
-
-    const kw =
-      $("searchInput")
-        .value
-        .trim()
-        .toLowerCase();
-
-
-    const loc =
-      $("locationSelect")
-        .value
-        .trim()
-        .toLowerCase();
-
-
-    if (!kw && !loc) {
-
-      showCats();
-
-      return;
-    }
-
-
-    const filtered =
-      services.filter(service => {
-
-        const location =
-          String(
-            service.location || ""
-          ).toLowerCase();
-
-
-        const name =
-          String(
-            service.name || ""
-          ).toLowerCase();
-
-
-        const description =
-          String(
-            service.description || ""
-          ).toLowerCase();
-
-
-        const category =
-          String(
-            service.category || ""
-          ).toLowerCase();
-
-
-        const matchLocation =
-          !loc ||
-          location.includes(loc);
-
-
-        const matchKeyword =
-          !kw ||
-          name.includes(kw) ||
-          description.includes(kw) ||
-          category.includes(kw) ||
-          location.includes(kw);
-
-
-        return (
-          matchLocation &&
-          matchKeyword
-        );
-
-      });
-
-
-    showResults(
-      filtered,
-      kw,
-      loc
-    );
-
+    const kw = $("searchInput").value.trim();
+    if (!kw) return;
+    location.href = `./seeker.html?q=${encodeURIComponent(kw.slice(0, 80))}`;
   }
 
-
-  /* =========================================================
-     DISPLAY SEARCH RESULTS
-  ========================================================= */
 
   function showResults(
     list,
@@ -2446,28 +2324,16 @@
             .value;
 
 
-        if (
-          !hasKeyword &&
-          !hasLocation
-        ) {
-
+        if (!hasKeyword) {
           showCats();
-
-          return;
         }
-
-
-        runSearch();
 
       }
     )
   );
 
 
-  $("locationSelect").addEventListener(
-    "change",
-    runSearch
-  );
+  // Location is chosen on the matching page (country/state/city), not here.
 
 
   /* =========================================================

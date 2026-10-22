@@ -213,6 +213,7 @@ import {
   doc, updateDoc, addDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { uploadToCloudinary } from "./assets/cloudinary.js";
+import { submitReview, ReviewError } from "./assets/reviews.js";
 
 // ── State ──────────────────────────────────────────────
 const $ = id => document.getElementById(id);
@@ -385,7 +386,7 @@ function renderList() {
             : ""}
           ${isReviewed ? `<span style="font-size:11px;color:var(--success);font-weight:600">⭐ Reviewed</span>` : ""}
           <button class="btn btn-ghost btn-sm chat-btn"
-            data-uid="${esc(b.providerId || "")}"
+            data-uid="${esc(b.providerId || "")}" data-name="${esc(b.providerName || "")}"
             ${!b.providerId ? "disabled" : ""}>
             💬 Chat
           </button>
@@ -428,7 +429,7 @@ function renderList() {
 
   el.querySelectorAll(".chat-btn").forEach(btn =>
     btn.addEventListener("click", () => {
-      if (btn.dataset.uid) location.href = `./chat.html?uid=${btn.dataset.uid}`;
+      if (btn.dataset.uid) location.href = `./chat.html?uid=${encodeURIComponent(btn.dataset.uid)}&name=${encodeURIComponent(btn.dataset.name || "")}`;
     })
   );
 }
@@ -601,47 +602,24 @@ $("submitReview").addEventListener("click", async () => {
   const sBtn = $("submitReview");
   setLoading(sBtn, true);
   try {
-    // Duplicate check
-    const dupQ    = query(collection(db, "reviews"),
-      where("bookingId", "==", reviewBookingId),
-      where("seekerId",  "==", currentUser.uid));
-    const dupSnap = await getDocs(dupQ);
-    if (!dupSnap.empty) {
-      toast("You've already reviewed this booking.", "warning");
-      $("reviewOverlay").classList.remove("active");
-      return;
-    }
+    const booking = allBookings.find(x => x.id === reviewBookingId);
+    if (!booking) { toast("Booking not found. Please refresh.", "error"); return; }
 
-    const booking = allBookings.find(x => x.id === reviewBookingId) || {};
+    // Review + reviewed flag + provider rating aggregate: one atomic transaction.
+    await submitReview({ user: currentUser, booking, rating: selectedStars, comment: $("reviewComment").value });
 
-    await addDoc(collection(db, "reviews"), {
-      bookingId:   reviewBookingId,
-      seekerId:    currentUser.uid,
-      seekerName:  currentUser.displayName || "",
-      providerId:  reviewProviderId,
-      providerName:booking.providerName    || "",
-      rating:      Number(selectedStars),   // Explicit number cast — Firestore rules check `is number`
-      comment:     $("reviewComment").value.trim(),
-      createdAt:   serverTimestamp()
-    });
-
-    await updateDoc(doc(db, "bookings", reviewBookingId), {
-      reviewed:   true,
-      reviewedAt: serverTimestamp()
-    });
-
-    // Update local state
-    if (booking) booking.reviewed = true;
-
+    booking.reviewed = true;
     $("reviewOverlay").classList.remove("active");
     renderList();
     toast("Review submitted! Thank you. ⭐", "success");
   } catch(e) {
     console.error("[Review] Submit failed:", e.code, e.message);
-    const msg = e.code === "permission-denied"
-      ? "Permission denied — try logging out and back in."
-      : `Failed to submit review: ${e.message || "Unknown error. Check console."}`;
-    toast(msg, "error");
+    if (e instanceof ReviewError) {
+      toast(e.message, e.code === "already" ? "warning" : "error");
+      if (e.code === "already") $("reviewOverlay").classList.remove("active");
+    } else {
+      toast(e.code === "permission-denied" ? "Permission denied — try logging out and back in." : "Failed to submit review. Please try again.", "error");
+    }
   } finally {
     setLoading(sBtn, false);
     reviewBookingId = reviewProviderId = null;

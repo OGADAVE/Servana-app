@@ -211,6 +211,7 @@
 </nav>
 
 <script type="module">
+import { deleteMyAccount, AccountError } from "./assets/account.js";
 import { auth, db, toast, showSpinner, hideSpinner, setLoading } from "./assets/firebase.js";
 import { onAuthStateChanged, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -291,15 +292,16 @@ $("signOutBtn").addEventListener("click", async () => {
 
 // Delete account
 $("deleteBtn").addEventListener("click", async () => {
-  const confirmed = confirm("This will permanently delete your Servana account and all data. This cannot be undone. Are you sure?");
+  const confirmed = confirm("This will permanently delete your Servana account and your profile, listings and payout details. Completed bookings and reviews stay on record for the other party. This cannot be undone. Are you sure?");
   if (!confirmed) return;
   try {
     showSpinner();
-    await deleteUser(currentUser);
+    await deleteMyAccount(currentUser);
     location.href = "./index.html";
   } catch(e) {
     hideSpinner();
-    if (e.code === "auth/requires-recent-login") toast("Please log out and log back in before deleting your account.", "warning");
+    if (e instanceof AccountError) toast(e.message, "warning", 6000);
+    else if (e.code === "auth/requires-recent-login") toast("Please log out and log back in before deleting your account.", "warning");
     else toast("Failed to delete account.", "error");
   }
 });

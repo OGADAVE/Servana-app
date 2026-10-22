@@ -1,7 +1,8 @@
 <!--
 ═══════════════════════════════════════════════════════════
 SERVANA — PWA Integration Guide
-Add this to EVERY HTML page in the <head> section
+Add this to EVERY HTML page in the <head>
+<meta name="robots" content="noindex,nofollow"> section
 ═══════════════════════════════════════════════════════════
 -->
 
@@ -290,11 +291,11 @@ if (savedDark === "false") document.documentElement.style.colorScheme = "light";
   □ Update CLOUD_NAME + UPLOAD_PRESET in assets/cloudinary.js
   □ Replace Firebase Storage calls in profile.html, provider.html, dashboard.html
 
-  PAYSTACK
+  PAYSTACK (provider commission only; seekers pay providers directly)
   □ Activate account at paystack.com
-  □ Add public key to assets/paystack.js
-  □ Add <script src="https://js.paystack.co/v1/inline.js"> to seeker.html
-  □ Wire payForBooking() into seeker.html booking confirm flow
+  □ Put your pk_live_ key in assets/paystack.js (PAYSTACK_PUBLIC_KEY)
+  □ Netlify env vars: PAYSTACK_SECRET_KEY, FIREBASE_SERVICE_ACCOUNT
+  □ Paystack dashboard webhook URL: https://servana.top/.netlify/functions/paystack-webhook
 
   EMAILJS
   □ Create templates in EmailJS dashboard (3 templates — see email.js)

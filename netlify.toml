@@ -11,15 +11,12 @@
 
 
 # ───────────────────────────────────────────────────────
-# SPA FALLBACK
+# NO SPA FALLBACK
 # ───────────────────────────────────────────────────────
-# Allows client-side routes to resolve through index.html
-# while preserving the existing Servana application flow.
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# Servana is a multi-page app. The old catch-all (/* -> /index.html, 200) turned every
+# mistyped URL into a "successful" home page (soft 404s, confusing for users and Google)
+# and hid broken links. Netlify now serves 404.html for unknown paths. Pretty URLs such as
+# /login and /support still resolve to login.html and support.html.
 
 
 # ───────────────────────────────────────────────────────
@@ -88,6 +85,8 @@
                   https://onesignal.com
                   https://api.onesignal.com
                   https://api.emailjs.com
+                  https://api.paystack.co
+                  https://checkout.paystack.com
                   https://cdn.jsdelivr.net;
 
       frame-src 'self'
@@ -95,7 +94,8 @@
                 https://auth.servana.top
                 https://*.firebase.com
                 https://accounts.google.com
-                https://js.paystack.co;
+                https://js.paystack.co
+                https://checkout.paystack.com;
 
       object-src 'none';
 
@@ -115,36 +115,28 @@
 # IMPORTANT:
 # Specific files that change frequently are overridden below.
 
+# Code (JS/CSS) is NOT fingerprinted, so it must be revalidated on every load (cheap 304s).
+# "immutable for a year" meant returning users kept running old matching/booking/payment code.
 [[headers]]
-  for = "/assets/*"
+  for = "/assets/*.js"
 
   [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+    Cache-Control = "public, max-age=0, must-revalidate"
 
 
+[[headers]]
+  for = "/assets/*.css"
+
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+
+# Images never change in place.
 [[headers]]
   for = "/assets/images/*"
 
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
-
-
-# ───────────────────────────────────────────────────────
-# CLOUDINARY MODULE
-# ───────────────────────────────────────────────────────
-# Do NOT aggressively cache this file.
-#
-# This ensures fixes to uploadToCloudinary(),
-# serviceImageUrl(), avatarUrl(), etc. reach users
-# immediately after deployment.
-
-[[headers]]
-  for = "/assets/cloudinary.js"
-
-  [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
-    Pragma = "no-cache"
-    Expires = "0"
 
 
 # ───────────────────────────────────────────────────────

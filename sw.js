@@ -3,7 +3,8 @@
 // Strategy: Cache-first for assets, Network-first for pages
 // ═══════════════════════════════════════════════════════
 
-const APP_VERSION   = "servana-v1.0.0";
+// Bump this on every deploy that changes cached files.
+const APP_VERSION   = "servana-v2.0.0";
 const STATIC_CACHE  = `${APP_VERSION}-static`;
 const DYNAMIC_CACHE = `${APP_VERSION}-dynamic`;
 const OFFLINE_PAGE  = "./offline.html";
@@ -28,8 +29,12 @@ const PRECACHE_ASSETS = [
   "./assets/firebase.js",
   "./assets/cloudinary.js",
   "./assets/paystack.js",
-  "./assets/email.js",
   "./assets/notifications.js",
+  "./assets/locations.js",
+  "./assets/matching.js",
+  "./assets/booking.js",
+  "./assets/reviews.js",
+  "./assets/account.js",
   "https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=DM+Sans:wght@400;500;600;700&display=swap"
 ];
 
@@ -41,7 +46,8 @@ const NEVER_CACHE = [
   "api.cloudinary.com",
   "js.paystack.co",
   "emailjs.com",
-  "onesignal.com"
+  "onesignal.com",
+  "/.netlify/functions/"
 ];
 
 // ── Max entries in dynamic cache ─────────────────────────
@@ -111,11 +117,16 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // ── Strategy: Cache-first for static assets (CSS, JS, images) ──
+  // ── Strategy: NETWORK-first for code (JS/CSS) ───────────
+  // Cache-first here served stale matching/booking/payment code after deploys. Code is small;
+  // the cache is only the offline fallback.
+  if (url.pathname.endsWith(".js") || url.pathname.endsWith(".css")) {
+    event.respondWith(networkFirst(request, STATIC_CACHE));
+    return;
+  }
+
+  // ── Strategy: Cache-first for immutable media (images, fonts) ──
   if (
-    url.pathname.startsWith("/assets/") ||
-    url.pathname.endsWith(".css") ||
-    url.pathname.endsWith(".js") ||
     url.pathname.endsWith(".png") ||
     url.pathname.endsWith(".jpg") ||
     url.pathname.endsWith(".svg") ||

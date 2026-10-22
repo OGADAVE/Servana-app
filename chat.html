@@ -290,7 +290,7 @@ import { auth, db, toast, esc, initials } from "./assets/firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   collection, doc, query, where, limit,
-  onSnapshot, addDoc, updateDoc, serverTimestamp,
+  onSnapshot, addDoc, updateDoc, serverTimestamp, increment,
   getDocs, getDoc, setDoc, orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -304,8 +304,11 @@ onAuthStateChanged(auth, user => {
   me = user;
   listenConversations();
   // Deep link: ?uid=xxx starts chat with that user
-  const uid = new URLSearchParams(location.search).get("uid");
-  if (uid) setTimeout(() => startChatWith(uid), 1000);
+  const qs  = new URLSearchParams(location.search);
+  const uid = qs.get("uid");
+  if (uid && /^[A-Za-z0-9]{10,64}$/.test(uid) && uid !== user.uid) {
+    setTimeout(() => startChatWith(uid, (qs.get("name") || "").slice(0, 80)), 1000);
+  }
 });
 
 // ── Listen to conversations ──────────────────────────
@@ -476,9 +479,12 @@ async function sendMessage() {
       createdAt:  serverTimestamp(),
       read:       false
     });
+    const conv  = allConvs.find(c => c.id === activeChatId);
+    const other = (conv?.participants || []).find(u => u !== me.uid);
     await updateDoc(doc(db, "chats", activeChatId), {
-      lastMessage:   text,
-      lastMessageAt: serverTimestamp()
+      lastMessage:   text.slice(0, 200),
+      lastMessageAt: serverTimestamp(),
+      ...(other ? { [`unread.${other}`]: increment(1) } : {})
     });
   } catch(e) {
     console.error("[Chat] Send error:", e);
@@ -513,7 +519,7 @@ $("backBtn").addEventListener("click", () => {
 });
 
 // ── Start chat from deep link (?uid=xxx) ─────────────
-async function startChatWith(otherUid) {
+async function startChatWith(otherUid, hintName = "") {
   if (!me) return;
   try {
     // Check for existing chat
@@ -525,8 +531,12 @@ async function startChatWith(otherUid) {
     });
 
     if (!chatId) {
-      const otherSnap = await getDoc(doc(db, "users", otherUid));
-      const otherName = otherSnap.exists() ? (otherSnap.data().displayName || "User") : "User";
+      // users/{uid} is private, so the name comes from the booking (?name=) or the public provider profile.
+      let otherName = hintName;
+      if (!otherName) {
+        try { const ps = await getDoc(doc(db, "providers", otherUid)); if (ps.exists()) otherName = ps.data().name || ""; } catch (_) { /* ignore */ }
+      }
+      otherName = otherName || "User";
       const ref = await addDoc(collection(db, "chats"), {
         participants:     [me.uid, otherUid],
         participantNames: { [me.uid]: me.displayName || "User", [otherUid]: otherName },

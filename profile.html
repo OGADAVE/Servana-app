@@ -206,6 +206,7 @@
 </nav>
 
 <script type="module">
+import { deleteMyAccount, AccountError } from "./assets/account.js";
 import { auth, db, toast, showSpinner, hideSpinner, esc, formatNGN, initials, setLoading } from "./assets/firebase.js";
 import { wireCascade, getLocationString } from "./assets/locations.js";
 import { onAuthStateChanged, updateProfile, updatePassword, deleteUser, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -370,15 +371,16 @@ $("changePwBtn").addEventListener("click", async () => {
 
 // ── Delete account ────────────────────────────────────────
 $("deleteAccBtn").addEventListener("click", async () => {
-  const confirmed = confirm("Are you absolutely sure? This will permanently delete your account and all data. This cannot be undone.");
+  const confirmed = confirm("Are you absolutely sure? This will permanently delete your account and your profile, listings and payout details. Completed bookings and reviews stay on record for the other party. This cannot be undone.");
   if (!confirmed) return;
   try {
     showSpinner();
-    await deleteUser(currentUser);
+    await deleteMyAccount(currentUser);
     location.href = "./index.html";
   } catch(e) {
     hideSpinner();
-    if (e.code === "auth/requires-recent-login") toast("Please log out and log back in before deleting your account.", "warning");
+    if (e instanceof AccountError) toast(e.message, "warning", 6000);
+    else if (e.code === "auth/requires-recent-login") toast("Please log out and log back in before deleting your account.", "warning");
     else toast("Failed to delete account.", "error");
   }
 });

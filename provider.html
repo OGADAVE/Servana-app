@@ -335,9 +335,18 @@
       <div class="field"><label>Service Name *</label><input type="text" id="svcName" placeholder="e.g. Pipe Repair"></div>
       <div class="field"><label>Description</label><textarea id="svcDesc" placeholder="What does this service include?" style="min-height:80px"></textarea></div>
       <div class="field-row">
-        <div class="field"><label>Price (₦) *</label><input type="number" id="svcPrice" placeholder="5000" min="0"></div>
+        <div class="field"><label>Price (₦) *</label><input type="number" id="svcPrice" placeholder="5000" min="1"></div>
         <div class="field"><label>Duration</label><input type="text" id="svcDuration" placeholder="e.g. 1–2 hours"></div>
       </div>
+      <div class="field-row">
+        <div class="field"><label>Category *</label><select id="svcCat" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-subtle);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;width:100%"></select></div>
+        <div class="field"><label>Where do you work? *</label><select id="svcCoverage" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-subtle);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;width:100%">
+          <option value="city">On-site · my city only</option>
+          <option value="state">On-site · anywhere in my state</option>
+          <option value="remote">Remote / online (anywhere)</option>
+        </select></div>
+      </div>
+      <p id="svcMinNote" style="font-size:11px;color:var(--text-3);margin:-4px 0 4px"></p>
       <button class="btn btn-primary btn-block" id="saveSvcBtn">
         <span class="btn-text">Save Service</span>
         <span class="btn-spin-wrap"><div class="btn-spin"></div></span>
@@ -358,11 +367,13 @@
 import { auth, db, toast, showSpinner, hideSpinner, esc, starsHtml, initials, formatNGN, setLoading } from "./assets/firebase.js";
 import { wireCascade } from "./assets/locations.js";
 import { uploadToCloudinary, avatarUrl } from "./assets/cloudinary.js";
+import { commissionFor, slugify, DEFAULT_COMMISSION_PCT, isPriced } from "./assets/matching.js";
+import { payCommission as payCommissionOnline, paystackConfigured } from "./assets/paystack.js";
 import { onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   doc, getDoc, setDoc, getDocs, updateDoc, addDoc, deleteDoc,
   collection, query, where, serverTimestamp,
-  onSnapshot, writeBatch, limit, deleteField
+  onSnapshot, writeBatch, limit, deleteField, increment
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const $ = id => document.getElementById(id);
@@ -374,6 +385,19 @@ let allBookings  = [];
 let providerServices = [];       // loaded from top-level services collection
 let activeBookTab    = "pending";
 let editingSvcId     = null;     // service document ID being edited (null = new)
+let payout           = {};       // providers/{uid}/private/payout  (NEVER on the public provider doc)
+let platformCfg      = {};       // config/platform
+let categoryList     = [];       // [{id, name, icon}]
+
+// ── Money helpers: ONE definition shared by every card/total on this page ──
+const ratePct       = b => Number.isFinite(Number(b?.commissionRate)) ? Number(b.commissionRate)
+                          : (Number.isFinite(Number(platformCfg.commissionRate)) ? Number(platformCfg.commissionRate) : DEFAULT_COMMISSION_PCT);
+const isPaidJob     = b => b.status === "completed" && b.paymentStatus === "payment_confirmed";
+const commissionOf  = b => Number(b.commissionAmount) > 0 ? Number(b.commissionAmount) : commissionFor(b.serviceFee || 0, ratePct(b));
+const pendingCommissionBookings = () => allBookings.filter(b => b.commissionStatus === "pending" && Number(b.commissionAmount) > 0);
+const outstandingCommission     = () => pendingCommissionBookings().reduce((s, b) => s + Number(b.commissionAmount), 0);
+const payoutComplete = () => !!(payout.bankName && payout.accountNumber && payout.accountName);
+const safeInternalUrl = u => /^\.\/[a-z-]+\.html(\?[\w=&%.\-]*)?$/.test(u || "") ? u : "";
 
 // ── Tab switcher ───────────────────────────────────────
 window.switchTab = function(tabId) {
@@ -394,7 +418,9 @@ document.querySelectorAll(".htab").forEach(t =>
 onAuthStateChanged(auth, async user => {
   if (!user) { location.href = "./login.html"; return; }
   currentUser = user;
+  try { const c = await getDoc(doc(db, "config", "platform")); platformCfg = c.exists() ? c.data() : {}; } catch (_) { platformCfg = {}; }
   await Promise.all([loadProviderData(), loadBookings()]);
+  renderStrength();
   initNotifPanel();
 });
 
@@ -422,6 +448,7 @@ async function loadProviderData() {
       $("heroAvFb").style.display = "flex";
     }
     if (provData.verified) { $("heroVerified").style.display = "flex"; $("verifBanner").style.display = "none"; }
+    if (!provData.verified && provData.verificationRequestedAt) { $("verifyBtn").textContent = "Requested ✓"; $("verifyBtn").disabled = true; }
 
     const avail = provData.available !== false;
     $("availToggle").checked = avail; updateAvailLabel(avail);
@@ -434,19 +461,16 @@ async function loadProviderData() {
     $("pfTags").value  = Array.isArray(provData.tags) ? provData.tags.join(", ") : (provData.tags || "");
     $("pfPrice").value = provData.startingPrice || "";
     $("pfExp").value   = provData.experience    || "";
-    $("bankName").value    = provData.bankName      || "";
-    $("accountNum").value  = provData.accountNumber || "";
-    $("accountName").value = provData.accountName   || "";
+    await loadPayout();
 
     // Category select — load from Firestore (same list seeker uses)
     try {
       const catSnap = await getDocs(collection(db, "category"));
       const el = $("pfCat");
       el.innerHTML = '<option value="">Select your category</option>';
-      catSnap.docs
-        .map(d => d.data())
-        .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
-        .forEach(c => {
+      categoryList = catSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+      categoryList.forEach(c => {
           const o = document.createElement("option");
           o.value = c.name || "";
           o.textContent = `${c.icon || ""}  ${c.name || ""}`.trim();
@@ -475,112 +499,91 @@ async function loadProviderData() {
 // ── SERVICES — top-level collection ───────────────────
 // This is the authoritative source for both provider and seeker
 
+async function loadPayout() {
+  const provRef = doc(db, "providers", currentUser.uid);
+  try {
+    const snap = await getDoc(doc(db, "providers", currentUser.uid, "private", "payout"));
+    payout = snap.exists() ? snap.data() : {};
+  } catch (e) { console.warn("[Provider] payout load:", e.message); payout = {}; }
+
+  // One-time move of legacy PUBLIC bank details into the private doc.
+  if (!payout.accountNumber && provData.accountNumber) {
+    try {
+      payout = { bankName: provData.bankName || "", accountNumber: provData.accountNumber || "", accountName: provData.accountName || "" };
+      await setDoc(doc(db, "providers", currentUser.uid, "private", "payout"), { ...payout, updatedAt: serverTimestamp() }, { merge: true });
+      await updateDoc(provRef, { bankName: deleteField(), accountNumber: deleteField(), accountName: deleteField() });
+    } catch (e) { console.warn("[Provider] payout move:", e.message); }
+  }
+  $("bankName").value    = payout.bankName      || "";
+  $("accountNum").value  = payout.accountNumber || "";
+  $("accountName").value = payout.accountName   || "";
+}
+
+// ── SERVICES: top-level `services` collection is the single source of truth ──
+async function fetchProviderServices() {
+  const snap = await getDocs(query(collection(db, "services"), where("providerId", "==", currentUser.uid)));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
+}
+
 async function loadProviderServices() {
   try {
-    const q    = query(collection(db, "services"), where("providerId", "==", currentUser.uid));
-    const snap = await getDocs(q);
-    providerServices = snap.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .filter(s => s.active !== false)
-      .sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
-
-    // Migrate embedded services if any exist
-    const embedded = provData.services || [];
-    if (embedded.length) {
-      const migrated = await migrateEmbeddedServices(embedded, providerServices);
-      if (migrated > 0) {
-        // Reload after migration
-        const snap2 = await getDocs(q);
-        providerServices = snap2.docs
-          .map(d => ({ id: d.id, ...d.data() }))
-          .filter(s => s.active !== false)
-          .sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
-        const banner = $("migrateBanner");
-        if (banner) {
-          banner.innerHTML = `<div class="migrate-banner">✅ <strong>${migrated} service${migrated > 1 ? "s" : ""} migrated</strong> to the new architecture. Seekers can now find your services.</div>`;
-          setTimeout(() => { banner.innerHTML = ""; }, 6000);
-        }
-      }
-    }
-
-    renderServices();
-  } catch(e) {
+    providerServices = (await fetchProviderServices()).filter(s => s.active !== false);
+  } catch (e) {
     console.error("[Provider] loadProviderServices:", e);
     toast("Could not load services.", "error");
+    providerServices = [];
+  }
+  renderServices();                                   // ALWAYS render, even if migration fails below
+
+  const embedded = Array.isArray(provData.services) ? provData.services : [];
+  if (!embedded.length) return;
+  try {
+    const migrated = await migrateEmbeddedServices(embedded);
+    if (migrated > 0) {
+      providerServices = (await fetchProviderServices()).filter(s => s.active !== false);
+      renderServices(); renderStrength();
+      const banner = $("migrateBanner");
+      if (banner) {
+        banner.innerHTML = `<div class="migrate-banner">✅ <strong>${migrated} service${migrated > 1 ? "s" : ""} upgraded</strong>. Please open each one and confirm its category and coverage area so seekers can find it.</div>`;
+        setTimeout(() => { banner.innerHTML = ""; }, 9000);
+      }
+    }
+  } catch (e) {
+    console.error("[Provider] service migration:", e);   // never blocks the page
   }
 }
 
-
-async function migrateEmbeddedServices(embedded, existing) {
-  // Never delete legacy data automatically.
-  // Migrate only valid services and retain all embedded records
-  // until migration has been independently verified.
-
-  const normalize = value =>
-    String(value ?? "").trim().toLocaleLowerCase();
-
-  const fingerprint = service => JSON.stringify([
-    normalize(service.name),
-    Number(service.price),
-    normalize(service.description),
-    normalize(service.duration)
-  ]);
-
-  // Match the complete service details, not just its name.
-  const existingKeys = new Set(existing.map(fingerprint));
-  const toMigrate = [];
-
-  for (const service of embedded) {
-    const name = String(service.name ?? "").trim();
-    const price = Number(service.price);
-
-    // Invalid legacy records remain untouched for manual review.
-    if (!name || !Number.isFinite(price) || price <= 0) {
-      continue;
-    }
-
-    const key = fingerprint(service);
-
-    // Avoid migrating an identical service more than once.
-    if (existingKeys.has(key)) {
-      continue;
-    }
-
-    existingKeys.add(key);
-    toMigrate.push({ ...service, name, price });
-  }
-
-  if (!toMigrate.length) {
-    return 0;
-  }
-
+// Idempotent: the document id is derived from provider + service name, so running it
+// twice (or from two devices) can never create duplicates.
+async function migrateEmbeddedServices(embedded) {
+  const have = new Set((await fetchProviderServices()).map(s => s.id));
   const batch = writeBatch(db);
+  let count = 0, skipped = 0;
+  const catId = slugify(provData.category);
 
-  for (const service of toMigrate) {
-    const ref = doc(collection(db, "services"));
-
-    batch.set(ref, {
-      providerId: currentUser.uid,
-      name: service.name,
-      description: String(service.description ?? ""),
-      price: service.price,
-      duration: String(service.duration ?? ""),
-      active: service.active !== false,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+  embedded.forEach(s => {
+    const name  = String(s?.name || "").trim().slice(0, 160);
+    const price = Number(String(s?.price ?? "").replace(/[^0-9.]/g, ""));
+    if (!name || !(price > 0)) { skipped++; return; }
+    const id = `${currentUser.uid}_${slugify(name).slice(0, 60) || "service"}`;
+    if (have.has(id)) return;
+    have.add(id);
+    batch.set(doc(db, "services", id), {
+      providerId: currentUser.uid, name, price,
+      description: String(s.description || "").trim().slice(0, 500),
+      duration: String(s.duration || "").trim().slice(0, 60),
+      categoryId: catId, serviceMode: "onsite", serviceCoverage: "city",
+      active: true, createdAt: serverTimestamp(), updatedAt: serverTimestamp()
     });
-  }
-
-  // If this fails, the batch does not partially migrate its writes.
-  await batch.commit();
-
-  // IMPORTANT:
-  // Do not delete providers/{uid}.services here.
-  // Cleanup will happen only after a separate verification step.
-
-  return toMigrate.length;
+    count++;
+  });
+  if (count) await batch.commit();
+  // Drop the legacy array only when nothing was left behind.
+  if (!skipped) await updateDoc(doc(db, "providers", currentUser.uid), { services: deleteField() }).catch(() => {});
+  provData.services = skipped ? provData.services : undefined;
+  return count;
 }
-
 
 function renderServices() {
   const el = $("servicesList");
@@ -616,23 +619,38 @@ function renderServices() {
   );
 }
 
-$("addSvcBtn").addEventListener("click", () => {
-  editingSvcId = null;
-  $("svcModalTitle").textContent = "Add New Service";
-  $("svcName").value = $("svcDesc").value = $("svcPrice").value = $("svcDuration").value = "";
+function fillSvcCategorySelect(selectedId) {
+  const el = $("svcCat");
+  el.innerHTML = '<option value="">Select category</option>';
+  categoryList.forEach(c => {
+    const o = document.createElement("option");
+    o.value = c.id; o.textContent = `${c.icon || ""}  ${c.name || ""}`.trim();
+    el.appendChild(o);
+  });
+  el.value = selectedId || slugify(provData.category) || "";
+}
+function coverageOf(s) {
+  if ((s.serviceMode || "onsite") !== "onsite") return "remote";
+  return s.serviceCoverage === "state" ? "state" : "city";
+}
+function openSvcModal(s) {
+  editingSvcId = s ? s.id : null;
+  $("svcModalTitle").textContent = s ? "Edit Service" : "Add New Service";
+  $("svcName").value     = s?.name        || "";
+  $("svcDesc").value     = s?.description || "";
+  $("svcPrice").value    = s?.price       || "";
+  $("svcDuration").value = s?.duration    || "";
+  fillSvcCategorySelect(s?.categoryId);
+  $("svcCoverage").value = s ? coverageOf(s) : "city";
+  const min = Number(platformCfg.minBooking) || 0;
+  $("svcMinNote").textContent = min ? `Minimum price on Servana: ${formatNGN(min)}.` : "";
   $("svcModal").classList.add("active");
-});
+}
+$("addSvcBtn").addEventListener("click", () => openSvcModal(null));
 
 function openEditSvc(serviceId) {
   const s = providerServices.find(x => x.id === serviceId);
-  if (!s) return;
-  editingSvcId = serviceId;
-  $("svcModalTitle").textContent = "Edit Service";
-  $("svcName").value     = s.name        || "";
-  $("svcDesc").value     = s.description || "";
-  $("svcPrice").value    = s.price       || "";
-  $("svcDuration").value = s.duration    || "";
-  $("svcModal").classList.add("active");
+  if (s) openSvcModal(s);
 }
 
 async function deleteSvc(serviceId) {
@@ -652,33 +670,40 @@ async function deleteSvc(serviceId) {
 $("saveSvcBtn").addEventListener("click", async () => {
   const name = $("svcName").value.trim();
   if (!name) { toast("Service name is required.", "warning"); return; }
-  const price = parseFloat($("svcPrice").value);
-  if (!price || price <= 0) { toast("Enter a valid price greater than 0.", "warning"); return; }
+  if (name.length > 160) { toast("Service name is too long (max 160 characters).", "warning"); return; }
+  const price = Math.round(parseFloat($("svcPrice").value));
+  if (!isPriced(price)) { toast("Enter a valid price greater than 0.", "warning"); return; }
+  const min = Number(platformCfg.minBooking) || 0;
+  if (min && price < min) { toast(`The minimum price is ${formatNGN(min)}.`, "warning"); return; }
   if (!currentUser) { toast("You must be logged in.", "error"); return; }
+
+  const categoryId = $("svcCat").value;
+  if (!categoryId) { toast("Choose a category for this service.", "warning"); return; }
+  const coverage = $("svcCoverage").value;
+  if (coverage === "city"  && !(provData.city && provData.country)) { toast("Set your country, state and city in the Profile tab first.", "warning"); return; }
+  if (coverage === "state" && !(provData.state && provData.country)) { toast("Set your country and state in the Profile tab first.", "warning"); return; }
 
   const entry = {
     name,
-    description: $("svcDesc").value.trim(),
+    description:     $("svcDesc").value.trim().slice(0, 500),
     price,
-    duration:    $("svcDuration").value.trim(),
-    updatedAt:   serverTimestamp()
+    duration:        $("svcDuration").value.trim().slice(0, 60),
+    categoryId,
+    serviceMode:     coverage === "remote" ? "remote" : "onsite",
+    serviceCoverage: coverage === "state" ? "state" : "city",
+    updatedAt:       serverTimestamp()
   };
 
   setLoading($("saveSvcBtn"), true);
   try {
     if (editingSvcId) {
-      // UPDATE existing service document
       await updateDoc(doc(db, "services", editingSvcId), entry);
       const idx = providerServices.findIndex(s => s.id === editingSvcId);
       if (idx >= 0) Object.assign(providerServices[idx], entry);
       toast("Service updated! ✅", "success");
     } else {
-      // CREATE new service document in top-level collection
       const ref = await addDoc(collection(db, "services"), {
-        ...entry,
-        providerId: currentUser.uid,
-        active:     true,
-        createdAt:  serverTimestamp()
+        ...entry, providerId: currentUser.uid, active: true, createdAt: serverTimestamp()
       });
       providerServices.push({ id: ref.id, ...entry, providerId: currentUser.uid, active: true });
       toast("Service added! ✅", "success");
@@ -690,7 +715,7 @@ $("saveSvcBtn").addEventListener("click", async () => {
   } catch(e) {
     console.error("[Provider] saveSvc:", e.code, e.message);
     toast(e.code === "permission-denied"
-      ? "Permission denied — please log out and back in."
+      ? "Permission denied — your account may be restricted. Contact support."
       : "Failed to save service. Try again.", "error");
   } finally { setLoading($("saveSvcBtn"), false); }
 });
@@ -709,7 +734,7 @@ $("availToggle").addEventListener("change", async () => {
     const ref  = doc(db, "providers", currentUser.uid);
     const snap = await getDoc(ref);
     if (!snap.exists()) {
-      await setDoc(ref, { uid: currentUser.uid, name: currentUser.displayName || "", email: currentUser.email || "", available: on, rating: 0, reviewCount: 0, createdAt: serverTimestamp() });
+      await setDoc(ref, { uid: currentUser.uid, name: currentUser.displayName || "", available: on, rating: 0, reviewCount: 0, createdAt: serverTimestamp() });
     } else {
       await updateDoc(ref, { available: on, updatedAt: serverTimestamp() });
     }
@@ -736,10 +761,14 @@ async function loadBookings() {
     if (counts.pending > 0) { $("pendingBadge").textContent = counts.pending; $("pendingBadge").style.display = "inline"; }
 
     const completed  = allBookings.filter(b => b.status === "completed");
-    const totalEarn  = completed.reduce((s, b) => s + (b.serviceFee || 0), 0);
+    const paid       = allBookings.filter(isPaidJob);
+    const awaiting   = completed.filter(b => !isPaidJob(b)).reduce((s, b) => s + (b.serviceFee || 0), 0);
+    const totalEarn  = paid.reduce((s, b) => s + (b.serviceFee || 0), 0);
+    const commission = paid.reduce((s, b) => s + commissionOf(b), 0);
     const now        = new Date();
-    const thisMonth  = completed
-      .filter(b => b.date && new Date(b.date).getMonth() === now.getMonth() && new Date(b.date).getFullYear() === now.getFullYear())
+    const paidDate   = b => b.paymentConfirmedAt?.toDate?.() || (b.date ? new Date(b.date) : null);
+    const thisMonth  = paid
+      .filter(b => { const d = paidDate(b); return d && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); })
       .reduce((s, b) => s + (b.serviceFee || 0), 0);
 
     $("stEarnings").textContent  = formatNGN(totalEarn);
@@ -751,7 +780,7 @@ async function loadBookings() {
     renderBookingList("pending");
     renderRecentList();
     renderEarningsChart();
-    renderEarningsBreakdown(totalEarn, thisMonth);
+    renderEarningsBreakdown(totalEarn, commission, thisMonth, awaiting);
   } catch(e) {
     console.error("[Provider] loadBookings:", e);
     toast("Failed to load bookings.", "error");
@@ -759,7 +788,7 @@ async function loadBookings() {
 }
 
 function bookingCardHtml(b) {
-  const blocked = (provData.outstandingCommission || 0) > 0;
+  const blocked = outstandingCommission() > 0;
   return `
   <div class="booking-item ${esc(b.status)}">
     <div class="bi-avatar">${initials(b.seekerName || "C")}</div>
@@ -774,7 +803,8 @@ function bookingCardHtml(b) {
       <div class="bi-actions">
         ${b.status === "pending"
           ? (blocked
-              ? `<span style="font-size:11px;color:var(--danger);font-weight:600;background:rgba(220,38,38,.08);padding:5px 10px;border-radius:8px">⚠️ Clear commission to accept</span>`
+              ? `<span style="font-size:11px;color:var(--danger);font-weight:600;background:rgba(220,38,38,.08);padding:5px 10px;border-radius:8px">⚠️ Clear commission to accept</span>
+                 <button class="btn btn-danger btn-sm"  data-action="decline" data-bid="${b.id}">Decline</button>`
               : `<button class="btn btn-success btn-sm" data-action="accept" data-bid="${b.id}">Accept</button>
                  <button class="btn btn-danger btn-sm"  data-action="decline" data-bid="${b.id}">Decline</button>`)
           : ""}
@@ -787,7 +817,7 @@ function bookingCardHtml(b) {
         ${b.paymentStatus === "payment_confirmed"
           ? `<span style="font-size:11px;color:var(--success);font-weight:600">✅ Payment Confirmed</span>`
           : ""}
-        <button class="btn btn-ghost btn-sm" data-action="chat" data-uid="${esc(b.seekerId || "")}">💬 Chat</button>
+        <button class="btn btn-ghost btn-sm" data-action="chat" data-uid="${esc(b.seekerId || "")}" data-name="${esc(b.seekerName || "")}">💬 Chat</button>
       </div>
     </div>
     <div class="bi-right">
@@ -810,12 +840,12 @@ function renderBookingList(status) {
   // Event delegation
   el.querySelectorAll("[data-action]").forEach(btn => {
     btn.addEventListener("click", () => {
-      const { action, bid, fee, uid } = btn.dataset;
+      const { action, bid, fee, uid, name } = btn.dataset;
       if (action === "accept")   updateBookingStatus(bid, "accepted");
       if (action === "decline")  updateBookingStatus(bid, "cancelled");
       if (action === "complete") updateBookingStatus(bid, "completed");
       if (action === "confirm")  confirmPaymentReceived(bid, fee);
-      if (action === "chat" && uid) location.href = `./chat.html?uid=${uid}`;
+      if (action === "chat" && uid) location.href = `./chat.html?uid=${encodeURIComponent(uid)}&name=${encodeURIComponent(name || "")}`;
     });
   });
 }
@@ -846,10 +876,28 @@ document.querySelectorAll(".pill-tab[data-btab]").forEach(t =>
 
 async function updateBookingStatus(bookingId, newStatus) {
   try {
+    const patch = { status: newStatus, updatedAt: serverTimestamp() };
+    if (newStatus === "accepted") {
+      if (outstandingCommission() > 0) { toast("Clear your outstanding commission to accept new bookings.", "warning"); switchTab("earnings"); return; }
+      if (!payoutComplete()) { toast("Add your payout details first so the customer knows where to pay you.", "warning"); switchTab("earnings"); return; }
+      patch.providerPaymentAccount = { bankName: payout.bankName, accountNumber: payout.accountNumber, accountName: payout.accountName };
+    }
     showSpinner();
-    await updateDoc(doc(db, "bookings", bookingId), { status: newStatus, updatedAt: serverTimestamp() });
+    if (newStatus === "completed") {
+      // completedJobs is only allowed to rise together with a booking becoming completed (see rules).
+      const batch = writeBatch(db);
+      batch.update(doc(db, "bookings", bookingId), patch);
+      batch.update(doc(db, "providers", currentUser.uid), {
+        completedJobs: increment(1), lastCompletedBookingId: bookingId, updatedAt: serverTimestamp()
+      });
+      await batch.commit();
+      provData.completedJobs = (Number(provData.completedJobs) || 0) + 1;
+      $("heroJobs").textContent = `${provData.completedJobs} jobs`;
+    } else {
+      await updateDoc(doc(db, "bookings", bookingId), patch);
+    }
     const b = allBookings.find(x => x.id === bookingId);
-    if (b) b.status = newStatus;
+    if (b) { b.status = newStatus; if (patch.providerPaymentAccount) b.providerPaymentAccount = patch.providerPaymentAccount; }
     const counts = { pending:0, accepted:0, completed:0, cancelled:0 };
     allBookings.forEach(b => { if (counts[b.status] !== undefined) counts[b.status]++; });
     Object.entries(counts).forEach(([k, v]) => { const e = $(`bcnt-${k}`); if (e) e.textContent = v; });
@@ -871,28 +919,24 @@ async function updateBookingStatus(bookingId, newStatus) {
   } finally { hideSpinner(); }
 }
 
-async function confirmPaymentReceived(bookingId, fee) {
-  const commission = Math.round(parseFloat(fee) * 0.05);
+async function confirmPaymentReceived(bookingId) {
+  const b = allBookings.find(x => x.id === bookingId);
+  if (!b) return;
+  const commission = commissionFor(b.serviceFee || 0, ratePct(b));
   try {
     showSpinner();
     await updateDoc(doc(db, "bookings", bookingId), {
       paymentStatus:            "payment_confirmed",
       providerPaymentConfirmed: true,
       paymentConfirmedAt:       serverTimestamp(),
-      commissionStatus:         "pending",
+      commissionStatus:         commission > 0 ? "pending" : "not_due",
       commissionAmount:         commission,
       updatedAt:                serverTimestamp()
     });
-    await setDoc(doc(db, "providers", currentUser.uid), {
-      outstandingCommission: (provData.outstandingCommission || 0) + commission,
-      updatedAt:             serverTimestamp()
-    }, { merge: true });
-    provData.outstandingCommission = (provData.outstandingCommission || 0) + commission;
-    const b = allBookings.find(x => x.id === bookingId);
-    if (b) { b.paymentStatus = "payment_confirmed"; b.commissionStatus = "pending"; }
-    toast(`Payment confirmed! Commission due: ₦${commission.toLocaleString("en-NG")}. Go to Earnings to pay.`, "success");
+    b.paymentStatus = "payment_confirmed"; b.commissionStatus = commission > 0 ? "pending" : "not_due"; b.commissionAmount = commission;
+    toast(`Payment confirmed! Commission due: ${formatNGN(commission)}. Pay it from the Earnings tab.`, "success");
+    await loadBookings();
     loadCommissionStatus();
-    renderBookingList(activeBookTab);
   } catch(e) {
     console.error("[Provider] confirmPayment:", e);
     toast("Failed to confirm. Try again.", "error");
@@ -973,7 +1017,8 @@ function initNotifPanel() {
             item.classList.remove("unread");
             updateDoc(doc(db, "notifications", item.dataset.id), { read: true, readAt: serverTimestamp() }).catch(() => {});
           }
-          if (item.dataset.url) location.href = item.dataset.url;
+          const dest = safeInternalUrl(item.dataset.url);
+          if (dest) location.href = dest;
         });
       });
     },
@@ -1011,35 +1056,35 @@ $("markAllRead")?.addEventListener("click", async () => {
 async function loadCommissionStatus() {
   const wrap = $("commissionAlertWrap");
   if (!wrap || !currentUser) return;
-  const outstanding = provData.outstandingCommission || 0;
+  const pending = pendingCommissionBookings();
+  const outstanding = outstandingCommission();
   if (outstanding > 0) {
+    const batchSize = 40;
+    const note = pending.length > batchSize ? `<div style="font-size:11px;color:var(--text-3);margin-bottom:10px">You have ${pending.length} unpaid jobs. They are paid ${batchSize} at a time.</div>` : "";
     wrap.innerHTML = `<div class="commission-alert">
       <div class="commission-alert-title">⚠️ Commission Due</div>
-      <div class="commission-alert-amount">₦${outstanding.toLocaleString("en-NG")}</div>
+      <div class="commission-alert-amount">${formatNGN(outstanding)}</div>
       <div class="commission-alert-body">Clear your commission to continue receiving new booking requests.</div>
-      <button class="btn btn-danger" id="payCommBtn">Pay ₦${outstanding.toLocaleString("en-NG")} Commission →</button>
+      ${note}
+      <button class="btn btn-danger" id="payCommBtn">Pay commission →</button>
     </div>`;
-    $("payCommBtn").addEventListener("click", () => payCommission(outstanding));
+    $("payCommBtn").addEventListener("click", () => payCommission(pending));
   } else {
     wrap.innerHTML = `<div class="commission-clear"><div style="font-size:22px">✅</div><div><div style="font-size:13px;font-weight:700;color:var(--success)">All Commissions Cleared</div><div style="font-size:12px;color:var(--text-2);margin-top:2px">Outstanding: ₦0 — You can accept new bookings.</div></div></div>`;
   }
 }
 
-async function payCommission(amount) {
-  import("./assets/paystack.js").then(({ initPaystackPayment }) => {
-    initPaystackPayment({
-      email:    currentUser.email,
-      amount:   Math.round(amount * 100),
-      metadata: { type: "commission", providerId: currentUser.uid },
-      onSuccess: async () => {
-        await setDoc(doc(db, "providers", currentUser.uid), { outstandingCommission: 0, lastCommissionPaidAt: serverTimestamp() }, { merge: true });
-        provData.outstandingCommission = 0;
-        toast("Commission paid! 🎉 You can now accept new bookings.", "success");
-        loadCommissionStatus();
-      },
-      onClose: () => toast("Payment cancelled.", "info")
-    });
-  });
+async function payCommission(pending) {
+  if (!paystackConfigured()) { toast("Online payment isn't switched on yet. Please contact support to settle your commission.", "warning", 6000); return; }
+  const btn = $("payCommBtn"); if (btn) btn.disabled = true;
+  try {
+    const { paid } = await payCommissionOnline({ email: currentUser.email, bookings: pending });
+    toast(`Commission of ${formatNGN(paid)} paid! 🎉`, "success");
+    await loadBookings();
+  } catch (e) {
+    if (!e.cancelled) { console.error("[Provider] payCommission:", e); toast(e.message || "Payment failed.", "error", 6000); }
+    else toast("Payment cancelled.", "info");
+  } finally { if (btn) btn.disabled = false; loadCommissionStatus(); }
 }
 
 // ── Earnings ───────────────────────────────────────────
@@ -1050,7 +1095,7 @@ function renderEarningsChart() {
     const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
     return { label: months[d.getMonth()], month: d.getMonth(), year: d.getFullYear(), total: 0 };
   });
-  allBookings.filter(b => b.status === "completed" && b.date).forEach(b => {
+  allBookings.filter(b => isPaidJob(b) && b.date).forEach(b => {
     const d = new Date(b.date);
     const e = last6.find(x => x.month === d.getMonth() && x.year === d.getFullYear());
     if (e) e.total += b.serviceFee || 0;
@@ -1061,13 +1106,14 @@ function renderEarningsChart() {
   ).join("");
 }
 
-function renderEarningsBreakdown(total, thisMonth) {
-  const platform = total * 0.05, net = total - platform;
+function renderEarningsBreakdown(total, commission, thisMonth, awaiting) {
+  const net = total - commission;
   $("earningsBreakdown").innerHTML = [
-    { c:"#16A34A", l:"Total Revenue",    v: formatNGN(total) },
-    { c:"#DC2626", l:"Platform Fee (5%)", v: formatNGN(platform) },
-    { c:"#2962FF", l:"Net Earnings",     v: formatNGN(net) },
-    { c:"#F59E0B", l:"This Month",       v: formatNGN(thisMonth) },
+    { c:"#16A34A", l:"Total Revenue (payment confirmed)", v: formatNGN(total) },
+    { c:"#DC2626", l:"Servana Commission",                v: formatNGN(commission) },
+    { c:"#2962FF", l:"Net Earnings",                      v: formatNGN(net) },
+    { c:"#F59E0B", l:"This Month",                        v: formatNGN(thisMonth) },
+    { c:"#8B5CF6", l:"Completed, awaiting payment",       v: formatNGN(awaiting) },
   ].map(r => `<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg-subtle);border:.5px solid var(--border);border-radius:var(--r-sm)"><div style="width:10px;height:10px;border-radius:50%;background:${r.c};flex-shrink:0"></div><div style="flex:1;font-size:13px;color:var(--text-2);font-weight:500">${r.l}</div><div style="font-size:14px;font-weight:700;color:var(--text-1)">${r.v}</div></div>`).join("");
 }
 
@@ -1078,6 +1124,7 @@ function renderStrength() {
     { l: "Bio / description written", d: !!provData.bio },
     { l: "At least 1 service added",  d: providerServices.length > 0 },
     { l: "Phone number added",        d: !!provData.phone },
+    { l: "Payout details added",      d: payoutComplete() },
     { l: "Portfolio photo uploaded",  d: (provData.portfolio || []).length > 0 },
     { l: "Verified by Servana",       d: !!provData.verified },
   ];
@@ -1105,10 +1152,13 @@ $("savePayoutBtn").addEventListener("click", async () => {
     const ref  = doc(db, "providers", currentUser.uid);
     const snap = await getDoc(ref);
     if (!snap.exists()) {
-      await setDoc(ref, { uid: currentUser.uid, name: currentUser.displayName||"", email: currentUser.email||"", available: true, rating: 0, reviewCount: 0, createdAt: serverTimestamp() });
+      await setDoc(ref, { uid: currentUser.uid, name: currentUser.displayName||"", available: true, rating: 0, reviewCount: 0, createdAt: serverTimestamp() });
     }
-    await updateDoc(ref, { bankName, accountNumber, accountName, updatedAt: serverTimestamp() });
-    Object.assign(provData, { bankName, accountNumber, accountName });
+    // Bank details live in a PRIVATE sub-document; they are copied into a booking only when you accept it.
+    await setDoc(doc(db, "providers", currentUser.uid, "private", "payout"),
+      { bankName, accountNumber, accountName, updatedAt: serverTimestamp() }, { merge: true });
+    payout = { bankName, accountNumber, accountName };
+    renderStrength();
     toast("Payout details saved! ✅", "success");
   } catch(e) {
     console.error("[Provider] savePayoutBtn:", e.code, e.message);
@@ -1147,7 +1197,7 @@ $("saveProfileBtn").addEventListener("click", async () => {
     if (!snap.exists()) {
       // First-time create — safe base fields only
       await setDoc(ref, {
-        uid: currentUser.uid, name, email: currentUser.email || "",
+        uid: currentUser.uid, name,
         available: true, rating: 0, reviewCount: 0,
         createdAt: serverTimestamp()
       });
@@ -1196,9 +1246,18 @@ $("profilePhotoInput").addEventListener("change", async () => {
 });
 
 // ── Verify ────────────────────────────────────────────
-$("verifyBtn").addEventListener("click", () =>
-  toast("Verification request submitted. Our team will review within 48 hours.", "info", 6000)
-);
+$("verifyBtn").addEventListener("click", async () => {
+  if (provData.verificationRequestedAt) { toast("Your verification request is already with our team.", "info"); return; }
+  try {
+    await updateDoc(doc(db, "providers", currentUser.uid), { verificationRequestedAt: serverTimestamp(), updatedAt: serverTimestamp() });
+    provData.verificationRequestedAt = new Date();
+    $("verifyBtn").textContent = "Requested ✓"; $("verifyBtn").disabled = true;
+    toast("Verification request submitted. Our team will review it within 48 hours.", "success", 6000);
+  } catch (e) {
+    console.error("[Provider] verify:", e);
+    toast("Could not submit your request. Please try again.", "error");
+  }
+});
 
 // ── Modals ────────────────────────────────────────────
 $("closeSvcModal").addEventListener("click", () => $("svcModal").classList.remove("active"));

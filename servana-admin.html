@@ -537,7 +537,9 @@ function renderUsers(filter="") {
 $("userSearch").addEventListener("input", e => renderUsers(e.target.value));
 
 window.toggleSuspendUser = async (uid, isSuspended) => {
-  try { showSpinner(); await updateDoc(doc(db,"users",uid),{suspended:!isSuspended}); const u=allUsers.find(x=>x.id===uid); if(u) u.suspended=!isSuspended; renderUsers($("userSearch").value); toast(`User ${!isSuspended?"suspended":"reinstated"}.`,!isSuspended?"warning":"success"); }
+  try { showSpinner(); await updateDoc(doc(db,"users",uid),{suspended:!isSuspended});
+    if (allProviders.some(x=>x.id===uid)) { await setDoc(doc(db,"providers",uid),{suspended:!isSuspended},{merge:true}); const pp=allProviders.find(x=>x.id===uid); if(pp) pp.suspended=!isSuspended; }
+    const u=allUsers.find(x=>x.id===uid); if(u) u.suspended=!isSuspended; renderUsers($("userSearch").value); toast(`User ${!isSuspended?"suspended":"reinstated"}.`,!isSuspended?"warning":"success"); }
   catch(e){toast("Failed.","error");} finally{hideSpinner();}
 };
 window.deleteUserDoc = async uid => {
@@ -560,7 +562,7 @@ function renderProviders(filter="",statusFilter="all") {
       <td>${esc(p.city||p.location||"—")}</td>
       <td>${starsHtml(p.rating||0)} <span style="font-size:11px;color:var(--text-3)">${parseFloat(p.rating||0).toFixed(1)}</span></td>
       <td>${p.completedJobs||0}</td>
-      <td><span class="badge ${p.suspended?"badge-danger":p.verified?"badge-success":"badge-warning"}">${p.suspended?"Suspended":p.verified?"Verified":"Pending"}</span></td>
+      <td><span class="badge ${p.suspended?"badge-danger":p.verified?"badge-success":"badge-warning"}">${p.suspended?"Suspended":p.verified?"Verified":p.verificationRequestedAt?"Pending · requested":"Pending"}</span></td>
       <td><div class="actions-cell">
         ${!p.verified&&!p.suspended?`<button class="tbl-btn verify" onclick="verifyProvider('${p.id}')">Verify</button>`:""}
         ${p.verified?`<button class="tbl-btn suspend" onclick="unverifyProvider('${p.id}')">Unverify</button>`:""}
@@ -582,7 +584,9 @@ window.unverifyProvider = async id => {
   catch(e){toast("Failed.","error");} finally{hideSpinner();}
 };
 window.toggleSuspendProvider = async (id,isSusp) => {
-  try { showSpinner(); await setDoc(doc(db,"providers",id),{suspended:!isSusp},{merge:true}); const p=allProviders.find(x=>x.id===id); if(p)p.suspended=!isSusp; renderProviders(); toast(`Provider ${!isSusp?"suspended":"reinstated"}.`,!isSusp?"warning":"success"); }
+  try { showSpinner(); await setDoc(doc(db,"providers",id),{suspended:!isSusp},{merge:true});
+    try { await updateDoc(doc(db,"users",id),{suspended:!isSusp}); const uu=allUsers.find(x=>x.id===id); if(uu) uu.suspended=!isSusp; } catch(_) { /* no users doc */ }
+    const p=allProviders.find(x=>x.id===id); if(p)p.suspended=!isSusp; renderProviders(); toast(`Provider ${!isSusp?"suspended":"reinstated"}.`,!isSusp?"warning":"success"); }
   catch(e){toast("Failed.","error");} finally{hideSpinner();}
 };
 

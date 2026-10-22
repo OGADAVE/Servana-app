@@ -20,9 +20,9 @@
     .hsb-field{flex:1;min-width:160px;display:flex;align-items:center;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);overflow:hidden}
     .hsb-icon{padding:0 10px}.hsb-icon svg{width:16px;height:16px;stroke:var(--text-3);fill:none;stroke-width:2}
     .hsb-input{flex:1;min-width:0;border:0;background:transparent;font:14px "DM Sans",sans-serif;color:var(--text-1);outline:none;padding:10px 8px 10px 0}
-    .hsb-loc{display:flex;align-items:center;gap:6px;padding:0 10px}
+    .hsb-loc{display:flex;align-items:center;gap:6px;padding:0 10px;flex-wrap:wrap}
     .hsb-loc svg{width:14px;height:14px;stroke:var(--accent);fill:none;stroke-width:2}
-    .hsb-loc select{max-width:130px;border:0;background:transparent;font:13px "DM Sans",sans-serif;color:var(--text-2)}
+    .hsb-loc select{max-width:120px;border:0;background:transparent;font:13px "DM Sans",sans-serif;color:var(--text-2)}
     .stats-strip{display:flex;background:var(--bg-surface);border-bottom:1px solid var(--border);overflow-x:auto}
     .ss-item{flex:1;min-width:85px;padding:12px;text-align:center;border-right:1px solid var(--border)}
     .ss-num{font-size:17px;font-weight:700;color:var(--brand)}
@@ -99,8 +99,12 @@
     </div>
     <div class="hsb-loc">
       <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-      <label class="sr-only" for="locationSelect">Location</label>
-      <select id="locationSelect"><option value="">All Locations</option></select>
+      <label class="sr-only" for="locCountry">Country</label>
+      <select id="locCountry"></select>
+      <label class="sr-only" for="locState">State</label>
+      <select id="locState" disabled></select>
+      <label class="sr-only" for="locCity">City</label>
+      <select id="locCity" disabled></select>
     </div>
     <button class="btn btn-accent btn-sm" id="searchBtn" type="button">Search</button>
   </div>
@@ -120,7 +124,7 @@
   <div class="filter-row" id="filterRow">
     <span class="filter-lbl">Filter:</span>
     <button class="fchip active" type="button" data-f="all"       aria-pressed="true">All</button>
-    <button class="fchip"       type="button" data-f="available"  aria-pressed="false">Available Now</button>
+    <button class="fchip"       type="button" data-f="offline"    aria-pressed="false">Show offline</button>
     <button class="fchip"       type="button" data-f="verified"   aria-pressed="false">Verified Only</button>
     <button class="fchip"       type="button" data-f="top"        aria-pressed="false">Top Rated</button>
     <label class="sr-only" for="sortSel">Sort providers</label>
@@ -168,8 +172,8 @@
         <div class="field"><label for="bookTime">Time</label><input type="time" id="bookTime" required/></div>
       </div>
       <div class="field mb-3">
-        <label for="bookAddr">Service address</label>
-        <input type="text" id="bookAddr" maxlength="300" autocomplete="street-address" placeholder="e.g. 15 Wuse Zone 4, Abuja" required/>
+        <label for="bookAddr" id="bookAddrLabel">Service address</label>
+        <input type="text" id="bookAddr" maxlength="300" autocomplete="street-address" placeholder="e.g. 15 Wuse Zone 4, Abuja" />
       </div>
       <div class="field mb-3">
         <label for="bookNotes">Additional notes (optional)</label>
@@ -182,7 +186,7 @@
         <div class="ps-divider"></div>
         <div class="ps-row ps-total"><span class="ps-lbl">You Pay</span><span class="ps-val" id="psTotal">—</span></div>
         <p style="font-size:11px;color:var(--text-3);margin-top:8px">
-          💡 Payment is made directly to the provider after the job is completed. No upfront payment required.
+          💡 You pay the provider directly after the job is completed. Servana charges you no fee and takes no upfront payment.
         </p>
       </div>
       <button class="btn btn-primary btn-block btn-lg" id="confirmBtn" type="button">
@@ -210,405 +214,413 @@
 </nav>
 
 <script type="module">
-import { auth, db, toast, starsHtml, initials, formatNGN, genRef, debounce } from "./assets/firebase.js";
-import { buildSearchSelectHtml } from "./assets/locations.js";
+import { auth, db, toast, starsHtml, initials, formatNGN, debounce } from "./assets/firebase.js";
+import { wireCascade } from "./assets/locations.js";
+import {
+  findMatches, evaluateMatch, hasLocation, isProviderListed, slugify, REASON_TEXT
+} from "./assets/matching.js";
+import { createBooking, BookingError } from "./assets/booking.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  collection, getDocs, addDoc, getDoc, doc,
-  serverTimestamp, query, limit, where
+  collection, getDocs, getDoc, doc, query, limit
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const $ = id => document.getElementById(id);
+const params = new URLSearchParams(location.search);
 
 // ── State ─────────────────────────────────────────────
 const S = {
-  user: null, providers: [], services: [], categories: [],
-  cat: "", filter: "all", sort: "rating",
-  provider: null, service: null, sending: false
+  user: null, providers: [], services: [], categories: [], cfg: {},
+  loc: { country: "", state: "", city: "" },
+  catId: slugify(params.get("category") || params.get("cat") || ""),
+  providerId: (params.get("provider") || "").trim(),
+  filter: "all", sort: "rating", showOffline: false,
+  entry: null, service: null, sending: false
 };
 
-const str         = v => (typeof v === "string" ? v.trim() : "");
-const norm        = v => str(v).toLocaleLowerCase();
-const validPrice  = v => Number.isFinite(Number(v)) && Number(v) > 0;
-const money       = v => formatNGN(Number(v));
-const todayLocal  = () => {
+const str   = v => (typeof v === "string" ? v.trim() : "");
+const norm  = v => str(v).toLocaleLowerCase();
+const money = v => formatNGN(Number(v));
+const todayLocal = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 };
+const minBooking = () => Number(S.cfg.minBooking) || 0;
 
-function setError(m = "") {
-  const el = $("bookingError"); el.hidden = !m; el.textContent = m;
+function setError(m = "") { const el = $("bookingError"); el.hidden = !m; el.textContent = m; }
+
+// ── Seeker location (one source for listing AND booking) ──
+const LOC_KEY = "servana:seekerLoc";
+function readLoc() {
+  return { country: $("locCountry").value, state: $("locState").value, city: $("locCity").value };
+}
+function saveLoc() {
+  try { localStorage.setItem(LOC_KEY, JSON.stringify(S.loc)); } catch (_) { /* private mode */ }
+}
+async function initLocation() {
+  let d = {};
+  try { d = JSON.parse(localStorage.getItem(LOC_KEY) || "{}") || {}; } catch (_) { d = {}; }
+  if (!hasLocation(d)) {                       // fall back to the location chosen at signup / profile
+    try {
+      const snap = await getDoc(doc(db, "users", S.user.uid));
+      if (snap.exists()) { const u = snap.data(); d = { country: u.country || "", state: u.state || "", city: u.city || "" }; }
+    } catch (e) { console.warn("Profile location:", e.message); }
+  }
+  wireCascade($("locCountry"), $("locState"), $("locCity"), d);
+  S.loc = readLoc();
+  const onChange = () => { S.loc = readLoc(); saveLoc(); render(); };
+  ["locCountry", "locState", "locCity"].forEach(id => $(id).addEventListener("change", onChange));
 }
 
 // ── Auth ──────────────────────────────────────────────
 onAuthStateChanged(auth, async user => {
   if (!user) { location.replace("./login.html"); return; }
   S.user = user;
-  try { $("locationSelect").innerHTML = buildSearchSelectHtml(); } catch(e) { console.warn("Location options:", e); }
-  await Promise.allSettled([loadCategories(), loadServices(), loadProviders()]);
+  if (params.get("q")) $("searchInput").value = params.get("q").slice(0, 80);
+  await initLocation();
+  // Everything the matcher needs is loaded BEFORE the first render (no race).
+  await Promise.allSettled([loadCategories(), loadServices(), loadProviders(), loadConfig()]);
+  renderStats();
+  render();
 });
 
-// ── Load categories ───────────────────────────────────
+async function loadConfig() {
+  try { const s = await getDoc(doc(db, "config", "platform")); S.cfg = s.exists() ? s.data() : {}; }
+  catch (e) { S.cfg = {}; }
+}
+
 async function loadCategories() {
   try {
-    const snap = await getDocs(query(collection(db,"category"), limit(100)));
-    S.categories = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(c => str(c.name));
-    $("statCats").textContent = S.categories.length;
+    const snap = await getDocs(query(collection(db, "category"), limit(100)));
+    S.categories = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(c => str(c.name))
+      .sort((a, b) => a.name.localeCompare(b.name));
     const strip = $("catStrip");
     strip.querySelectorAll("[data-dynamic]").forEach(n => n.remove());
     S.categories.forEach(c => {
       const b = document.createElement("button");
-      b.type = "button"; b.className = "cat-pill";
-      b.dataset.cat = str(c.name); b.dataset.dynamic = "1";
-      b.setAttribute("role","tab"); b.setAttribute("aria-selected","false");
-      b.textContent = `${str(c.icon)||"📂"} ${str(c.name)}`;
+      b.type = "button"; b.className = "cat-pill"; b.dataset.cat = c.id; b.dataset.dynamic = "1";
+      b.setAttribute("role", "tab");
+      b.textContent = `${str(c.icon) || "📂"} ${str(c.name)}`;
       strip.appendChild(b);
     });
-  } catch(e) { console.error("Category load:", e); $("statCats").textContent = "—"; }
+    markActiveCategory();
+  } catch (e) { console.error("Category load:", e); }
+}
+function markActiveCategory() {
+  $("catStrip").querySelectorAll("[data-cat]").forEach(el => {
+    const on = (el.dataset.cat || "") === S.catId;
+    el.classList.toggle("active", on); el.setAttribute("aria-selected", String(on));
+  });
 }
 
-// ── Load services (top-level collection — authoritative) ──
 async function loadServices() {
   try {
-    const snap = await getDocs(query(collection(db,"services"), limit(2000)));
-    S.services = snap.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .filter(s => str(s.providerId) && str(s.name) && validPrice(s.price) && s.active !== false);
-  } catch(e) { console.error("Service load:", e); S.services = []; }
+    const snap = await getDocs(query(collection(db, "services"), limit(1500)));
+    S.services = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (e) { console.error("Service load:", e); S.services = []; }
 }
 
-// ── Load providers ────────────────────────────────────
 async function loadProviders() {
   const grid = $("providersGrid");
-  grid.setAttribute("aria-busy","true");
   try {
-    const snap = await getDocs(query(collection(db,"providers"), limit(500)));
-    S.providers = snap.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .filter(p => p.isPublic !== false && p.status !== "suspended");
-    $("statProv").textContent = S.providers.length;
-    const cities = new Set(S.providers.map(p => str(p.city || p.location)).filter(Boolean));
-    $("statCities").textContent = cities.size;
-    const ratings = S.providers.map(p => Number(p.rating)).filter(n => Number.isFinite(n) && n > 0);
-    $("statRating").textContent = ratings.length
-      ? (ratings.reduce((a,b)=>a+b,0)/ratings.length).toFixed(1)+"★" : "—";
-    applyFilters();
-  } catch(e) {
+    const snap = await getDocs(query(collection(db, "providers"), limit(500)));
+    S.providers = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(isProviderListed);
+  } catch (e) {
     console.error("Provider load:", e);
+    S.providers = [];
     grid.innerHTML = '<div class="inline-message"><strong>Could not load providers.</strong><p>Check your connection and try again.</p><button class="btn btn-secondary" id="retryBtn" type="button">Retry</button></div>';
     $("resSub").textContent = "Unable to load results";
-    $("retryBtn").addEventListener("click", loadProviders, { once: true });
-  } finally { grid.setAttribute("aria-busy","false"); }
+    $("retryBtn").addEventListener("click", () => location.reload(), { once: true });
+  } finally { grid.setAttribute("aria-busy", "false"); }
 }
 
-// ── Service helpers ───────────────────────────────────
-function servicesFor(providerId) {
-  return S.services.filter(s => s.providerId === providerId);
+function renderStats() {
+  const withSvc = new Set(S.services.map(s => s.providerId));
+  const live = S.providers.filter(p => withSvc.has(p.id));
+  $("statProv").textContent = live.length;
+  $("statCats").textContent = S.categories.length || "—";
+  $("statCities").textContent = new Set(live.map(p => norm(p.city || p.location)).filter(Boolean)).size;
+  const r = live.map(p => Number(p.rating)).filter(n => Number.isFinite(n) && n > 0);
+  $("statRating").textContent = r.length ? (r.reduce((a, b) => a + b, 0) / r.length).toFixed(1) + "★" : "—";
 }
-function priceFor(p) {
-  const prices = servicesFor(p.id).map(s => Number(s.price)).filter(validPrice);
-  if (prices.length) return Math.min(...prices);
-  return validPrice(p.startingPrice) ? Number(p.startingPrice) : null;
+
+// ── Matching + render ─────────────────────────────────
+function currentMatches() {
+  let list = findMatches({
+    providers: S.providers, services: S.services,
+    categoryId: S.catId, keyword: $("searchInput").value, loc: S.loc,
+    includeOffline: S.showOffline, minBooking: minBooking(), providerId: S.providerId
+  });
+  if (S.filter === "verified") list = list.filter(e => e.provider.verified === true);
+  if (S.filter === "top")      list = list.filter(e => Number(e.provider.rating || 0) >= 4);
+  const rating = e => Number(e.provider.rating) || 0;
+  list.sort((a, b) =>
+    S.sort === "price_asc"  ? a.startingPrice - b.startingPrice :
+    S.sort === "price_desc" ? b.startingPrice - a.startingPrice :
+    S.sort === "newest"     ? (b.provider.createdAt?.seconds || 0) - (a.provider.createdAt?.seconds || 0) :
+    rating(b) - rating(a));
+  return list;
 }
-function isAvailable(p) { return p.available === true || p.availabilityStatus === "available"; }
-function isVerified(p)  { return p.verified === true; }
 
-// ── Filter + sort ─────────────────────────────────────
-function applyFilters() {
-  const kw  = norm($("searchInput").value);
-  const loc = norm($("locationSelect").value);
-  let list  = [...S.providers];
+function render() {
+  const list = currentMatches();
+  const cat = S.categories.find(c => c.id === S.catId);
+  const prov = S.providerId ? S.providers.find(p => p.id === S.providerId) : null;
+  $("resTitle").textContent = prov ? (str(prov.name) || "Provider") : cat ? `${cat.name} Providers` : "All Providers";
 
-  // Category — exact match (normalised) against stored category/role fields
-  if (S.cat) {
-    const c = norm(S.cat);
-    list = list.filter(p =>
-      [p.category, p.role, ...(Array.isArray(p.categories) ? p.categories : [])]
-        .some(v => norm(v) === c || norm(v).includes(c))
-    );
+  const sub = $("resSub");
+  let text = `${list.length} provider${list.length === 1 ? "" : "s"} found`;
+  if (!prov && !hasLocation(S.loc)) text += " · choose your location to see on-site providers";
+  sub.textContent = text;
+  if (S.providerId) {
+    const a = document.createElement("a");
+    a.href = "./seeker.html"; a.textContent = " · Show all providers"; a.style.color = "var(--accent)";
+    sub.appendChild(a);
   }
-  if (loc) list = list.filter(p => norm(p.location).includes(loc) || norm(p.city).includes(loc));
-  if (kw)  list = list.filter(p =>
-    [p.name, p.role, p.description, p.category, p.location, p.city, ...(Array.isArray(p.tags)?p.tags:[])]
-      .some(v => norm(v).includes(kw))
-  );
-  if (S.filter === "available") list = list.filter(isAvailable);
-  if (S.filter === "verified")  list = list.filter(isVerified);
-  if (S.filter === "top")       list = list.filter(p => Number(p.rating||0) >= 4);
-
-  list.sort((a,b) =>
-    S.sort === "rating"      ? (Number(b.rating)||0)   - (Number(a.rating)||0) :
-    S.sort === "price_asc"   ? (priceFor(a)??Infinity) - (priceFor(b)??Infinity) :
-    S.sort === "price_desc"  ? (priceFor(b)??-Infinity)- (priceFor(a)??-Infinity) :
-    S.sort === "newest"      ? (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0) : 0
-  );
-
-  $("resTitle").textContent = S.cat ? `${S.cat} Providers` : "All Providers";
-  $("resSub").textContent   = `${list.length} provider${list.length===1?"":"s"} found`;
   renderProviders(list);
 }
 
-// ── Render provider cards ─────────────────────────────
 function renderProviders(list) {
   const grid = $("providersGrid");
   grid.replaceChildren();
   if (!list.length) {
-    grid.innerHTML = '<div class="inline-message"><div style="font-size:32px">🔍</div><strong>No providers found</strong><p>Try adjusting your filters.</p><button class="btn btn-secondary" id="clearFiltersBtn" type="button">Clear filters</button></div>';
+    grid.innerHTML = '<div class="inline-message"><div style="font-size:32px">🔍</div><strong>No providers found</strong><p>Try another category or location, or clear your filters.</p><button class="btn btn-secondary" id="clearFiltersBtn" type="button">Clear filters</button></div>';
     $("clearFiltersBtn").addEventListener("click", clearFilters);
     return;
   }
-  list.forEach(p => {
+  list.forEach(entry => {
+    const p = entry.provider;
+    const available = p.available !== false;
     const card = document.createElement("article");
     card.className = "provider-card"; card.tabIndex = 0;
-    card.setAttribute("role","button");
-    card.setAttribute("aria-label",`Book ${str(p.name)||"provider"}`);
+    card.setAttribute("role", "button");
+    card.setAttribute("aria-label", `Book ${str(p.name) || "provider"}`);
 
     const top = document.createElement("div"); top.className = "pc-top";
-    const aw  = document.createElement("div"); aw.className  = "pc-av-wrap";
+    const aw  = document.createElement("div"); aw.className = "pc-av-wrap";
     let avatar;
     if (str(p.photoURL)) {
       avatar = document.createElement("img");
-      avatar.src = str(p.photoURL); avatar.alt = `${str(p.name)||"Provider"} profile`;
+      avatar.src = str(p.photoURL); avatar.alt = `${str(p.name) || "Provider"} profile`;
       avatar.loading = "lazy"; avatar.referrerPolicy = "no-referrer";
       avatar.addEventListener("error", () => {
-        const f = document.createElement("div"); f.className="pc-av"; f.textContent=initials(p.name||""); avatar.replaceWith(f);
-      }, { once:true });
+        const f = document.createElement("div"); f.className = "pc-av"; f.textContent = initials(p.name || ""); avatar.replaceWith(f);
+      }, { once: true });
     } else {
-      avatar = document.createElement("div"); avatar.className = "pc-av"; avatar.textContent = initials(p.name||"");
+      avatar = document.createElement("div"); avatar.textContent = initials(p.name || "");
     }
     avatar.classList.add("pc-av"); aw.appendChild(avatar);
-    if (isAvailable(p)) { const d=document.createElement("span"); d.className="pc-online"; d.title="Available"; aw.appendChild(d); }
-    if (isVerified(p))  { const v=document.createElement("span"); v.className="pc-verified"; v.textContent="✓"; v.title="Verified"; aw.appendChild(v); }
+    if (available) { const d = document.createElement("span"); d.className = "pc-online"; d.title = "Available"; aw.appendChild(d); }
+    if (p.verified === true) { const v = document.createElement("span"); v.className = "pc-verified"; v.textContent = "✓"; v.title = "Verified"; aw.appendChild(v); }
 
     const info = document.createElement("div"); info.className = "pc-info";
-    const nm   = document.createElement("div"); nm.className="pc-name";   nm.textContent=str(p.name)||"Service Provider";
-    const role = document.createElement("div"); role.className="pc-role"; role.textContent=str(p.role||p.category)||"Service Provider";
-    const stars= document.createElement("div"); stars.className="pc-stars";
-    const r    = Number(p.rating);
-    stars.innerHTML = `${starsHtml(Number.isFinite(r)?r:0)}<span class="pc-rnum">${Number.isFinite(r)?r.toFixed(1):"0.0"}</span><span class="pc-rv">(${Number(p.reviewCount)||0})</span>`;
+    const nm = document.createElement("div"); nm.className = "pc-name"; nm.textContent = str(p.name) || "Service Provider";
+    const role = document.createElement("div"); role.className = "pc-role"; role.textContent = str(p.role || p.category) || "Service Provider";
+    const stars = document.createElement("div"); stars.className = "pc-stars";
+    const r = Number(p.rating);
+    stars.innerHTML = `${starsHtml(Number.isFinite(r) ? r : 0)}<span class="pc-rnum">${Number.isFinite(r) ? r.toFixed(1) : "0.0"}</span><span class="pc-rv">(${Number(p.reviewCount) || 0})</span>`;
     info.append(nm, role, stars);
     top.append(aw, info);
 
     const badge = document.createElement("span");
-    badge.className = `badge ${isAvailable(p)?"badge-success":"badge-danger"}`;
-    badge.textContent = isAvailable(p) ? "Available" : "Offline";
+    badge.className = `badge ${available ? "badge-success" : "badge-danger"}`;
+    badge.textContent = available ? "Available" : "Offline";
     top.appendChild(badge);
 
     const body = document.createElement("div"); body.className = "pc-body";
-    if (str(p.description)) { const d=document.createElement("p"); d.className="pc-desc"; d.textContent=str(p.description); body.appendChild(d); }
-    if (Array.isArray(p.tags)&&p.tags.length) {
-      const tags=document.createElement("div"); tags.className="pc-tags";
-      p.tags.filter(t=>typeof t==="string").slice(0,3).forEach(t=>{const tag=document.createElement("span");tag.className="pc-tag";tag.textContent=t;tags.appendChild(tag);});
+    if (str(p.description || p.bio)) { const d = document.createElement("p"); d.className = "pc-desc"; d.textContent = str(p.description || p.bio); body.appendChild(d); }
+    const tagList = Array.isArray(p.tags) ? p.tags.filter(t => typeof t === "string" && t.trim()).slice(0, 3) : [];
+    if (tagList.length) {
+      const tags = document.createElement("div"); tags.className = "pc-tags";
+      tagList.forEach(t => { const tag = document.createElement("span"); tag.className = "pc-tag"; tag.textContent = t; tags.appendChild(tag); });
       body.appendChild(tags);
     }
-    const meta=document.createElement("div"); meta.className="pc-meta";
-    if (str(p.city||p.location)) { const l=document.createElement("span"); l.textContent=`📍 ${str(p.city||p.location)}`; meta.appendChild(l); }
-    if (Number(p.completedJobs)>0) { const j=document.createElement("span"); j.textContent=`✓ ${Number(p.completedJobs)} jobs`; meta.appendChild(j); }
+    const meta = document.createElement("div"); meta.className = "pc-meta";
+    if (str(p.city || p.location)) { const l = document.createElement("span"); l.textContent = `📍 ${str(p.city || p.location)}`; meta.appendChild(l); }
+    const n = entry.services.length;
+    const sc = document.createElement("span"); sc.textContent = `🛠 ${n} service${n === 1 ? "" : "s"}`; meta.appendChild(sc);
+    if (Number(p.completedJobs) > 0) { const j = document.createElement("span"); j.textContent = `✓ ${Number(p.completedJobs)} jobs`; meta.appendChild(j); }
     body.appendChild(meta);
 
-    const foot  = document.createElement("div"); foot.className="pc-foot";
-    const price = document.createElement("div"); price.className="pc-price";
-    price.textContent = priceFor(p)===null ? "Contact for price" : money(priceFor(p));
-    const sm=document.createElement("span"); sm.textContent="starting price"; price.appendChild(sm);
-    const book=document.createElement("button"); book.type="button"; book.className="btn btn-primary btn-sm"; book.textContent="Book Now";
-    book.addEventListener("click", e=>{e.stopPropagation(); openModal(p);});
+    const foot = document.createElement("div"); foot.className = "pc-foot";
+    const price = document.createElement("div"); price.className = "pc-price";
+    price.textContent = money(entry.startingPrice);
+    const sm = document.createElement("span"); sm.textContent = n > 1 ? "starting from" : "price"; price.appendChild(sm);
+    const book = document.createElement("button"); book.type = "button"; book.className = "btn btn-primary btn-sm"; book.textContent = "Book Now";
+    book.addEventListener("click", e => { e.stopPropagation(); openModal(entry); });
     foot.append(price, book);
 
     card.append(top, body, foot);
-    card.addEventListener("click", ()=>openModal(p));
-    card.addEventListener("keydown", e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openModal(p);}});
+    card.addEventListener("click", () => openModal(entry));
+    card.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openModal(entry); } });
     grid.appendChild(card);
   });
 }
 
 function clearFilters() {
-  $("searchInput").value=""; $("locationSelect").value="";
-  S.cat=""; S.filter="all"; S.sort="rating"; $("sortSel").value="rating";
-  $("catStrip").querySelectorAll("[data-cat]").forEach((e,i)=>{e.classList.toggle("active",i===0);e.setAttribute("aria-selected",String(i===0));});
-  document.querySelectorAll(".fchip").forEach((e,i)=>{e.classList.toggle("active",i===0);e.setAttribute("aria-pressed",String(i===0));});
-  applyFilters();
+  $("searchInput").value = "";
+  S.catId = ""; S.providerId = ""; S.filter = "all"; S.sort = "rating"; S.showOffline = false;
+  $("sortSel").value = "rating";
+  markActiveCategory();
+  document.querySelectorAll(".fchip").forEach((e, i) => { e.classList.toggle("active", i === 0); e.setAttribute("aria-pressed", String(i === 0)); });
+  history.replaceState(null, "", "./seeker.html");
+  render();
 }
 
 // ── Event listeners ───────────────────────────────────
-$("catStrip").addEventListener("click", e=>{
-  const b=e.target.closest("[data-cat]"); if(!b) return;
-  S.cat=b.dataset.cat||"";
-  $("catStrip").querySelectorAll("[data-cat]").forEach(el=>{const on=el===b;el.classList.toggle("active",on);el.setAttribute("aria-selected",String(on));});
-  applyFilters();
+$("catStrip").addEventListener("click", e => {
+  const b = e.target.closest("[data-cat]"); if (!b) return;
+  S.catId = b.dataset.cat || ""; S.providerId = "";
+  markActiveCategory(); render();
 });
-document.querySelectorAll(".fchip").forEach(b=>b.addEventListener("click",()=>{
-  S.filter=b.dataset.f||"all";
-  document.querySelectorAll(".fchip").forEach(el=>{const on=el===b;el.classList.toggle("active",on);el.setAttribute("aria-pressed",String(on));});
-  applyFilters();
+document.querySelectorAll(".fchip").forEach(b => b.addEventListener("click", () => {
+  const f = b.dataset.f || "all";
+  if (f === "offline") { S.showOffline = !S.showOffline; b.classList.toggle("active", S.showOffline); b.setAttribute("aria-pressed", String(S.showOffline)); }
+  else {
+    S.filter = f;
+    document.querySelectorAll(".fchip:not([data-f=offline])").forEach(el => { const on = el === b; el.classList.toggle("active", on); el.setAttribute("aria-pressed", String(on)); });
+  }
+  render();
 }));
-$("sortSel").addEventListener("change", ()=>{S.sort=$("sortSel").value;applyFilters();});
-$("searchBtn").addEventListener("click", applyFilters);
-$("searchInput").addEventListener("keydown", e=>{if(e.key==="Enter")applyFilters();});
-$("searchInput").addEventListener("input", debounce(applyFilters,200));
-$("locationSelect").addEventListener("change", applyFilters);
-$("filterBtn").addEventListener("click", ()=>$("filterRow").scrollIntoView({behavior:"smooth",block:"center"}));
+$("sortSel").addEventListener("change", () => { S.sort = $("sortSel").value; render(); });
+$("searchBtn").addEventListener("click", render);
+$("searchInput").addEventListener("keydown", e => { if (e.key === "Enter") render(); });
+$("searchInput").addEventListener("input", debounce(render, 200));
+$("filterBtn").addEventListener("click", () => $("filterRow").scrollIntoView({ behavior: "smooth", block: "center" }));
 
 // ── Booking modal ─────────────────────────────────────
-function openModal(p) {
-  S.provider=p; S.service=null; S.sending=false;
+function openModal(entry) {
+  const p = entry.provider;
+  S.entry = entry; S.service = null; S.sending = false;
   setError();
   $("bookForm").classList.remove("hidden");
   $("bookSuccess").classList.add("hidden");
-  $("confirmBtn").disabled=false; $("confirmBtn").classList.remove("loading");
-  $("mAvatar").textContent = initials(p.name||"");
-  $("mName").textContent   = str(p.name)||"Service Provider";
-  $("mRole").textContent   = str(p.role||p.category)||"Service Provider";
-  const r=Number(p.rating);
-  $("mStars").textContent  = `${Number.isFinite(r)?r.toFixed(1)+"★":"No rating"} · ${Number(p.reviewCount)||0} reviews`;
+  $("confirmBtn").disabled = false; $("confirmBtn").classList.remove("loading");
+  $("mAvatar").textContent = initials(p.name || "");
+  $("mName").textContent = str(p.name) || "Service Provider";
+  $("mRole").textContent = str(p.role || p.category) || "Service provider";
+  const r = Number(p.rating);
+  $("mStars").textContent = `${Number.isFinite(r) && r > 0 ? r.toFixed(1) + "★" : "No rating yet"} · ${Number(p.reviewCount) || 0} reviews`;
   $("bookDate").min = todayLocal(); $("bookDate").value = todayLocal();
   $("bookTime").value = ""; $("bookAddr").value = ""; $("bookNotes").value = "";
 
-  const opts     = $("svcOptions"); opts.replaceChildren();
-  const services = servicesFor(p.id)
-    .map(s=>({id:s.id,name:str(s.name),price:Number(s.price)}))
-    .filter(s=>s.id&&s.name&&validPrice(s.price));
+  // Only services that pass EVERY matching rule for this seeker are bookable.
+  const checked = entry.services.map(s => ({ s, m: evaluateMatch(s, p, S.loc, { minBooking: minBooking() }) }));
+  const ok = checked.filter(x => x.m.eligible).map(x => x.s);
+  const opts = $("svcOptions"); opts.replaceChildren();
 
-  if (!services.length) {
-    const note=document.createElement("p"); note.className="empty-sub";
-    note.textContent="This provider has no active, priced services yet.";
+  if (!ok.length) {
+    const note = document.createElement("p"); note.className = "empty-sub";
+    note.textContent = REASON_TEXT[checked[0]?.m.reason] || "This provider has no bookable services right now.";
     opts.appendChild(note);
-    $("psService").textContent="—"; $("psTotal").textContent="—";
-    $("confirmBtn").disabled=true;
+    $("psService").textContent = "—"; $("psTotal").textContent = "—";
+    $("confirmBtn").disabled = true;
   } else {
-    services.forEach((s,i)=>{
-      const b=document.createElement("button"); b.type="button";
-      b.className=`svc-opt${i===0?" sel":""}`;
-      b.textContent=`${s.name} — ${money(s.price)}`;
-      b.setAttribute("aria-pressed",String(i===0));
-      b.addEventListener("click",()=>{
-        S.service=s;
-        opts.querySelectorAll("button").forEach(x=>{const on=x===b;x.classList.toggle("sel",on);x.setAttribute("aria-pressed",String(on));});
-        updatePrice(s.price);
+    ok.forEach((s, i) => {
+      const b = document.createElement("button"); b.type = "button";
+      b.className = `svc-opt${i === 0 ? " sel" : ""}`;
+      b.textContent = `${str(s.name)} — ${money(s.price)}`;
+      b.setAttribute("aria-pressed", String(i === 0));
+      b.addEventListener("click", () => {
+        S.service = s;
+        opts.querySelectorAll("button").forEach(x => { const on = x === b; x.classList.toggle("sel", on); x.setAttribute("aria-pressed", String(on)); });
+        updatePrice(s);
       });
       opts.appendChild(b);
-      if(i===0){S.service=s;updatePrice(s.price);}
+      if (i === 0) { S.service = s; updatePrice(s); }
     });
   }
   $("bookingOverlay").classList.add("active");
-  $("bookingOverlay").setAttribute("aria-hidden","false");
-  document.body.style.overflow="hidden";
+  $("bookingOverlay").setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
   $("closeBooking").focus();
 }
 
-function updatePrice(n) {
-  $("psService").textContent = money(n);
-  $("psTotal").textContent   = money(n);
+function updatePrice(s) {
+  $("psService").textContent = money(s.price);
+  $("psTotal").textContent = money(s.price);
+  const remote = (s.serviceMode || "onsite") !== "onsite";
+  $("bookAddrLabel").textContent = remote ? "Service address (optional for remote services)" : "Service address";
 }
 
 function closeModal() {
   $("bookingOverlay").classList.remove("active");
-  $("bookingOverlay").setAttribute("aria-hidden","true");
-  document.body.style.overflow="";
-  S.provider=null; S.service=null;
+  $("bookingOverlay").setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+  S.entry = null; S.service = null;
 }
 
 $("closeBooking").addEventListener("click", closeModal);
-$("bookingOverlay").addEventListener("click", e=>{if(e.target===$("bookingOverlay"))closeModal();});
-document.addEventListener("keydown", e=>{if(e.key==="Escape"&&$("bookingOverlay").classList.contains("active"))closeModal();});
-$("doneBtn").addEventListener("click", ()=>{closeModal();location.href="./bookings.html";});
+$("bookingOverlay").addEventListener("click", e => { if (e.target === $("bookingOverlay")) closeModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && $("bookingOverlay").classList.contains("active")) closeModal(); });
+$("doneBtn").addEventListener("click", () => { closeModal(); location.href = "./bookings.html"; });
 
 // ── Confirm booking ───────────────────────────────────
 $("confirmBtn").addEventListener("click", async () => {
-  const p=S.provider, s=S.service, u=S.user;
+  const entry = S.entry, s = S.service, u = S.user;
   if (S.sending) return;
-  if (!p||!s||!u||!s.id||!validPrice(s.price)) { toast("Choose a valid priced service.","warning"); return; }
+  if (!entry || !s || !u) { toast("Choose a valid priced service.", "warning"); return; }
 
-  const date    = $("bookDate").value;
-  const time    = $("bookTime").value;
-  const address = str($("bookAddr").value);
-  const notes   = str($("bookNotes").value);
-  const today   = todayLocal();
+  const date = $("bookDate").value, time = $("bookTime").value;
+  const address = str($("bookAddr").value), notes = str($("bookNotes").value);
+  const remote = (s.serviceMode || "onsite") !== "onsite";
+  const today = todayLocal();
 
-  if (!date||date<today)             { toast("Choose today or a future date.","warning"); return; }
-  if (!time)                          { toast("Choose a time.","warning"); return; }
-  if (date===today) {
-    const [h,m]=time.split(":").map(Number), d=new Date(); d.setHours(h,m,0,0);
-    if (d.getTime()<=Date.now())       { toast("Choose a future time.","warning"); return; }
+  if (!date || date < today)       { toast("Choose today or a future date.", "warning"); return; }
+  if (!time)                        { toast("Choose a time.", "warning"); return; }
+  if (date === today) {
+    const [h, m] = time.split(":").map(Number), d = new Date(); d.setHours(h, m, 0, 0);
+    if (d.getTime() <= Date.now())  { toast("Choose a future time.", "warning"); return; }
   }
-  if (address.length<5||address.length>300) { toast("Enter a valid address (5–300 chars).","warning"); return; }
-  if (notes.length>1500)              { toast("Notes must be ≤1,500 characters.","warning"); return; }
-  if (p.id===u.uid)                   { toast("You cannot book your own profile.","warning"); return; }
+  if (!remote && (address.length < 5 || address.length > 300)) { toast("Enter a valid address (5–300 characters).", "warning"); return; }
+  if (address.length > 300)         { toast("Address is too long.", "warning"); return; }
+  if (notes.length > 1500)          { toast("Notes must be 1,500 characters or fewer.", "warning"); return; }
 
-  S.sending=true;
-  const btn=$("confirmBtn"); btn.disabled=true; btn.classList.add("loading");
+  S.sending = true;
+  const btn = $("confirmBtn"); btn.disabled = true; btn.classList.add("loading");
   setError();
 
   try {
-    // Fetch provider's payment details — stored with the booking so seeker
-    // can pay after job completion even if provider later changes bank details
-    let providerPaymentAccount = { bankName:"", accountNumber:"", accountName:"" };
-    try {
-      const provSnap = await getDoc(doc(db,"providers",p.id));
-      if (provSnap.exists()) {
-        const d = provSnap.data();
-        providerPaymentAccount = {
-          bankName:      d.bankName      || "",
-          accountNumber: d.accountNumber || "",
-          accountName:   d.accountName   || ""
-        };
-      }
-    } catch(e) { console.warn("Could not fetch provider payment details:", e.message); }
+    // Provider, service, price, area and fees are re-read and re-validated inside a transaction.
+    const result = await createBooking({
+      user: u, providerId: entry.provider.id, serviceId: s.id, expectedPrice: Number(s.price),
+      date, time, address, notes, seekerLocation: S.loc
+    });
 
-    const bookingRef = genRef();
-    const data = {
-      bookingRef,
-      seekerId:             u.uid,
-      seekerName:           str(u.displayName).slice(0,120),
-      seekerEmail:          str(u.email).slice(0,254),
-      providerId:           p.id,
-      providerName:         str(p.name).slice(0,120),
-      service:              s.name.slice(0,160),
-      serviceId:            s.id,
-      serviceFee:           Number(s.price),
-      platformFee:          0,            // Seekers pay NO platform fee
-      total:                Number(s.price),
-      date, time, address, notes,
-      status:               "pending",
-      paymentStatus:        "awaiting_completion",
-      providerPaymentAccount,             // Snapshot at booking time
-      commissionAmount:     Math.round(Number(s.price)*0.05),
-      commissionStatus:     "pending",
-      createdAt:            serverTimestamp()
-    };
-
-    const docRef = await addDoc(collection(db,"bookings"), data);
-
-    // Show success
     $("bookForm").classList.add("hidden");
     const box = $("bookingRef"); box.replaceChildren();
     [
-      ["Reference",    bookingRef],
-      ["Provider",     str(p.name)||"Provider"],
-      ["Service",      s.name],
-      ["Date & Time",  `${date} at ${time}`],
-      ["Address",      address],
-      ["Booking ID",   docRef.id]
-    ].forEach(([label,value]) => {
-      const row=document.createElement("div"), strong=document.createElement("strong");
-      strong.textContent=label+": "; row.append(strong, document.createTextNode(value)); box.appendChild(row);
+      ["Reference", result.bookingRef], ["Provider", str(result.provider.name) || "Provider"],
+      ["Service", result.data.service], ["Date & Time", `${date} at ${time}`],
+      ["Address", address || "Remote / online"], ["Booking ID", result.id]
+    ].forEach(([label, value]) => {
+      const row = document.createElement("div"), strong = document.createElement("strong");
+      strong.textContent = label + ": "; row.append(strong, document.createTextNode(value)); box.appendChild(row);
     });
     $("bookSuccess").classList.remove("hidden");
-    btn.classList.remove("loading"); btn.disabled=false; S.sending=false;
 
-    // Notify provider (non-blocking)
     import("./assets/notifications.js")
-      .then(({ notifyNewBooking }) => notifyNewBooking(p.id, {
-        id: docRef.id, seekerName: str(u.displayName)||"A customer",
-        service: s.name, date, bookingRef
+      .then(({ notifyNewBooking }) => notifyNewBooking(entry.provider.id, {
+        id: result.id, seekerName: str(u.displayName) || "A customer",
+        service: result.data.service, date, bookingRef: result.bookingRef
       }))
       .catch(e => console.warn("Notification failed:", e));
-
     toast("Booking submitted! The provider will confirm shortly.", "success");
-  } catch(e) {
+  } catch (e) {
     console.error("Booking failed:", e.code, e.message);
-    setError("We couldn't submit the booking. Please try again.");
-    toast("Failed to submit booking. Please try again.", "error");
-    btn.disabled=false; btn.classList.remove("loading"); S.sending=false;
+    if (e instanceof BookingError) {
+      setError(e.message);
+      if (["price_changed", "service_inactive", "not_found", "provider_offline", "provider_unavailable"].includes(e.code)) {
+        await Promise.allSettled([loadServices(), loadProviders(), loadConfig()]);
+        render();
+        closeModal();
+        toast(e.message, "warning");
+      }
+    } else {
+      setError("We couldn't submit the booking. Please check your details and try again.");
+    }
+  } finally {
+    btn.disabled = false; btn.classList.remove("loading"); S.sending = false;
   }
 });
 </script>
