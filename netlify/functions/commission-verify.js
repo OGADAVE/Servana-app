@@ -15,7 +15,7 @@ exports.handler = async event => {
     if (!token) return json(401, { error: "Missing token" });
 
     let uid;
-    try { uid = (await getAdmin().auth().verifyIdToken(token)).uid; }
+    try { uid = (await getAdmin().auth.verifyIdToken(token)).uid; }
     catch (_) { return json(401, { error: "Invalid token" }); }
 
     let body = {};

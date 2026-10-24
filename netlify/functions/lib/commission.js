@@ -5,15 +5,17 @@
 // Required Netlify environment variables:
 //   PAYSTACK_SECRET_KEY       sk_live_... / sk_test_...
 //   FIREBASE_SERVICE_ACCOUNT  the full service-account JSON (one line)
-const admin = require("firebase-admin");
+const { initializeApp, cert, getApps } = require("firebase-admin/app");
+const { getAuth } = require("firebase-admin/auth");
+const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 
 function getAdmin() {
-  if (!admin.apps.length) {
+  if (!getApps().length) {
     const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
     if (!raw) throw new Error("FIREBASE_SERVICE_ACCOUNT is not configured");
-    admin.initializeApp({ credential: admin.credential.cert(JSON.parse(raw)) });
+    initializeApp({ credential: cert(JSON.parse(raw)) });
   }
-  return admin;
+  return { db: getFirestore(), auth: getAuth(), FieldValue };
 }
 
 const REF_RE = /^[A-Za-z0-9_.=-]{6,100}$/;
@@ -40,7 +42,7 @@ async function settleCommission(reference, uid) {
   if (!REF_RE.test(reference || "")) throw Object.assign(new Error("Invalid reference"), { status: 400 });
 
   const fb = getAdmin();
-  const db = fb.firestore();
+  const db = fb.db;
   const payRef = db.collection("commissionPayments").doc(reference);
 
   const done = await payRef.get();
@@ -80,7 +82,7 @@ async function settleCommission(reference, uid) {
       throw Object.assign(new Error("Amount does not match outstanding commission"), { status: 409 });
     }
 
-    const now = fb.firestore.FieldValue.serverTimestamp();
+    const now = fb.FieldValue.serverTimestamp();
     snaps.forEach(s => t.update(s.ref, {
       commissionStatus: "paid", commissionPaidAt: now, commissionPaymentRef: reference, updatedAt: now
     }));

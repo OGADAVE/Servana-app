@@ -17,13 +17,14 @@
 //  5. Recomputes rating / reviewCount / ratingBreakdown from the reviews collection
 //     (ratings were never aggregated before, so every provider currently shows 0)
 // ═══════════════════════════════════════════════════════
-import admin from "firebase-admin";
+import { initializeApp, cert } from "firebase-admin/app";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { readFileSync } from "fs";
 
 const WRITE = process.argv.includes("--write");
-admin.initializeApp({ credential: admin.credential.cert(JSON.parse(readFileSync("./serviceAccount.json", "utf8"))) });
-const db = admin.firestore();
-const FV = admin.firestore.FieldValue;
+initializeApp({ credential: cert(JSON.parse(readFileSync("./serviceAccount.json", "utf8"))) });
+const db = getFirestore();
+const FV = FieldValue;
 
 const slug = s => String(s || "").toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
 const key  = s => String(s || "").toLowerCase().trim();

@@ -80,7 +80,7 @@ service cloud.firestore {
           && d.serviceFee == svc.price
           && d.total      == svc.price
           && d.platformFee == 0
-          && d.service    == svc.name
+          && d["service"]    == svc.name
           && d.commissionRate == cfg.get("commissionRate", 5)
           && prov.get("suspended", false) != true
           && prov.get("deleted", false)   != true
