@@ -143,6 +143,10 @@
     .msg-bubble.mine { background:linear-gradient(135deg,var(--brand),var(--accent)); color:#fff; border-bottom-right-radius:4px; }
     .msg-time { font-size:10px; color:rgba(255,255,255,.6); margin-top:4px; text-align:right; }
     .msg-bubble.them .msg-time { color:var(--text-3); }
+    .tick { display:inline-flex; align-items:center; margin-left:4px; vertical-align:-2px; color:rgba(255,255,255,.65); }
+    .tick svg { width:16px; height:11px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+    .tick.sending svg { width:12px; height:12px; }
+    .tick.read { color:#4fc3f7; }
 
     /* ── Composer — ALWAYS at bottom, NEVER disappears ── */
     .chat-composer {
@@ -297,6 +301,8 @@ import {
 const $ = id => document.getElementById(id);
 let me = null, activeChatId = null, unsubMessages = null;
 let allConvs = [];
+let currentMsgs = [];                 // messages of the open chat (re-rendered when ticks change)
+const marked = new Set();             // guards so we never write the same receipt twice
 
 // ── Auth ─────────────────────────────────────────────
 onAuthStateChanged(auth, user => {
@@ -323,6 +329,8 @@ function listenConversations() {
       .sort((a,b) => (b.lastMessageAt?.seconds||0) - (a.lastMessageAt?.seconds||0));
     $("convCount").textContent = allConvs.length;
     renderConvList();
+    markDelivered();
+    if (activeChatId && currentMsgs.length) renderMessages(currentMsgs);   // other person's delivered/seen may have changed
   }, err => {
     console.error("[Chat] Conversations error:", err);
     $("convList").innerHTML = `
@@ -383,6 +391,67 @@ function getOtherName(conv) {
 $("convSearch").addEventListener("input", e => renderConvList(e.target.value));
 
 // ── Open conversation ────────────────────────────────
+// ── Delivery / read receipts ─────────────────────────
+// No per-message writes. The chat document keeps, per person:
+//   delivered.<uid>  last time that person's app received messages in this chat
+//   seen.<uid>       last time that person had this chat open on screen
+// A message from me is: sending (clock) -> sent ✓ -> delivered ✓✓ -> read ✓✓ (blue).
+const tsMs = t => (t && typeof t.toMillis === "function") ? t.toMillis() : 0;
+
+function markDelivered() {
+  allConvs.forEach(c => {
+    if (!c.lastSenderId || c.lastSenderId === me.uid) return;       // only messages sent TO me
+    const last = tsMs(c.lastMessageAt);
+    if (!last || last <= tsMs(c.delivered?.[me.uid])) return;
+    const key = `d:${c.id}:${last}`;
+    if (marked.has(key)) return;
+    marked.add(key);
+    updateDoc(doc(db, "chats", c.id), { [`delivered.${me.uid}`]: serverTimestamp() }).catch(() => marked.delete(key));
+  });
+}
+
+function lastIncomingMs(msgs) {
+  let t = 0;
+  msgs.forEach(m => { if (m.senderId !== me.uid) t = Math.max(t, tsMs(m.createdAt)); });
+  return t;
+}
+
+function markSeen(chatId, incomingMs) {
+  if (!chatId || document.visibilityState !== "visible") return;     // a hidden tab is not "reading"
+  const conv = allConvs.find(c => c.id === chatId);
+  if (incomingMs && incomingMs <= tsMs(conv?.seen?.[me.uid])) return;
+  const key = `s:${chatId}:${incomingMs}`;
+  if (marked.has(key)) return;
+  marked.add(key);
+  updateDoc(doc(db, "chats", chatId), {
+    [`seen.${me.uid}`]: serverTimestamp(),
+    [`delivered.${me.uid}`]: serverTimestamp(),
+    [`unread.${me.uid}`]: 0
+  }).catch(() => marked.delete(key));
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (activeChatId) markSeen(activeChatId, lastIncomingMs(currentMsgs));
+});
+
+const TICK_SVG = {
+  sending: '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.5 1.5"/></svg>',
+  one:     '<svg viewBox="0 0 16 11"><path d="M1.5 5.8 5.2 9.5 13.5 1.5"/></svg>',
+  two:     '<svg viewBox="0 0 16 11"><path d="M1 5.8 4.7 9.5 11 3"/><path d="M6.2 8.6 7.1 9.5 14.8 1.5"/></svg>'
+};
+
+function tickHtml(m) {
+  const sent = tsMs(m.createdAt);
+  if (!sent) return `<span class="tick sending" title="Sending">${TICK_SVG.sending}</span>`;
+  const conv  = allConvs.find(c => c.id === activeChatId);
+  const other = (conv?.participants || []).find(u => u !== me.uid);
+  const seenAt = tsMs(conv?.seen?.[other]);
+  const delivAt = tsMs(conv?.delivered?.[other]);
+  if (seenAt && sent <= seenAt)       return `<span class="tick read" title="Read">${TICK_SVG.two}</span>`;
+  if (delivAt && sent <= delivAt)     return `<span class="tick" title="Delivered">${TICK_SVG.two}</span>`;
+  return `<span class="tick" title="Sent">${TICK_SVG.one}</span>`;
+}
+
 async function openChat(chatId, partnerName) {
   if (activeChatId === chatId) return;
   activeChatId = chatId;
@@ -393,10 +462,8 @@ async function openChat(chatId, partnerName) {
   $("chatName").textContent = partnerName;
   $("chatAv").textContent   = initials(partnerName);
 
-  // Mark as read
-  try {
-    await updateDoc(doc(db, "chats", chatId), { [`unread.${me.uid}`]: 0 });
-  } catch {}
+  currentMsgs = [];
+  markSeen(chatId, 0);                                       // opening the chat = I've seen it (also clears unread)
 
   // Highlight conv item
   $("convList").querySelectorAll(".conv-item").forEach(i =>
@@ -426,15 +493,18 @@ async function openChat(chatId, partnerName) {
     const msgs = snap.docs
       .map(d => ({ id: d.id, ...d.data() }))
       .sort((a,b) => (a.createdAt?.seconds||0) - (b.createdAt?.seconds||0));
-    renderMessages(msgs);
+    currentMsgs = msgs;
+    renderMessages(msgs, true);
+    markSeen(chatId, lastIncomingMs(msgs));                  // new incoming message while it's on screen
   });
 
   // Focus input
   setTimeout(() => $("msgInput").focus(), 100);
 }
 
-function renderMessages(messages) {
+function renderMessages(messages, forceScroll = false) {
   const area = $("messagesArea");
+  const nearBottom = area.scrollHeight - area.scrollTop - area.clientHeight < 80;
   if (!messages.length) {
     area.innerHTML = `<div class="msg-date-sep">Say hello! 👋 Be the first to send a message.</div>`;
     return;
@@ -455,13 +525,13 @@ function renderMessages(messages) {
       ${!mine ? `<div class="msg-av-sm">${initials(m.senderName || "U")}</div>` : ""}
       <div class="msg-bubble ${mine ? "mine" : "them"}">
         ${esc(m.text || "")}
-        <div class="msg-time">${time}${mine ? " ✓" : ""}</div>
+        <div class="msg-time">${time}${mine ? tickHtml(m) : ""}</div>
       </div>
     </div>`;
   }).join("");
 
-  // Scroll to bottom
-  area.scrollTop = area.scrollHeight;
+  // Only jump to the bottom for new messages or when the reader is already there.
+  if (forceScroll || nearBottom) area.scrollTop = area.scrollHeight;
 }
 
 // ── Send message ─────────────────────────────────────
@@ -484,6 +554,7 @@ async function sendMessage() {
     await updateDoc(doc(db, "chats", activeChatId), {
       lastMessage:   text.slice(0, 200),
       lastMessageAt: serverTimestamp(),
+      lastSenderId:  me.uid,
       ...(other ? { [`unread.${other}`]: increment(1) } : {})
     });
   } catch(e) {
