@@ -25,7 +25,8 @@ export async function notify(recipientUid, notification) {
   if (!recipientUid || !notification?.title) return;
 
   // ── Layer 1: Firestore in-app notification ──────────
-  try {
+  // Chat messages are not stored as notifications: the chat itself is the inbox.
+  if (notification.type !== "new_message") try {
     await addDoc(collection(db, "notifications"), {
       userId:    recipientUid,
       title:     notification.title,
@@ -110,7 +111,7 @@ export const notifyBookingDeclined = (seekerUid, booking) =>
   });
 
 /** Either party gets a new chat message */
-export const notifyNewMessage = (recipientUid, senderName, messagePreview) =>
+export const notifyNewMessage = (recipientUid, senderName, messagePreview, chatId) =>
   notify(recipientUid, {
     title: `💬 ${senderName || "New Message"}`,
     body:  (messagePreview || "").length > 80
@@ -118,7 +119,17 @@ export const notifyNewMessage = (recipientUid, senderName, messagePreview) =>
              : (messagePreview || ""),
     type:  "new_message",
     url:   "./chat.html",
-    data:  { type: "new_message" }
+    data:  { type: "new_message", chatId: chatId || "", senderName: senderName || "" }
+  });
+
+/** Provider gets notified that the seeker cancelled a pending booking */
+export const notifyBookingCancelled = (providerUid, booking) =>
+  notify(providerUid, {
+    title: "🚫 Booking Cancelled",
+    body:  `A customer cancelled their booking for "${booking.service || ""}".`,
+    type:  "booking_cancelled",
+    url:   "./provider.html",
+    data:  { bookingId: booking.id, type: "booking_cancelled" }
   });
 
 /** Provider — commission cleared, bookings unlocked */

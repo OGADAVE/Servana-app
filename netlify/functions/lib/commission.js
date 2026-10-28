@@ -5,18 +5,7 @@
 // Required Netlify environment variables:
 //   PAYSTACK_SECRET_KEY       sk_live_... / sk_test_...
 //   FIREBASE_SERVICE_ACCOUNT  the full service-account JSON (one line)
-const { initializeApp, cert, getApps } = require("firebase-admin/app");
-const { getAuth } = require("firebase-admin/auth");
-const { getFirestore, FieldValue } = require("firebase-admin/firestore");
-
-function getAdmin() {
-  if (!getApps().length) {
-    const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
-    if (!raw) throw new Error("FIREBASE_SERVICE_ACCOUNT is not configured");
-    initializeApp({ credential: cert(JSON.parse(raw)) });
-  }
-  return { db: getFirestore(), auth: getAuth(), FieldValue };
-}
+const { getAdmin } = require("./firebase-admin");
 
 const REF_RE = /^[A-Za-z0-9_.=-]{6,100}$/;
 const MAX_BOOKINGS = 40;

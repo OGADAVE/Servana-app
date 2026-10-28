@@ -132,6 +132,7 @@
   <button class="mob-tab" data-panel="users">👥 Users</button>
   <button class="mob-tab" data-panel="providers">🛠️ Providers</button>
   <button class="mob-tab" data-panel="bookings">📅 Bookings</button>
+  <button class="mob-tab" data-panel="reports">🚩 Reports</button>
   <button class="mob-tab" data-panel="categories">📂 Categories</button>
   <button class="mob-tab" data-panel="analytics">📈 Analytics</button>
   <button class="mob-tab" data-panel="settings">⚙️ Settings</button>
@@ -152,6 +153,7 @@
     <button class="sb-item" data-panel="users"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Users <span class="sb-badge" id="sb-users-count" style="display:none"></span></button>
     <button class="sb-item" data-panel="providers"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>Providers <span class="sb-badge" id="sb-pending-verif" style="display:none"></span></button>
     <button class="sb-item" data-panel="bookings"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Bookings <span class="sb-badge" id="sb-disputes" style="display:none"></span></button>
+    <button class="sb-item" data-panel="reports"><svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>Reports <span id="sb-reports" class="sb-badge" style="display:none"></span></button>
     <button class="sb-item" data-panel="categories"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>Categories</button>
 
     <div class="sb-section">Config</div>
@@ -252,6 +254,28 @@
           <div style="overflow-x:auto"><table class="data-table">
             <thead><tr><th>Ref</th><th>Seeker</th><th>Provider</th><th>Service</th><th>Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody id="bookingsBody"><tr><td colspan="8" style="text-align:center;padding:32px"><div class="skel" style="height:40px;border-radius:8px"></div></td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ═══════════ REPORTS ═══════════ -->
+      <div class="panel" id="panel-reports">
+        <div class="admin-header-bar">
+          <div><div class="admin-title">User Reports</div><div class="admin-sub">People reported from chat. Reply to reports quickly: the app stores expect it.</div></div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <select id="reportFilter" style="padding:7px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:12px">
+              <option value="open">Open</option>
+              <option value="reviewed">Reviewed</option>
+              <option value="dismissed">Dismissed</option>
+              <option value="all">All</option>
+            </select>
+            <span class="tbl-count" id="reportCount"></span>
+          </div>
+          <div style="overflow-x:auto"><table class="data-table">
+            <thead><tr><th>Date</th><th>Reported</th><th>Reported by</th><th>Reason &amp; messages</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="reportsBody"><tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-3)">No reports</td></tr></tbody>
           </table></div>
         </div>
       </div>
@@ -359,7 +383,7 @@ import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/
 import { collection, doc, getDoc, getDocs, updateDoc, deleteDoc, addDoc, setDoc, serverTimestamp, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const $ = id => document.getElementById(id);
-let allUsers=[], allProviders=[], allBookings=[], allCats=[], platformConfig={};
+let allUsers=[], allProviders=[], allBookings=[], allCats=[], allReports=[], platformConfig={};
 let editingCatId = null;
 
 // ── Auth guard — admin only ──────────────────────────────
@@ -465,18 +489,20 @@ $("sidebarSignOut").addEventListener("click", doSignOut);
 async function loadAllData() {
   try {
     showSpinner();
-    const [usersSnap, provsSnap, booksSnap, catsSnap] = await Promise.all([
+    const [usersSnap, provsSnap, booksSnap, catsSnap, reportsSnap] = await Promise.all([
       getDocs(collection(db,"users")),
       getDocs(collection(db,"providers")),
       getDocs(collection(db,"bookings")),
       getDocs(collection(db,"category")),
+      getDocs(collection(db,"reports")).catch(()=>({docs:[]})),
     ]);
     allUsers    = usersSnap.docs.map(d=>({id:d.id,...d.data()}));
     allProviders= provsSnap.docs.map(d=>({id:d.id,...d.data()}));
     allBookings = booksSnap.docs.map(d=>({id:d.id,...d.data()}));
     allCats     = catsSnap.docs.map(d=>({id:d.id,...d.data()}));
+    allReports  = reportsSnap.docs.map(d=>({id:d.id,...d.data()}));
 
-    updateOverview(); renderUsers(); renderProviders(); renderBookings(); renderCategories(); renderAnalytics();
+    updateOverview(); renderUsers(); renderProviders(); renderBookings(); renderReports(); renderCategories(); renderAnalytics();
   } catch(e) { toast("Failed to load platform data.","error"); console.error(e); }
   finally { hideSpinner(); }
 }
@@ -514,6 +540,57 @@ function updateOverview() {
       </div>
     </div>`).join("") : `<div class="empty-state" style="padding:24px"><div class="empty-icon">📋</div><p class="empty-title">No bookings yet</p></div>`;
 }
+
+// ── Reports (chat moderation) ────────────────────────────
+function renderReports() {
+  const filter = $("reportFilter")?.value || "open";
+  const open = allReports.filter(r => (r.status||"open")==="open").length;
+  const badge = $("sb-reports");
+  if (badge) { badge.textContent = open; badge.style.display = open ? "flex" : "none"; }
+
+  const list = [...allReports]
+    .filter(r => filter==="all" || (r.status||"open")===filter)
+    .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+  $("reportCount").textContent = `${list.length} report${list.length===1?"":"s"}`;
+
+  const nameOf = (uid, fallback) => fallback || allUsers.find(u=>u.id===uid)?.displayName || uid || "—";
+  $("reportsBody").innerHTML = list.length ? list.map(r => {
+    const when = r.createdAt?.toDate?.()?.toLocaleString("en-NG",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}) || "";
+    const status = r.status || "open";
+    const reported = allUsers.find(u=>u.id===r.reportedId);
+    const suspended = reported?.suspended === true;
+    const evidence = Array.isArray(r.evidence) ? r.evidence : [];
+    const msgs = evidence.map(m => {
+      const who = m.senderId===r.reportedId ? "Reported" : "Reporter";
+      const t = m.at ? new Date(m.at).toLocaleString("en-NG",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}) : "";
+      return `<div style="margin:3px 0"><strong>${who}</strong> <span style="color:var(--text-3);font-size:11px">${esc(t)}</span><br>${esc(m.text||"")}</div>`;
+    }).join("");
+    return `<tr>
+      <td style="white-space:nowrap">${esc(when)}<div style="font-size:11px;color:var(--text-3)">${esc(r.source||"")}</div></td>
+      <td><strong>${esc(nameOf(r.reportedId, r.reportedName))}</strong>${suspended?' <span class="badge badge-cancelled">suspended</span>':""}</td>
+      <td>${esc(nameOf(r.reporterId, r.reporterName))}</td>
+      <td style="max-width:340px"><div style="font-weight:600">${esc(r.reason||"")}</div>
+        ${evidence.length?`<details style="margin-top:4px"><summary style="cursor:pointer;color:var(--accent)">${evidence.length} message${evidence.length===1?"":"s"}</summary><div style="font-size:12px;margin-top:6px;max-height:220px;overflow:auto">${msgs}</div></details>`:'<div style="font-size:11px;color:var(--text-3)">No messages attached</div>'}
+      </td>
+      <td><span class="badge badge-${status==="open"?"pending":status==="reviewed"?"completed":"cancelled"}">${esc(status)}</span></td>
+      <td style="white-space:nowrap">
+        ${status==="open"?`<button class="btn btn-ghost btn-sm" onclick="setReportStatus('${r.id}','reviewed')">Reviewed</button>
+        <button class="btn btn-ghost btn-sm" onclick="setReportStatus('${r.id}','dismissed')">Dismiss</button>`:""}
+        ${reported&&r.reportedId?`<button class="btn btn-sm ${suspended?"btn-ghost":"btn-danger"}" onclick="toggleSuspendUser('${esc(r.reportedId)}',${suspended})">${suspended?"Reinstate":"Suspend user"}</button>`:""}
+      </td>
+    </tr>`;
+  }).join("") : `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-3)">No reports</td></tr>`;
+}
+window.setReportStatus = async (id, status) => {
+  try {
+    showSpinner();
+    await updateDoc(doc(db,"reports",id),{ status, reviewedBy: auth.currentUser.uid, reviewedAt: serverTimestamp() });
+    const r = allReports.find(x=>x.id===id); if (r) r.status = status;
+    renderReports(); toast(`Report marked ${status}.`,"success");
+  } catch(e) { console.error(e); toast("Failed to update the report.","error"); }
+  finally { hideSpinner(); }
+};
+$("reportFilter")?.addEventListener("change", renderReports);
 
 // ── Users ────────────────────────────────────────────────
 function renderUsers(filter="") {

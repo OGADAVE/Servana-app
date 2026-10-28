@@ -118,6 +118,15 @@
     .chat-view-av { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--brand),var(--accent)); display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:700; flex-shrink:0; }
     .chat-view-name { font-size:14px; font-weight:700; color:var(--text-1); }
     .chat-view-status { font-size:11px; color:var(--success); margin-top:1px; }
+    .safety-btn { margin-left:auto; background:transparent; border:none; color:var(--text-2); font-size:20px; cursor:pointer; padding:6px 10px; border-radius:8px; }
+    .safety-btn:hover { background:var(--bg-subtle); }
+    .safety-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; align-items:center; justify-content:center; z-index:3000; padding:16px; }
+    .safety-overlay.open { display:flex; }
+    .safety-box { background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:20px; width:min(380px,100%); }
+    .safety-box h3 { margin:0 0 4px; font-size:16px; color:var(--text-1); }
+    .safety-box p { margin:0 0 14px; font-size:12px; color:var(--text-3); }
+    .safety-opt { display:block; width:100%; text-align:left; padding:11px 14px; margin-bottom:8px; border-radius:10px; border:1px solid var(--border); background:var(--bg-subtle); color:var(--text-1); font:inherit; font-size:13px; cursor:pointer; }
+    .safety-opt.danger { color:var(--danger); }
     .back-mobile { display:none; width:32px; height:32px; border-radius:50%; background:none; border:1px solid var(--border); cursor:pointer; color:var(--text-2); align-items:center; justify-content:center; transition:background .15s; flex-shrink:0; }
     .back-mobile svg { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2.2; stroke-linecap:round; }
     @media(max-width:639px){ .back-mobile { display:flex; } }
@@ -265,6 +274,7 @@
           <div class="chat-view-name" id="chatName">—</div>
           <div class="chat-view-status">● Online</div>
         </div>
+        <button class="safety-btn" id="safetyBtn" aria-label="Report or block this person" title="Report or block">⋮</button>
       </div>
 
       <!-- Messages -->
@@ -289,18 +299,39 @@
   </div><!-- /chat-view -->
 </div><!-- /chat-root -->
 
+<div class="safety-overlay" id="safetyOverlay" role="dialog" aria-modal="true" aria-labelledby="safetyTitle">
+  <div class="safety-box">
+    <div id="safetyMain">
+      <h3 id="safetyTitle">Report or block</h3>
+      <p>Reports go to the Servana team. Blocking stops this person messaging you.</p>
+      <button class="safety-opt" id="safetyReportBtn">🚩 Report this person…</button>
+      <button class="safety-opt danger" id="safetyBlockBtn">⛔ Block this person</button>
+      <button class="safety-opt" data-safety-close>Cancel</button>
+    </div>
+    <div id="safetyReasons" style="display:none">
+      <h3>Why are you reporting them?</h3>
+      <p>Your last messages in this chat are attached so our team can review.</p>
+      <button class="safety-opt" data-reason="Harassment or abuse">Harassment or abuse</button>
+      <button class="safety-opt" data-reason="Spam or scam">Spam or scam</button>
+      <button class="safety-opt" data-reason="Inappropriate content">Inappropriate content</button>
+      <button class="safety-opt" data-safety-close>Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import { auth, db, toast, esc, initials } from "./assets/firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   collection, doc, query, where, limit,
-  onSnapshot, addDoc, updateDoc, serverTimestamp, increment,
+  onSnapshot, addDoc, updateDoc, serverTimestamp, increment, arrayUnion,
   getDocs, getDoc, setDoc, orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const $ = id => document.getElementById(id);
 let me = null, activeChatId = null, unsubMessages = null;
 let allConvs = [];
+let blocked = new Set();              // uids this user has blocked
 let currentMsgs = [];                 // messages of the open chat (re-rendered when ticks change)
 const marked = new Set();             // guards so we never write the same receipt twice
 
@@ -308,6 +339,10 @@ const marked = new Set();             // guards so we never write the same recei
 onAuthStateChanged(auth, user => {
   if (!user) { location.href = "./login.html"; return; }
   me = user;
+  getDoc(doc(db, "users", user.uid)).then(sn => {
+    blocked = new Set(Array.isArray(sn.data()?.blockedUsers) ? sn.data().blockedUsers : []);
+    renderConvList();
+  }).catch(() => {});
   listenConversations();
   // Deep link: ?uid=xxx starts chat with that user
   const qs  = new URLSearchParams(location.search);
@@ -343,9 +378,10 @@ function listenConversations() {
 }
 
 function renderConvList(filter = "") {
+  const visible = allConvs.filter(c => !blocked.has((c.participants || []).find(u => u !== me.uid)));
   const list = filter
-    ? allConvs.filter(c => getOtherName(c).toLowerCase().includes(filter.toLowerCase()))
-    : allConvs;
+    ? visible.filter(c => getOtherName(c).toLowerCase().includes(filter.toLowerCase()))
+    : visible;
 
   if (!list.length) {
     $("convList").innerHTML = `
@@ -534,6 +570,53 @@ function renderMessages(messages, forceScroll = false) {
   if (forceScroll || nearBottom) area.scrollTop = area.scrollHeight;
 }
 
+// ── Report / block ───────────────────────────────────
+function otherUidOf(chatId) {
+  const c = allConvs.find(x => x.id === chatId);
+  return (c?.participants || []).find(u => u !== me.uid) || "";
+}
+const closeSafety = () => { $("safetyOverlay").classList.remove("open"); $("safetyMain").style.display = ""; $("safetyReasons").style.display = "none"; };
+$("safetyBtn").addEventListener("click", () => { if (activeChatId) $("safetyOverlay").classList.add("open"); });
+document.querySelectorAll("[data-safety-close]").forEach(b => b.addEventListener("click", closeSafety));
+$("safetyOverlay").addEventListener("click", e => { if (e.target === $("safetyOverlay")) closeSafety(); });
+$("safetyReportBtn").addEventListener("click", () => { $("safetyMain").style.display = "none"; $("safetyReasons").style.display = ""; });
+
+document.querySelectorAll("[data-reason]").forEach(btn => btn.addEventListener("click", async () => {
+  const reportedId = otherUidOf(activeChatId);
+  if (!reportedId) return;
+  const conv = allConvs.find(x => x.id === activeChatId);
+  try {
+    await addDoc(collection(db, "reports"), {
+      reporterId: me.uid, reporterName: String(me.displayName || "").slice(0, 120),
+      reportedId, reportedName: String(getOtherName(conv) || "").slice(0, 120),
+      chatId: activeChatId, reason: btn.dataset.reason, source: "web", status: "open",
+      // The last messages are attached so moderators can review without read access to every chat.
+      evidence: currentMsgs.slice(-20).map(m => ({
+        senderId: m.senderId, text: String(m.text || "").slice(0, 500),
+        at: m.createdAt?.toMillis?.() || 0
+      })),
+      createdAt: serverTimestamp()
+    });
+    closeSafety();
+    toast("Report sent. Thank you, our team will review it.", "success", 5000);
+  } catch (e) { console.error("[Chat] report:", e); toast("Couldn't send your report. Please try again.", "error"); }
+}));
+
+$("safetyBlockBtn").addEventListener("click", async () => {
+  const otherId = otherUidOf(activeChatId);
+  if (!otherId || !confirm("Block this person? They won't be able to message you and this conversation will be hidden.")) return;
+  try {
+    await updateDoc(doc(db, "users", me.uid), { blockedUsers: arrayUnion(otherId) });
+    blocked.add(otherId);
+    closeSafety();
+    if (unsubMessages) unsubMessages();
+    activeChatId = null; currentMsgs = [];
+    $("activeChat").classList.remove("visible");
+    renderConvList();
+    toast("Person blocked.", "info");
+  } catch (e) { console.error("[Chat] block:", e); toast("Couldn't block this person. Please try again.", "error"); }
+});
+
 // ── Send message ─────────────────────────────────────
 async function sendMessage() {
   const text = $("msgInput").value.trim();
@@ -557,6 +640,12 @@ async function sendMessage() {
       lastSenderId:  me.uid,
       ...(other ? { [`unread.${other}`]: increment(1) } : {})
     });
+    // Push to the other person's phone/browser (non-blocking; the server enforces the rules and rate limits).
+    if (other) {
+      import("./assets/notifications.js")
+        .then(({ notifyNewMessage }) => notifyNewMessage(other, me.displayName, text, activeChatId))
+        .catch(() => {});
+    }
   } catch(e) {
     console.error("[Chat] Send error:", e);
     toast("Failed to send message.", "error");

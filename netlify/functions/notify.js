@@ -1,3 +1,4 @@
+const { sendExpoPush } = require("./lib/push");
 
 const json = (statusCode, body) => ({
   statusCode,
@@ -38,8 +39,10 @@ exports.handler = async (event) => {
   const apiKey = process.env.FIREBASE_API_KEY;
   const appId = process.env.ONESIGNAL_APP_ID;
   const restKey = process.env.ONESIGNAL_REST_API_KEY;
+  const webPushConfigured = !!(appId && restKey);                       // OneSignal (browsers) is optional now
+  const phonePushConfigured = !!process.env.FIREBASE_SERVICE_ACCOUNT;    // Expo (phones) needs the Admin credentials
 
-  if (!apiKey || !appId || !restKey) {
+  if (!apiKey || (!webPushConfigured && !phonePushConfigured)) {
     console.error("[notify] Required environment variables are missing.");
 
     return json(503, {
@@ -135,7 +138,8 @@ exports.handler = async (event) => {
     "job_completed",
     "payment_submitted",
     "payment_confirmed",
-    "booking_declined"
+    "booking_declined",
+    "booking_cancelled"
   ]);
 
   // Booking notifications: sender and recipient must be
@@ -227,55 +231,57 @@ exports.handler = async (event) => {
     }
   }
 
-  try {
-    const response = await fetch(
-      "https://onesignal.com/api/v1/notifications",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Basic ${restKey}`
-        },
-        body: JSON.stringify({
-          app_id: appId,
-          target_channel: "push",
-          include_aliases: {
-            external_id: [targetUserId]
-          },
-          headings: { en: title.trim() },
-          contents: { en: message.trim() },
-          url: safeUrl,
-          data,
-          chrome_web_icon:
-            "https://servana.top/assets/images/icon-192.png",
-          priority: 10,
-          ttl: 86400
-        })
-      }
-    );
+  const result = { ok: true, devices: 0, web: false };
 
-    const result = await response.json().catch(() => ({}));
-
-    if (!response.ok || result.errors?.length) {
-      console.error(
-        "[notify] OneSignal rejected request:",
-        result.errors || response.status
-      );
-
-      return json(502, {
-        error: "Push provider rejected the notification"
+  // 1) Phones (Expo push). Never lets a failure here break the caller's action.
+  if (phonePushConfigured) {
+    try {
+      const phone = await sendExpoPush({
+        callerUid, targetUserId, title: title.trim(), message: message.trim(),
+        data: { ...data, senderId: callerUid }
       });
+      result.devices = phone.sent || 0;
+      if (phone.skipped) result.skipped = phone.skipped;
+    } catch (err) {
+      console.error("[notify] Expo push failed:", err.message);
     }
-
-    return json(200, {
-      ok: true,
-      id: result.id || null
-    });
-  } catch (err) {
-    console.error("[notify] OneSignal request failed:", err.message);
-
-    return json(502, {
-      error: "Failed to reach push service"
-    });
   }
+
+  // 2) Browsers (OneSignal), only if configured.
+  if (webPushConfigured) {
+    try {
+      const response = await fetch(
+        "https://onesignal.com/api/v1/notifications",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Basic ${restKey}`
+          },
+          body: JSON.stringify({
+            app_id: appId,
+            target_channel: "push",
+            include_aliases: { external_id: [targetUserId] },
+            headings: { en: title.trim() },
+            contents: { en: message.trim() },
+            url: safeUrl,
+            data,
+            chrome_web_icon: "https://servana.top/assets/images/icon-192.png",
+            priority: 10,
+            ttl: 86400
+          })
+        }
+      );
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok || body.errors?.length) {
+        console.error("[notify] OneSignal rejected request:", body.errors || response.status);
+      } else {
+        result.web = true;
+      }
+    } catch (err) {
+      console.error("[notify] OneSignal request failed:", err.message);
+    }
+  }
+
+  return json(200, result);
 };

@@ -459,6 +459,12 @@ $("cancelYes").addEventListener("click", async () => {
     });
     const b = allBookings.find(x => x.id === cancelBookingId);
     if (b) b.status = "cancelled";
+    if (b?.providerId) {
+      const cancelledId = cancelBookingId;
+      import("./assets/notifications.js")
+        .then(({ notifyBookingCancelled }) => notifyBookingCancelled(b.providerId, { ...b, id: cancelledId }))
+        .catch(() => {});
+    }
     $("cancelOverlay").classList.remove("active");
     updateCounts(); updateStats(); renderList();
     toast("Booking cancelled.", "info");

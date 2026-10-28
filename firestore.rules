@@ -141,6 +141,14 @@ service cloud.firestore {
           || (b.providerId == request.auth.uid && b.seekerId == n.userId);
     }
 
+    // The recipient may have blocked the sender (users/{uid}.blockedUsers); blocked people cannot message them.
+    function blockedByOther(chatId) {
+      let ps    = get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+      let other = ps[0] == request.auth.uid ? ps[1] : ps[0];
+      return exists(/databases/$(database)/documents/users/$(other)) &&
+             request.auth.uid in get(/databases/$(database)/documents/users/$(other)).data.get("blockedUsers", []);
+    }
+
     // ── USERS (private: owner + admin only) ────────────
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
@@ -154,6 +162,16 @@ service cloud.firestore {
         isAdmin()
       );
       allow delete: if isOwner(userId) || isAdmin();
+
+      // Phones registered for push notifications (written by the mobile app, read by the server only).
+      match /devices/{deviceId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) &&
+                                 request.resource.data.keys().hasOnly(["token","platform","updatedAt"]) &&
+                                 request.resource.data.token is string &&
+                                 request.resource.data.token.matches("^Expo(nent)?PushToken\\[[A-Za-z0-9_-]+\\]$") &&
+                                 request.resource.data.platform in ["android","ios"];
+      }
     }
 
     // ── PROVIDERS (public profile; NO contact or bank data) ──
@@ -325,7 +343,7 @@ service cloud.firestore {
 
       match /messages/{messageId} {
         allow read:   if isChatParticipant(chatId);
-        allow create: if isChatParticipant(chatId) && notSuspended() &&
+        allow create: if isChatParticipant(chatId) && notSuspended() && !blockedByOther(chatId) &&
                          incomingIs("senderId", request.auth.uid) &&
                          validStr("text", 2000) &&
                          (!("read" in request.resource.data) || request.resource.data.read == false);
@@ -354,6 +372,21 @@ service cloud.firestore {
                        get(/databases/$(database)/documents/bookings/$(reviewId)).data.get("reviewed", false) != true;
       allow update: if isAdmin();
       allow delete: if isAdmin();
+    }
+
+    // ── REPORTS (users reporting other users; app-store UGC requirement) ──
+    match /reports/{reportId} {
+      allow create: if isAuth() && notSuspended() &&
+                       incomingIs("reporterId", request.auth.uid) &&
+                       incomingIs("status", "open") &&
+                       request.resource.data.reportedId is string &&
+                       request.resource.data.keys().hasOnly(["reporterId","reporterName","reportedId","reportedName",
+                         "chatId","reason","source","status","evidence","createdAt"]) &&
+                       validStr("reason", 500) &&
+                       (!("source" in request.resource.data) || request.resource.data.source in ["web","mobile"]) &&
+                       (!("evidence" in request.resource.data) ||
+                         (request.resource.data.evidence is list && request.resource.data.evidence.size() <= 20));
+      allow read, update, delete: if isAdmin();
     }
 
     // ── CATEGORIES (admin-managed) ─────────────────────
