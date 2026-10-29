@@ -132,6 +132,7 @@
   <button class="mob-tab" data-panel="users">👥 Users</button>
   <button class="mob-tab" data-panel="providers">🛠️ Providers</button>
   <button class="mob-tab" data-panel="bookings">📅 Bookings</button>
+  <button class="mob-tab" data-panel="claims">💸 Commission</button>
   <button class="mob-tab" data-panel="reports">🚩 Reports</button>
   <button class="mob-tab" data-panel="categories">📂 Categories</button>
   <button class="mob-tab" data-panel="analytics">📈 Analytics</button>
@@ -153,6 +154,7 @@
     <button class="sb-item" data-panel="users"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Users <span class="sb-badge" id="sb-users-count" style="display:none"></span></button>
     <button class="sb-item" data-panel="providers"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>Providers <span class="sb-badge" id="sb-pending-verif" style="display:none"></span></button>
     <button class="sb-item" data-panel="bookings"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Bookings <span class="sb-badge" id="sb-disputes" style="display:none"></span></button>
+    <button class="sb-item" data-panel="claims"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Commission <span id="sb-claims" class="sb-badge" style="display:none"></span></button>
     <button class="sb-item" data-panel="reports"><svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>Reports <span id="sb-reports" class="sb-badge" style="display:none"></span></button>
     <button class="sb-item" data-panel="categories"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>Categories</button>
 
@@ -258,6 +260,28 @@
         </div>
       </div>
 
+      <!-- ═══════════ COMMISSION PAYMENTS ═══════════ -->
+      <div class="panel" id="panel-claims">
+        <div class="admin-header-bar">
+          <div><div class="admin-title">Commission Payments</div><div class="admin-sub">Providers report a bank transfer to Servana. Compare each one with your bank statement, then approve or reject.</div></div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <select id="claimFilter" style="padding:7px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:12px">
+              <option value="submitted">Waiting for review</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+              <option value="all">All</option>
+            </select>
+            <span class="tbl-count" id="claimCount"></span>
+          </div>
+          <div style="overflow-x:auto"><table class="data-table">
+            <thead><tr><th>Date</th><th>Provider</th><th>Amount</th><th>Reference</th><th>Receipt</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="claimsBody"><tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-3)">No payments</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+
       <!-- ═══════════ REPORTS ═══════════ -->
       <div class="panel" id="panel-reports">
         <div class="admin-header-bar">
@@ -344,6 +368,18 @@
               <div style="display:flex;align-items:center;gap:6px"><span style="font-size:13px;color:var(--text-2)">₦</span><input class="comm-input" type="number" id="minBooking" value="500" min="0"></div>
             </div>
             <div class="commission-row">
+              <div><div class="comm-lbl">Allowed unpaid commission</div><div class="comm-sub">A provider who owes MORE than this stays visible but can't take new bookings (0 = as soon as they owe anything)</div></div>
+              <div style="display:flex;align-items:center;gap:6px"><span style="font-size:13px;color:var(--text-2)">₦</span><input class="comm-input" type="number" id="blockAbove" value="0" min="0"></div>
+            </div>
+            <div class="commission-row" style="align-items:flex-start">
+              <div><div class="comm-lbl">Servana account for commission</div><div class="comm-sub">Providers see these details, with a reference, when they pay commission by bank transfer</div></div>
+              <div style="display:flex;flex-direction:column;gap:6px;min-width:210px">
+                <input class="comm-input" style="width:100%;text-align:left" type="text" id="acctBank" placeholder="Bank name (e.g. GTBank)" maxlength="60">
+                <input class="comm-input" style="width:100%;text-align:left" type="text" id="acctNumber" placeholder="10-digit account number" maxlength="10" inputmode="numeric">
+                <input class="comm-input" style="width:100%;text-align:left" type="text" id="acctName" placeholder="Account name" maxlength="80">
+              </div>
+            </div>
+            <div class="commission-row">
               <div><div class="comm-lbl">Provider Payout Window</div><div class="comm-sub">Days after job completion before payout</div></div>
               <div style="display:flex;align-items:center;gap:6px"><input class="comm-input" type="number" id="payoutDays" value="3" min="1" max="30"><span style="font-size:13px;color:var(--text-2)">days</span></div>
             </div>
@@ -380,10 +416,10 @@
 <script type="module">
 import { auth, db, toast, showSpinner, hideSpinner, esc, formatNGN, starsHtml, initials, setLoading, seedDefaultCategories, DEFAULT_CATEGORIES } from "./assets/firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { collection, doc, getDoc, getDocs, updateDoc, deleteDoc, addDoc, setDoc, serverTimestamp, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { collection, doc, getDoc, getDocs, updateDoc, deleteDoc, addDoc, setDoc, serverTimestamp, query, orderBy, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const $ = id => document.getElementById(id);
-let allUsers=[], allProviders=[], allBookings=[], allCats=[], allReports=[], platformConfig={};
+let allUsers=[], allProviders=[], allBookings=[], allCats=[], allReports=[], allClaims=[], platformConfig={};
 let editingCatId = null;
 
 // ── Auth guard — admin only ──────────────────────────────
@@ -489,20 +525,22 @@ $("sidebarSignOut").addEventListener("click", doSignOut);
 async function loadAllData() {
   try {
     showSpinner();
-    const [usersSnap, provsSnap, booksSnap, catsSnap, reportsSnap] = await Promise.all([
+    const [usersSnap, provsSnap, booksSnap, catsSnap, reportsSnap, claimsSnap] = await Promise.all([
       getDocs(collection(db,"users")),
       getDocs(collection(db,"providers")),
       getDocs(collection(db,"bookings")),
       getDocs(collection(db,"category")),
       getDocs(collection(db,"reports")).catch(()=>({docs:[]})),
+      getDocs(collection(db,"commissionClaims")).catch(()=>({docs:[]})),
     ]);
     allUsers    = usersSnap.docs.map(d=>({id:d.id,...d.data()}));
     allProviders= provsSnap.docs.map(d=>({id:d.id,...d.data()}));
     allBookings = booksSnap.docs.map(d=>({id:d.id,...d.data()}));
     allCats     = catsSnap.docs.map(d=>({id:d.id,...d.data()}));
     allReports  = reportsSnap.docs.map(d=>({id:d.id,...d.data()}));
+    allClaims   = claimsSnap.docs.map(d=>({id:d.id,...d.data()}));
 
-    updateOverview(); renderUsers(); renderProviders(); renderBookings(); renderReports(); renderCategories(); renderAnalytics();
+    updateOverview(); renderUsers(); renderProviders(); renderBookings(); renderClaims(); renderReports(); renderCategories(); renderAnalytics();
   } catch(e) { toast("Failed to load platform data.","error"); console.error(e); }
   finally { hideSpinner(); }
 }
@@ -540,6 +578,91 @@ function updateOverview() {
       </div>
     </div>`).join("") : `<div class="empty-state" style="padding:24px"><div class="empty-icon">📋</div><p class="empty-title">No bookings yet</p></div>`;
 }
+
+// ── Commission payments (bank transfers reported by providers) ──
+async function pushToProvider(uid, type, title, message) {
+  try {                                           // best effort: the decision is already saved
+    const t = await auth.currentUser.getIdToken();
+    await fetch("/.netlify/functions/notify", {
+      method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
+      body: JSON.stringify({ targetUserId: uid, title, message, url: "./provider.html", data: { type } })
+    });
+  } catch (_) {}
+}
+const safeReceipt = u => /^https:\/\/res\.cloudinary\.com\//.test(u || "") ? u : "";
+
+function renderClaims() {
+  const filter = $("claimFilter")?.value || "submitted";
+  const waiting = allClaims.filter(c => c.status === "submitted").length;
+  const badge = $("sb-claims");
+  if (badge) { badge.textContent = waiting; badge.style.display = waiting ? "flex" : "none"; }
+
+  const list = [...allClaims].filter(c => filter === "all" || c.status === filter)
+    .sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
+  $("claimCount").textContent = `${list.length} payment${list.length===1?"":"s"}`;
+  $("claimsBody").innerHTML = list.length ? list.map(c => {
+    const when = c.createdAt?.toDate?.()?.toLocaleString("en-NG",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}) || "";
+    const url = safeReceipt(c.receiptUrl);
+    return `<tr>
+      <td style="white-space:nowrap">${esc(when)}</td>
+      <td><strong>${esc(c.providerName || c.providerId)}</strong><div style="font-size:11px;color:var(--text-3)">${(c.bookingIds||[]).length} job${(c.bookingIds||[]).length===1?"":"s"}</div></td>
+      <td><strong>${formatNGN(c.amount)}</strong>${c.status==="approved"&&c.approvedAmount!==undefined&&c.approvedAmount!==c.amount?`<div style="font-size:11px;color:var(--text-3)">approved ${formatNGN(c.approvedAmount)}</div>`:""}</td>
+      <td style="font-family:monospace;font-size:12px">${esc(c.reference||"")}</td>
+      <td>${url?`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer"><img src="${esc(url)}" alt="Receipt" style="width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid var(--border)"></a>`:"—"}</td>
+      <td><span class="badge badge-${c.status==="submitted"?"pending":c.status==="approved"?"completed":"cancelled"}">${esc(c.status)}</span>${c.note?`<div style="font-size:11px;color:var(--text-3);max-width:160px">${esc(c.note)}</div>`:""}</td>
+      <td style="white-space:nowrap">${c.status==="submitted"?`<button class="btn btn-success btn-sm" onclick="approveClaim('${c.id}')">Approve</button> <button class="btn btn-danger btn-sm" onclick="rejectClaim('${c.id}')">Reject</button>`:""}</td>
+    </tr>`;
+  }).join("") : `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-3)">No payments</td></tr>`;
+}
+
+window.approveClaim = async (id) => {
+  const c = allClaims.find(x => x.id === id);
+  if (!c || c.status !== "submitted") return;
+  try {
+    showSpinner();
+    // Approve what is REALLY owed (re-read from the bookings), not what the provider typed.
+    const snaps = await Promise.all((c.bookingIds||[]).map(bid => getDoc(doc(db,"bookings",bid))));
+    const payable = snaps.filter(sn => sn.exists() && sn.data().providerId === c.providerId && sn.data().commissionStatus === "pending");
+    const sum = payable.reduce((t, sn) => t + Number(sn.data().commissionAmount || 0), 0);
+    hideSpinner();
+    if (!payable.length) { alert("None of these jobs has commission pending any more (already paid?)."); return; }
+    const mismatch = Math.round(sum) !== Math.round(Number(c.amount));
+    const ok = confirm(
+      `${mismatch ? `⚠️ The provider reported ${formatNGN(c.amount)} but these jobs add up to ${formatNGN(sum)}.\n\n` : ""}` +
+      `Approve ${formatNGN(sum)} from ${c.providerName || "this provider"}?\n\nCheck your bank statement first (reference ${c.reference}).`);
+    if (!ok) return;
+
+    showSpinner();
+    const provSnap = await getDoc(doc(db,"providers",c.providerId));
+    const newDue = Math.max(0, (Number(provSnap.data()?.commissionDue) || 0) - sum);
+    const batch = writeBatch(db);
+    payable.forEach(sn => batch.update(sn.ref, { commissionStatus:"paid", commissionPaidAt: serverTimestamp(), commissionPaymentRef: c.reference, updatedAt: serverTimestamp() }));
+    batch.update(doc(db,"commissionClaims",id), { status:"approved", approvedAmount: sum, reviewedBy: auth.currentUser.uid, reviewedAt: serverTimestamp() });
+    batch.set(doc(db,"providers",c.providerId), { commissionDue: newDue, updatedAt: serverTimestamp() }, { merge:true });
+    await batch.commit();
+    c.status = "approved"; c.approvedAmount = sum;
+    renderClaims();
+    toast(`Approved ${formatNGN(sum)}. ${c.providerName || "The provider"} can take bookings again.`,"success",5000);
+    pushToProvider(c.providerId, "commission_approved", "✅ Commission payment approved", `Your payment of ${formatNGN(sum)} was approved. You can take new bookings again.`);
+  } catch(e) { console.error(e); toast("Failed to approve. Please try again.","error"); }
+  finally { hideSpinner(); }
+};
+
+window.rejectClaim = async (id) => {
+  const c = allClaims.find(x => x.id === id);
+  if (!c || c.status !== "submitted") return;
+  const note = prompt(`Why are you rejecting this payment from ${c.providerName || "the provider"}? (They will see this)`, "Amount or receipt doesn't match our bank statement.");
+  if (note === null) return;
+  try {
+    showSpinner();
+    await updateDoc(doc(db,"commissionClaims",id), { status:"rejected", note: note.trim().slice(0,200), reviewedBy: auth.currentUser.uid, reviewedAt: serverTimestamp() });
+    c.status = "rejected"; c.note = note.trim().slice(0,200);
+    renderClaims(); toast("Payment rejected.","info");
+    pushToProvider(c.providerId, "commission_rejected", "Commission payment not accepted", `Your payment (ref ${c.reference}) was not accepted${note.trim() ? `: ${note.trim().slice(0,120)}` : "."}`);
+  } catch(e) { console.error(e); toast("Failed to reject. Please try again.","error"); }
+  finally { hideSpinner(); }
+};
+$("claimFilter")?.addEventListener("change", renderClaims);
 
 // ── Reports (chat moderation) ────────────────────────────
 function renderReports() {
@@ -815,8 +938,12 @@ async function loadPlatformConfig() {
     const snap = await getDoc(doc(db,"config","platform"));
     if (snap.exists()) {
       const c=snap.data();
-      $("commRate").value    = c.commissionRate||5;
-      $("minBooking").value  = c.minBooking||500;
+      $("commRate").value    = c.commissionRate ?? 5;
+      $("minBooking").value  = c.minBooking ?? 500;
+      $("blockAbove").value  = c.commissionBlockAbove ?? 0;
+      $("acctBank").value    = c.commissionAccount?.bankName || "";
+      $("acctNumber").value  = c.commissionAccount?.accountNumber || "";
+      $("acctName").value    = c.commissionAccount?.accountName || "";
       $("payoutDays").value  = c.payoutDays||3;
       $("maintenanceMode").checked = c.maintenanceMode||false;
       $("allowRegistrations").checked = c.allowRegistrations!==false;
@@ -826,11 +953,19 @@ async function loadPlatformConfig() {
 }
 
 $("saveSettingsBtn").addEventListener("click", async () => {
+  const num = (id, def) => { const v = parseFloat($(id).value); return Number.isFinite(v) && v >= 0 ? v : def; };
+  const acct = { bankName: $("acctBank").value.trim(), accountNumber: $("acctNumber").value.trim(), accountName: $("acctName").value.trim() };
+  const anyAcct = acct.bankName || acct.accountNumber || acct.accountName;
+  if (anyAcct && (!acct.bankName || !acct.accountName || !/^\d{10}$/.test(acct.accountNumber))) {
+    toast("Servana account: enter the bank, a 10-digit account number and the account name.","warning"); return;
+  }
   setLoading($("saveSettingsBtn"),true);
   try {
     await setDoc(doc(db,"config","platform"), {
-      commissionRate:    parseFloat($("commRate").value)||5,
-      minBooking:        parseFloat($("minBooking").value)||500,
+      commissionRate:    num("commRate", 5),
+      minBooking:        num("minBooking", 500),
+      commissionBlockAbove: num("blockAbove", 0),
+      commissionAccount: acct,
       payoutDays:        parseInt($("payoutDays").value)||3,
       maintenanceMode:   $("maintenanceMode").checked,
       allowRegistrations:$("allowRegistrations").checked,

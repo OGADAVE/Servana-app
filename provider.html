@@ -323,6 +323,26 @@
 
 </main>
 
+<!-- Pay commission (bank transfer) modal -->
+<div class="modal-overlay" id="commModal" role="dialog" aria-modal="true" aria-labelledby="commTitle">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-head">
+      <span class="modal-title" id="commTitle">Pay commission</span>
+      <button class="modal-close" id="closeCommModal" aria-label="Close"><svg viewBox="0 0 24 24" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-form">
+      <div id="commBody"></div>
+      <div class="field"><label for="commReceipt">Payment receipt (photo or screenshot) *</label><input type="file" id="commReceipt" accept="image/*"></div>
+      <button class="btn btn-primary btn-block" id="commSubmitBtn">
+        <span class="btn-text">I've paid — submit receipt</span>
+        <span class="btn-spin-wrap"><div class="btn-spin"></div></span>
+      </button>
+      <button class="btn btn-secondary btn-block" id="commOnlineBtn" style="display:none;margin-top:8px">Pay online with card instead</button>
+    </div>
+  </div>
+</div>
+
 <!-- Service modal -->
 <div class="modal-overlay" id="svcModal" role="dialog" aria-modal="true">
   <div class="modal-box">
@@ -388,6 +408,7 @@ let editingSvcId     = null;     // service document ID being edited (null = new
 let payout           = {};       // providers/{uid}/private/payout  (NEVER on the public provider doc)
 let platformCfg      = {};       // config/platform
 let categoryList     = [];       // [{id, name, icon}]
+let claims           = [];       // this provider's commissionClaims (bank-transfer reports)
 
 // ── Money helpers: ONE definition shared by every card/total on this page ──
 const ratePct       = b => Number.isFinite(Number(b?.commissionRate)) ? Number(b.commissionRate)
@@ -396,6 +417,12 @@ const isPaidJob     = b => b.status === "completed" && b.paymentStatus === "paym
 const commissionOf  = b => Number(b.commissionAmount) > 0 ? Number(b.commissionAmount) : commissionFor(b.serviceFee || 0, ratePct(b));
 const pendingCommissionBookings = () => allBookings.filter(b => b.commissionStatus === "pending" && Number(b.commissionAmount) > 0);
 const outstandingCommission     = () => pendingCommissionBookings().reduce((s, b) => s + Number(b.commissionAmount), 0);
+const blockAbove    = () => Number(platformCfg.commissionBlockAbove) || 0;
+// Blocked = owes more than the allowed amount. Uses the public, rule-protected commissionDue AND the bookings,
+// so the screen is correct even for providers whose commissionDue has not been initialised yet.
+const isBlocked     = () => Math.max(Number(provData.commissionDue) || 0, outstandingCommission()) > blockAbove();
+const claimedIds    = () => new Set(claims.filter(c => c.status === "submitted").flatMap(c => c.bookingIds || []));
+const unclaimedBookings = () => pendingCommissionBookings().filter(b => !claimedIds().has(b.id));
 const payoutComplete = () => !!(payout.bankName && payout.accountNumber && payout.accountName);
 const safeInternalUrl = u => /^\.\/[a-z-]+\.html(\?[\w=&%.\-]*)?$/.test(u || "") ? u : "";
 
@@ -788,7 +815,7 @@ async function loadBookings() {
 }
 
 function bookingCardHtml(b) {
-  const blocked = outstandingCommission() > 0;
+  const blocked = isBlocked();
   return `
   <div class="booking-item ${esc(b.status)}">
     <div class="bi-avatar">${initials(b.seekerName || "C")}</div>
@@ -878,7 +905,7 @@ async function updateBookingStatus(bookingId, newStatus) {
   try {
     const patch = { status: newStatus, updatedAt: serverTimestamp() };
     if (newStatus === "accepted") {
-      if (outstandingCommission() > 0) { toast("Clear your outstanding commission to accept new bookings.", "warning"); switchTab("earnings"); return; }
+      if (isBlocked()) { toast("Clear your outstanding commission to accept new bookings.", "warning"); switchTab("earnings"); return; }
       if (!payoutComplete()) { toast("Add your payout details first so the customer knows where to pay you.", "warning"); switchTab("earnings"); return; }
       patch.providerPaymentAccount = { bankName: payout.bankName, accountNumber: payout.accountNumber, accountName: payout.accountName };
     }
@@ -925,7 +952,8 @@ async function confirmPaymentReceived(bookingId) {
   const commission = commissionFor(b.serviceFee || 0, ratePct(b));
   try {
     showSpinner();
-    await updateDoc(doc(db, "bookings", bookingId), {
+    const batch = writeBatch(db);
+    batch.update(doc(db, "bookings", bookingId), {
       paymentStatus:            "payment_confirmed",
       providerPaymentConfirmed: true,
       paymentConfirmedAt:       serverTimestamp(),
@@ -933,8 +961,16 @@ async function confirmPaymentReceived(bookingId) {
       commissionAmount:         commission,
       updatedAt:                serverTimestamp()
     });
+    // commissionDue is public and rule-protected: it can only rise together with the booking that causes it.
+    if (commission > 0) {
+      batch.update(doc(db, "providers", currentUser.uid), {
+        commissionDue: increment(commission), lastCommissionBookingId: bookingId, updatedAt: serverTimestamp()
+      });
+    }
+    await batch.commit();
     b.paymentStatus = "payment_confirmed"; b.commissionStatus = commission > 0 ? "pending" : "not_due"; b.commissionAmount = commission;
-    toast(`Payment confirmed! Commission due: ${formatNGN(commission)}. Pay it from the Earnings tab.`, "success");
+    provData.commissionDue = (Number(provData.commissionDue) || 0) + commission;
+    toast(`Payment confirmed! Commission due: ${formatNGN(commission)}. Pay it from the Earnings tab to keep taking new bookings.`, "success", 6000);
     await loadBookings();
     loadCommissionStatus();
   } catch(e) {
@@ -1053,30 +1089,120 @@ $("markAllRead")?.addEventListener("click", async () => {
 });
 
 // ── Commission ─────────────────────────────────────────
+async function loadClaims() {
+  try {
+    const snap = await getDocs(query(collection(db, "commissionClaims"), where("providerId", "==", currentUser.uid)));
+    claims = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+  } catch (e) { console.warn("[Provider] claims:", e.message); claims = []; }
+}
+
 async function loadCommissionStatus() {
   const wrap = $("commissionAlertWrap");
   if (!wrap || !currentUser) return;
-  const pending = pendingCommissionBookings();
-  const outstanding = outstandingCommission();
-  if (outstanding > 0) {
-    const batchSize = 40;
-    const note = pending.length > batchSize ? `<div style="font-size:11px;color:var(--text-3);margin-bottom:10px">You have ${pending.length} unpaid jobs. They are paid ${batchSize} at a time.</div>` : "";
-    wrap.innerHTML = `<div class="commission-alert">
+  await loadClaims();
+  const unclaimed = unclaimedBookings();
+  const unclaimedAmt = unclaimed.reduce((s, b) => s + Number(b.commissionAmount), 0);
+  const review = claims.filter(c => c.status === "submitted");
+  const reviewAmt = review.reduce((s, c) => s + Number(c.amount || 0), 0);
+  const rejected = claims.find(c => c.status === "rejected" && (c.bookingIds || []).some(id => unclaimed.some(b => b.id === id)));
+
+  let html = "";
+  if (rejected) {
+    html += `<div class="commission-alert" style="margin-bottom:12px"><div class="commission-alert-title">Payment not accepted</div>
+      <div class="commission-alert-body" style="margin-bottom:0">Your ${formatNGN(rejected.amount)} payment (ref ${esc(rejected.reference || "")}) was not accepted${rejected.note ? `: ${esc(rejected.note)}` : "."} Please check the amount and receipt and submit again.</div></div>`;
+  }
+  if (unclaimedAmt > 0) {
+    const nBatch = Math.min(unclaimed.length, 40);
+    html += `<div class="commission-alert">
       <div class="commission-alert-title">⚠️ Commission Due</div>
-      <div class="commission-alert-amount">${formatNGN(outstanding)}</div>
-      <div class="commission-alert-body">Clear your commission to continue receiving new booking requests.</div>
-      ${note}
+      <div class="commission-alert-amount">${formatNGN(unclaimedAmt)}</div>
+      <div class="commission-alert-body">You can't take new bookings until this is paid. Pay by bank transfer, then upload your receipt.
+        ${reviewAmt > 0 ? `<br><strong>${formatNGN(reviewAmt)}</strong> more is already under review.` : ""}
+        ${unclaimed.length > 40 ? `<br>You have ${unclaimed.length} unpaid jobs; they are paid 40 at a time.` : ""}</div>
       <button class="btn btn-danger" id="payCommBtn">Pay commission →</button>
     </div>`;
-    $("payCommBtn").addEventListener("click", () => payCommission(pending));
+    wrap.innerHTML = html;
+    $("payCommBtn").addEventListener("click", () => openCommModal(unclaimed.slice(0, nBatch)));
+  } else if (reviewAmt > 0) {
+    const c = review[0];
+    const when = c.createdAt?.toDate?.()?.toLocaleString("en-NG", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) || "";
+    wrap.innerHTML = html + `<div class="commission-alert" style="background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.35)">
+      <div class="commission-alert-title" style="color:#b45309">⏳ Payment under review</div>
+      <div class="commission-alert-amount" style="color:#b45309">${formatNGN(reviewAmt)}</div>
+      <div class="commission-alert-body" style="margin-bottom:0">We received your receipt${when ? ` (${esc(when)})` : ""}, ref <strong>${esc(c.reference || "")}</strong>. You'll be notified as soon as it is approved, then you can take new bookings again.</div></div>`;
   } else {
-    wrap.innerHTML = `<div class="commission-clear"><div style="font-size:22px">✅</div><div><div style="font-size:13px;font-weight:700;color:var(--success)">All Commissions Cleared</div><div style="font-size:12px;color:var(--text-2);margin-top:2px">Outstanding: ₦0 — You can accept new bookings.</div></div></div>`;
+    wrap.innerHTML = html + `<div class="commission-clear"><div style="font-size:22px">✅</div><div><div style="font-size:13px;font-weight:700;color:var(--success)">All Commissions Cleared</div><div style="font-size:12px;color:var(--text-2);margin-top:2px">Outstanding: ₦0 — You can accept new bookings.</div></div></div>`;
   }
 }
 
+// ── Pay commission by bank transfer ───────────────────
+let commBatch = [];
+const commRefKey = () => `servana:commRef:${currentUser.uid}`;
+function commReference() {
+  try {
+    const saved = localStorage.getItem(commRefKey());
+    if (saved) return saved;
+  } catch (_) {}
+  const ref = `SVC-${currentUser.uid.slice(0, 4).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}${Date.now().toString(36).slice(-3).toUpperCase()}`;
+  try { localStorage.setItem(commRefKey(), ref); } catch (_) {}
+  return ref;
+}
+
+function openCommModal(batchBookings) {
+  commBatch = batchBookings;
+  const amount = commBatch.reduce((s, b) => s + Number(b.commissionAmount), 0);
+  const acct = platformCfg.commissionAccount || {};
+  const ready = !!(acct.bankName && acct.accountNumber && acct.accountName);
+  $("commBody").innerHTML = ready ? `
+    <div style="font-size:12px;color:var(--text-3);margin-bottom:6px">Amount to pay</div>
+    <div style="font-family:'Orbitron',sans-serif;font-size:26px;font-weight:700;color:var(--danger);margin-bottom:14px">${formatNGN(amount)}</div>
+    <div style="background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px;font-size:13px;line-height:1.8">
+      <div><span style="color:var(--text-3)">Bank:</span> <strong>${esc(acct.bankName)}</strong></div>
+      <div><span style="color:var(--text-3)">Account number:</span> <strong style="font-size:16px;letter-spacing:1px">${esc(acct.accountNumber)}</strong></div>
+      <div><span style="color:var(--text-3)">Account name:</span> <strong>${esc(acct.accountName)}</strong></div>
+      <div><span style="color:var(--text-3)">Narration / reference:</span> <strong style="color:var(--accent)">${esc(commReference())}</strong></div>
+    </div>
+    <p style="font-size:12px;color:var(--text-3);margin:10px 0 0">Transfer exactly ${formatNGN(amount)} and put the reference above in the narration. Then upload your receipt below.</p>`
+  : `<p style="font-size:13px;color:var(--text-2)">Servana's payment account isn't set up yet. Please contact support to settle your commission.</p>`;
+  $("commSubmitBtn").disabled = !ready;
+  $("commReceipt").value = "";
+  $("commOnlineBtn").style.display = paystackConfigured() ? "" : "none";
+  $("commModal").classList.add("active");
+}
+const closeCommModal = () => $("commModal").classList.remove("active");
+$("closeCommModal").addEventListener("click", closeCommModal);
+$("commModal").addEventListener("click", e => { if (e.target === $("commModal")) closeCommModal(); });
+$("commOnlineBtn").addEventListener("click", () => { closeCommModal(); payCommission(commBatch); });
+
+$("commSubmitBtn").addEventListener("click", async () => {
+  const file = $("commReceipt").files?.[0];
+  if (!file)                       { toast("Please choose your payment receipt (photo or screenshot).", "warning"); return; }
+  if (!file.type.startsWith("image/")) { toast("The receipt must be an image.", "warning"); return; }
+  if (file.size > 5 * 1024 * 1024) { toast("The receipt must be under 5MB.", "warning"); return; }
+  if (!commBatch.length)           { toast("Nothing to pay.", "info"); return; }
+
+  setLoading($("commSubmitBtn"), true);
+  try {
+    const receiptUrl = await uploadToCloudinary(file, { folder: `servana/commission/${currentUser.uid}` });
+    const amount = commBatch.reduce((s, b) => s + Number(b.commissionAmount), 0);
+    await addDoc(collection(db, "commissionClaims"), {
+      providerId: currentUser.uid, providerName: String(provData.name || currentUser.displayName || "").slice(0, 120),
+      amount, bookingIds: commBatch.map(b => b.id), reference: commReference(), receiptUrl,
+      status: "submitted", createdAt: serverTimestamp()
+    });
+    try { localStorage.removeItem(commRefKey()); } catch (_) {}      // next payment gets a fresh reference
+    closeCommModal();
+    toast("Receipt submitted. We'll review it and notify you.", "success", 6000);
+    await loadCommissionStatus();
+  } catch (e) {
+    console.error("[Provider] commission claim:", e);
+    toast(e.message?.includes("CLOUDINARY") ? "Photo upload isn't ready. Please contact support." : "Couldn't submit your receipt. Please try again.", "error");
+  } finally { setLoading($("commSubmitBtn"), false); }
+});
+
 async function payCommission(pending) {
-  if (!paystackConfigured()) { toast("Online payment isn't switched on yet. Please contact support to settle your commission.", "warning", 6000); return; }
-  const btn = $("payCommBtn"); if (btn) btn.disabled = true;
+  if (!paystackConfigured()) { toast("Online payment isn't switched on yet. Please pay by bank transfer.", "warning", 6000); return; }
   try {
     const { paid } = await payCommissionOnline({ email: currentUser.email, bookings: pending });
     toast(`Commission of ${formatNGN(paid)} paid! 🎉`, "success");
@@ -1084,7 +1210,7 @@ async function payCommission(pending) {
   } catch (e) {
     if (!e.cancelled) { console.error("[Provider] payCommission:", e); toast(e.message || "Payment failed.", "error", 6000); }
     else toast("Payment cancelled.", "info");
-  } finally { if (btn) btn.disabled = false; loadCommissionStatus(); }
+  } finally { loadCommissionStatus(); }
 }
 
 // ── Earnings ───────────────────────────────────────────

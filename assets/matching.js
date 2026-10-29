@@ -54,6 +54,11 @@ export const isProviderListed = p =>
 
 export const isProviderAvailable = p => !!p && p.available !== false;
 
+// A provider who owes more commission than the allowed amount stays VISIBLE but cannot take new bookings.
+// `commissionDue` is a public, rule-protected field on the provider document (admins lower it when a
+// commission payment is approved); the allowed amount is config/platform.commissionBlockAbove (default 0).
+export const isCommissionBlocked = (p, above = 0) => (Number(p?.commissionDue) || 0) > (Number(above) || 0);
+
 export const isServiceActive = s =>
   !!s && s.active !== false && !!str(s.providerId) && !!str(s.name) && isPriced(s.price);
 
@@ -83,7 +88,7 @@ export const hasLocation = loc => !!(str(loc?.city) || str(loc?.state) || str(lo
 // opts.includeOffline  list providers who toggled themselves Offline
 // opts.minBooking      platform minimum price (config/platform.minBooking)
 // opts.ignoreLocation  skip the service-area check (viewing a deep-linked provider)
-export function evaluateMatch(svc, prov, loc = {}, { includeOffline = false, minBooking = 0, ignoreLocation = false } = {}) {
+export function evaluateMatch(svc, prov, loc = {}, { includeOffline = false, minBooking = 0, ignoreLocation = false, commissionBlockAbove = 0 } = {}) {
   if (!isProviderListed(prov))                       return no("provider_unavailable");
   if (!includeOffline && !isProviderAvailable(prov)) return no("provider_offline");
   if (!isServiceActive(svc))                         return no("service_inactive");
@@ -91,10 +96,13 @@ export function evaluateMatch(svc, prov, loc = {}, { includeOffline = false, min
   if (minBooking && Number(svc.price) < Number(minBooking)) return no("below_minimum");
 
   const mode = svc.serviceMode || "onsite";
-  if (ignoreLocation || mode === "remote" || mode === "both") return yes(); // remote can be delivered anywhere
-
-  if (!hasLocation(loc)) return no("location_required");
-  return serviceAreas(svc, prov).some(a => areaCovers(a, loc)) ? yes() : no("out_of_area");
+  if (!(ignoreLocation || mode === "remote" || mode === "both")) {      // remote can be delivered anywhere
+    if (!hasLocation(loc)) return no("location_required");
+    if (!serviceAreas(svc, prov).some(a => areaCovers(a, loc))) return no("out_of_area");
+  }
+  // Checked LAST so people are only told "not accepting" about providers that otherwise match them.
+  if (isCommissionBlocked(prov, commissionBlockAbove)) return no("not_accepting");
+  return yes();
 }
 
 export const REASON_TEXT = {
@@ -103,6 +111,7 @@ export const REASON_TEXT = {
   service_inactive:     "This service is no longer offered.",
   provider_mismatch:    "This service doesn't belong to that provider.",
   below_minimum:        "This service is below the platform minimum booking amount.",
+  not_accepting:        "This provider isn't taking new bookings right now.",
   location_required:    "Choose your location first.",
   out_of_area:          "This provider doesn't serve your area.",
   not_found:            "That provider or service no longer exists.",
@@ -111,11 +120,11 @@ export const REASON_TEXT = {
 };
 
 // ── Matching engine ────────────────────────────────────
-// Returns [{ provider, services:[eligible services], startingPrice }].
+// Returns [{ provider, services:[matching services], startingPrice, accepting }].
 // Providers with no eligible service are NOT returned.
 export function findMatches({
   providers, services, categoryId = "", keyword = "", loc = {},
-  includeOffline = false, minBooking = 0, providerId = ""
+  includeOffline = false, minBooking = 0, providerId = "", commissionBlockAbove = 0
 }) {
   const byId = new Map(providers.map(p => [p.id, p]));
   const kw   = norm(keyword);
@@ -134,11 +143,13 @@ export function findMatches({
     const m = evaluateMatch(s, p, loc, {
       includeOffline: includeOffline || !!providerId,
       minBooking,
-      ignoreLocation: !!providerId
+      ignoreLocation: !!providerId,
+      commissionBlockAbove
     });
-    if (!m.eligible) continue;
+    // "not_accepting" providers are still LISTED (so seekers see them) but flagged: accepting === false.
+    if (!m.eligible && m.reason !== "not_accepting") continue;
 
-    const e = out.get(p.id) || { provider: p, services: [], startingPrice: Infinity };
+    const e = out.get(p.id) || { provider: p, services: [], startingPrice: Infinity, accepting: m.eligible };
     e.services.push(s);
     e.startingPrice = Math.min(e.startingPrice, Number(s.price));
     out.set(p.id, e);

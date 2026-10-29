@@ -91,7 +91,8 @@ service cloud.firestore {
           && prov.get("suspended", false) != true
           && prov.get("deleted", false)   != true
           && prov.get("isPublic", true)   != false
-          && prov.get("available", true)  != false;
+          && prov.get("available", true)  != false
+          && prov.get("commissionDue", 0) <= cfg.get("commissionBlockAbove", 0);
     }
 
     // Provider updating their own profile: these fields are system-owned.
@@ -99,7 +100,7 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys().hasAny([
         "uid","createdAt","verified","suspended","rating","reviewCount","ratingBreakdown",
         "completedJobs","lastReviewedAt","lastReviewBookingId","lastCompletedBookingId",
-        "outstandingCommission","lastCommissionPaidAt"
+        "outstandingCommission","lastCommissionPaidAt","commissionDue","lastCommissionBookingId"
       ]);
     }
 
@@ -131,6 +132,29 @@ service cloud.firestore {
       return pre.providerId == providerId
           && pre.status == "accepted" && post.status == "completed"
           && n.completedJobs == resource.data.get("completedJobs", 0) + 1;
+    }
+
+    // commissionDue (public) may only go UP, by exactly the commission of a booking that is being confirmed
+    // paid in the same batch. Only an admin can lower it (approving a commission payment).
+    function commissionIncrementOk(providerId) {
+      let n    = request.resource.data;
+      let bid  = n.lastCommissionBookingId;
+      let pre  = get(/databases/$(database)/documents/bookings/$(bid)).data;
+      let post = getAfter(/databases/$(database)/documents/bookings/$(bid)).data;
+      return pre.providerId == providerId
+          && pre.get("paymentStatus", "") == "payment_submitted"
+          && post.paymentStatus == "payment_confirmed"
+          && post.commissionStatus == "pending"
+          && n.commissionDue == resource.data.get("commissionDue", 0) + post.commissionAmount;
+    }
+
+    // A provider who owes more than the allowed amount cannot take new bookings.
+    function commissionClear(uid) {
+      let cfg = exists(/databases/$(database)/documents/config/platform)
+                  ? get(/databases/$(database)/documents/config/platform).data
+                  : {};
+      return get(/databases/$(database)/documents/providers/$(uid)).data.get("commissionDue", 0)
+               <= cfg.get("commissionBlockAbove", 0);
     }
 
     // Booking notifications: a user may notify the OTHER party of a booking they share.
@@ -196,6 +220,12 @@ service cloud.firestore {
         (request.resource.data.diff(resource.data).affectedKeys()
            .hasOnly(["rating","reviewCount","ratingBreakdown","lastReviewedAt","lastReviewBookingId"]) &&
          reviewAggregationOk(providerId)) ||
+
+        // commissionDue goes up, only together with the booking whose payment is being confirmed
+        (isOwner(providerId) && notSuspended() &&
+         request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(["commissionDue","lastCommissionBookingId","updatedAt"]) &&
+         commissionIncrementOk(providerId)) ||
 
         // completedJobs +1, only together with a booking becoming completed
         (isOwner(providerId) && notSuspended() &&
@@ -291,6 +321,7 @@ service cloud.firestore {
         (resource.data.providerId == request.auth.uid && notSuspended() &&
          (
            (resource.data.status=="pending"  && incomingIs("status","accepted") &&
+              commissionClear(request.auth.uid) &&
               request.resource.data.providerPaymentAccount is map &&
               request.resource.data.providerPaymentAccount.accountNumber is string &&
               request.resource.data.providerPaymentAccount.accountNumber.size() == 10) ||
@@ -372,6 +403,24 @@ service cloud.firestore {
                        get(/databases/$(database)/documents/bookings/$(reviewId)).data.get("reviewed", false) != true;
       allow update: if isAdmin();
       allow delete: if isAdmin();
+    }
+
+    // ── COMMISSION CLAIMS: a provider reports a bank transfer to Servana; an admin approves it ──
+    match /commissionClaims/{claimId} {
+      allow read: if isAuth() && (resource.data.providerId == request.auth.uid || isAdmin());
+      allow create: if isAuth() && notSuspended() &&
+                       incomingIs("providerId", request.auth.uid) &&
+                       incomingIs("status", "submitted") &&
+                       request.resource.data.keys().hasOnly(["providerId","providerName","amount","bookingIds",
+                         "reference","receiptUrl","status","createdAt"]) &&
+                       validNum("amount", 1, 100000000) &&
+                       validStr("reference", 60) && validStr("providerName", 120) &&
+                       request.resource.data.bookingIds is list &&
+                       request.resource.data.bookingIds.size() >= 1 &&
+                       request.resource.data.bookingIds.size() <= 40 &&
+                       request.resource.data.receiptUrl is string &&
+                       request.resource.data.receiptUrl.matches("^https://res\\.cloudinary\\.com/pgstcx8v/.*");
+      allow update, delete: if isAdmin();
     }
 
     // ── REPORTS (users reporting other users; app-store UGC requirement) ──

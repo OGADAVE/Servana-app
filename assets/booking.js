@@ -57,7 +57,9 @@ export async function createBooking({
     const minBooking = Number(cfg.minBooking) || 0;
 
     // Same rules as the listing.
-    const m = evaluateMatch(service, provider, seekerLocation, { minBooking });
+    const m = evaluateMatch(service, provider, seekerLocation, {
+      minBooking, commissionBlockAbove: Number(cfg.commissionBlockAbove) || 0
+    });
     if (!m.eligible) throw new BookingError(m.reason);
 
     // The seeker confirmed a specific price. If it moved, make them look again.

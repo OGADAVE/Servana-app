@@ -200,8 +200,14 @@ exports.handler = async (event) => {
       callerUid !== targetUserId;
   }
 
-  // Commission notifications must use a trusted server-side
-  // workflow, not an arbitrary browser request.
+  // Commission decisions (approved / rejected) may only be sent by an ADMIN.
+  // Checked against the caller's own users/{uid} document (readable by its owner under the rules).
+  else if (type === "commission_approved" || type === "commission_rejected") {
+    const caller = await readFirebaseDocument("users", callerUid, apiKey, token);
+    authorized = stringField(caller, "role") === "admin" && targetUserId !== callerUid;
+  }
+
+  // Anything else must use a trusted server-side workflow, not an arbitrary browser request.
   else {
     return json(403, {
       error: "This notification type is not allowed from the browser"

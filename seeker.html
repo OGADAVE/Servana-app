@@ -246,6 +246,7 @@ const todayLocal = () => {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 };
 const minBooking = () => Number(S.cfg.minBooking) || 0;
+const blockAbove = () => Number(S.cfg.commissionBlockAbove) || 0;   // commission a provider may owe before they stop taking bookings
 
 function setError(m = "") { const el = $("bookingError"); el.hidden = !m; el.textContent = m; }
 
@@ -349,7 +350,8 @@ function currentMatches() {
   let list = findMatches({
     providers: S.providers, services: S.services,
     categoryId: S.catId, keyword: $("searchInput").value, loc: S.loc,
-    includeOffline: S.showOffline, minBooking: minBooking(), providerId: S.providerId
+    includeOffline: S.showOffline, minBooking: minBooking(), providerId: S.providerId,
+    commissionBlockAbove: blockAbove()
   });
   if (S.filter === "verified") list = list.filter(e => e.provider.verified === true);
   if (S.filter === "top")      list = list.filter(e => Number(e.provider.rating || 0) >= 4);
@@ -359,6 +361,8 @@ function currentMatches() {
     S.sort === "price_desc" ? b.startingPrice - a.startingPrice :
     S.sort === "newest"     ? (b.provider.createdAt?.seconds || 0) - (a.provider.createdAt?.seconds || 0) :
     rating(b) - rating(a));
+  // Providers who can take bookings first (stable sort keeps the chosen order inside each group).
+  list.sort((a, b) => Number(b.accepting) - Number(a.accepting));
   return list;
 }
 
@@ -423,8 +427,9 @@ function renderProviders(list) {
     top.append(aw, info);
 
     const badge = document.createElement("span");
-    badge.className = `badge ${available ? "badge-success" : "badge-danger"}`;
-    badge.textContent = available ? "Available" : "Offline";
+    const accepting = entry.accepting !== false;
+    badge.className = `badge ${available && accepting ? "badge-success" : "badge-danger"}`;
+    badge.textContent = !accepting ? "Not taking bookings" : available ? "Available" : "Offline";
     top.appendChild(badge);
 
     const body = document.createElement("div"); body.className = "pc-body";
@@ -446,7 +451,9 @@ function renderProviders(list) {
     const price = document.createElement("div"); price.className = "pc-price";
     price.textContent = money(entry.startingPrice);
     const sm = document.createElement("span"); sm.textContent = n > 1 ? "starting from" : "price"; price.appendChild(sm);
-    const book = document.createElement("button"); book.type = "button"; book.className = "btn btn-primary btn-sm"; book.textContent = "Book Now";
+    const book = document.createElement("button"); book.type = "button"; book.className = "btn btn-primary btn-sm";
+    book.textContent = accepting ? "Book Now" : "Unavailable";
+    if (!accepting) { book.disabled = true; book.title = "This provider isn't taking new bookings right now."; book.style.opacity = ".55"; }
     book.addEventListener("click", e => { e.stopPropagation(); openModal(entry); });
     foot.append(price, book);
 
@@ -505,7 +512,7 @@ function openModal(entry) {
   $("bookTime").value = ""; $("bookAddr").value = ""; $("bookNotes").value = "";
 
   // Only services that pass EVERY matching rule for this seeker are bookable.
-  const checked = entry.services.map(s => ({ s, m: evaluateMatch(s, p, S.loc, { minBooking: minBooking() }) }));
+  const checked = entry.services.map(s => ({ s, m: evaluateMatch(s, p, S.loc, { minBooking: minBooking(), commissionBlockAbove: blockAbove() }) }));
   const ok = checked.filter(x => x.m.eligible).map(x => x.s);
   const opts = $("svcOptions"); opts.replaceChildren();
 
